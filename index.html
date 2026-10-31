@@ -1743,9 +1743,26 @@ function zTrafEst(day,hol,hr){var dow=new Date(day+'T00:00').getDay(),lab=dow>=1
   tx=lv=='alto'?(k=='dn'?'hora pico en el Distrito (entradas y salidas)':'hora pico hacia y desde el Distrito'):lv=='medio'?'movimiento normal':'calles despejadas';
   out[k]={lv:lv,tx:tx}});return out}
 // Tránsito en vivo (opcional): relación velocidad actual / velocidad libre en dos corredores por zona.
-async function zTraffic(){if(!ZCFG.tt)return null;var out={};
- await Promise.all(ZK.map(function(k){return Promise.all(ZONAS[k].tt.map(function(p){return fetchT('https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json?point='+p[0]+','+p[1]+'&unit=KMPH&key='+encodeURIComponent(ZCFG.tt),8000).then(function(j){var f=j.flowSegmentData;return f?{r:f.freeFlowSpeed?f.currentSpeed/f.freeFlowSpeed:1,cl:!!f.roadClosure}:null},function(){return null})})).then(function(a){a=a.filter(Boolean);if(a.length)out[k]={r:fiSum(a,function(x){return x.r})/a.length,cl:a.some(function(x){return x.cl})}})}));
- if(!Object.keys(out).length)throw new Error('TomTom no respondió');return out}
+// Un punto de TomTom: devuelve la velocidad o el motivo del fallo en palabras claras.
+function zTTPoint(p,key){var c=new AbortController(),t=setTimeout(function(){c.abort()},8000);
+ return fetch('https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json?point='+p[0]+','+p[1]+'&unit=KMPH&key='+encodeURIComponent(key),{signal:c.signal,cache:'no-store'}).then(function(r){clearTimeout(t);return r.text().then(function(tx){var j=null;try{j=JSON.parse(tx)}catch(e){}
+  if(r.ok&&j&&j.flowSegmentData){var f=j.flowSegmentData;return{ok:1,r:f.freeFlowSpeed?f.currentSpeed/f.freeFlowSpeed:1,cl:!!f.roadClosure,cur:f.currentSpeed,free:f.freeFlowSpeed}}
+  var m=(j&&(j.detailedError&&j.detailedError.message||j.error||j.errorText))||tx.slice(0,120);
+  return{ok:0,st:r.status,err:r.status==401||r.status==403?'la clave no es válida o no tiene permiso para Traffic API':r.status==429?'llegaste al límite de consultas de hoy':r.status==400?'TomTom no encontró una calle en ese punto':'HTTP '+r.status,det:String(m||'')}})},
+ function(e){clearTimeout(t);return{ok:0,st:0,err:e.name=='AbortError'?'TomTom tardó demasiado':navigator.onLine?'no se pudo conectar con TomTom (bloqueo de red o del navegador)':'sin internet'}})}
+var ZTTERR='';
+async function zTraffic(){if(!ZCFG.tt)return null;var out={},errs=[];ZTTERR='';
+ await Promise.all(ZK.map(function(k){return Promise.all(ZONAS[k].tt.map(function(p){return zTTPoint(p,ZCFG.tt)})).then(function(a){a.forEach(function(x){if(!x.ok)errs.push(x.err)});a=a.filter(function(x){return x.ok});if(a.length)out[k]={r:fiSum(a,function(x){return x.r})/a.length,cl:a.some(function(x){return x.cl})}})}));
+ if(!Object.keys(out).length){ZTTERR=errs[0]||'sin respuesta';throw new Error('TomTom: '+ZTTERR)}return out}
+// Botón "Probar conexión": usa la clave escrita en el campo (aunque no esté guardada) y prueba un punto por zona.
+async function zTTTest(){var m=$('zttm'),key=($('zc_tt')&&$('zc_tt').value||'').replace(/\s+/g,'');if(!m)return;
+ if(!key){m.innerHTML='<div class="warn">Primero pega tu clave de TomTom en el campo.</div>';return}
+ if(!navigator.onLine){m.innerHTML='<div class="warn">Sin internet: conéctate y vuelve a probar.</div>';return}
+ m.innerHTML=fiLoading('Probando la conexión con TomTom');
+ var R=await Promise.all(ZK.map(function(k){return zTTPoint(ZONAS[k].tt[0],key).then(function(x){return{k:k,x:x}})})),okN=R.filter(function(o){return o.x.ok}).length;
+ var rows=R.map(function(o){var x=o.x;return '<div style="font-size:13px;margin-top:6px">'+(x.ok?'✅':'❌')+' <b>'+ZONAS[o.k].c+':</b> <span class="sub">'+(x.ok?Math.round(x.cur)+' km/h ahora (normal '+Math.round(x.free)+') · '+Math.round(x.r*100)+'%'+(x.cl?' · vía cerrada':''):esc(x.err)+(x.det?' <i>('+esc(x.det.slice(0,90))+')</i>':''))+'</span></div>'}).join('');
+ var auth=R.some(function(o){return o.x.st==401||o.x.st==403}),msg=okN==R.length?'<div class="warn ok">¡Conexión con TomTom correcta! Toca “Guardar” y luego “Actualizar”.</div>':okN?'<div class="warn ok">TomTom responde ('+okN+' de '+R.length+' zonas). Guarda y actualiza.</div>':auth?'<div class="warn">TomTom rechazó la clave. Revisa en developer.tomtom.com → Dashboard → Keys que copiaste la clave completa (sin espacios) y que tenga marcado <b>Traffic API</b>; las claves nuevas pueden tardar unos minutos en activarse.</div>':'<div class="warn">No se pudo usar TomTom. Mira el motivo en cada zona.</div>';
+ m.innerHTML=msg+rows}
 // Tu historial por zona: neto (bruto − gastos) por jornada y por hora.
 function zHist(){var m={},A={n:0,h:0,c:0,nh:0};S.logs.forEach(function(x){if(!x.z||x.off||x.g==null)return;var o=m[x.z]=m[x.z]||{n:0,h:0,c:0,hn:0},nn=Math.max(0,x.g-exOf(x));o.n+=nn;o.c++;if(+x.h>0){o.h+=+x.h;o.hn+=nn}A.n+=nn;A.c++;if(+x.h>0){A.h+=+x.h;A.nh+=nn}});
  for(var k in m){var o=m[k];o.nd=o.n/o.c;o.nph=o.h>0?o.hn/o.h:null}A.nd=A.c?A.n/A.c:0;A.nph=A.h>0?A.nh/A.h:null;return{Z:m,A:A}}
@@ -1799,7 +1816,7 @@ async function zRun(force){if(ZST.busy)return;var old=zGet();if(old&&!force){zRe
  z.W=R[0].status=='fulfilled'?R[0].value:null;z.src.clima=z.W?'ok':'Sin datos del clima ('+(navigator.onLine?'Open-Meteo no respondió':'sin internet')+')';
  z.hol=R[1].status=='fulfilled'?R[1].value.n:null;z.src.feriados=R[1].status=='fulfilled'?R[1].value.src:'No se pudo consultar';
  z.T=R[2].status=='fulfilled'?R[2].value:null;z.TE=z.T?null:zTrafEst(day,z.hol,new Date().getHours());
- z.src.transito=z.T?'ok · en vivo (TomTom)':'estimado por horas pico'+(ZCFG.tt?' (TomTom no respondió)':' · para tránsito en vivo, añade tu clave gratis de TomTom en Ajustes');
+ z.src.transito=z.T?'ok · en vivo (TomTom)':'estimado por horas pico'+(ZCFG.tt?' (TomTom falló: '+(ZTTERR||'sin respuesta')+'; usa “Probar conexión” en Ajustes)':' · para tránsito en vivo, añade tu clave gratis de TomTom en Ajustes');
  z.src.historial=z.H.A.c?z.H.A.c+' jornadas con zona':'Sin jornadas con zona todavía';
  zScore(z);z.src.noticias=aiReady()&&navigator.onLine?'Consultando…':'No disponible ('+(navigator.onLine?'configura la IA':'sin internet')+')';zPut(z);ZST.msg=aiReady()&&navigator.onLine?'Buscando noticias de hoy con Gemini':'';zRender();
  if(aiReady()&&navigator.onLine){try{z.ai=await zNews(z);zScore(z);z.src.noticias=z.ai.web?'ok · búsqueda web':'IA sin búsqueda web (solo interpreta el clima)'}catch(e){z.src.noticias='No disponible: '+(e.message||'error')}zPut(z)}
@@ -1828,10 +1845,10 @@ function zR_full(){var el=$('fi_zona');if(!el)return;var z=zGet(),h=zCard(false)
  var ck=function(b){return b?' checked':''};
  h+='<details style="margin-top:16px"><summary>Ajustes del agente</summary><label style="flex-direction:row;align-items:center;gap:8px;margin-top:10px"><input type="checkbox" id="zc_on"'+ck(ZCFG.on)+'> Agente activado</label><label style="flex-direction:row;align-items:center;gap:8px;margin-top:6px"><input type="checkbox" id="zc_auto"'+ck(ZCFG.auto)+'> Analizar automáticamente al abrir la app (una vez al día)</label><label style="flex-direction:row;align-items:center;gap:8px;margin-top:6px"><input type="checkbox" id="zc_web"'+ck(ZCFG.web)+'> Buscar noticias en la web con Gemini (≈US$0.01–0.04 por análisis)</label><label style="flex-direction:row;align-items:center;gap:8px;margin-top:6px"><input type="checkbox" id="zc_fam"'+ck(ZCFG.familia)+'> Puedo quedarme con mi familia cerca de Santiago</label><label style="flex-direction:row;align-items:center;gap:8px;margin-top:6px"><input type="checkbox" id="zc_rem"'+ck(ZCFG.rem)+'> Avisarme a la hora de salir (con la app abierta y los avisos activados)</label>'+
   '<div class="row" style="margin-top:10px"><label>Km de ida a Santiago<input type="number" id="zc_km" value="'+ZCFG.km+'"></label><label>Peajes de ida (RD$)<input type="number" id="zc_pj" value="'+ZCFG.peaje+'"></label><label>Horas de manejo de ida<input type="number" step="0.5" id="zc_hr" value="'+ZCFG.horas+'"></label><label>GLP por km (RD$, si no registras km)<input type="number" step="0.1" id="zc_gk" value="'+ZCFG.glpkm+'"></label></div>'+
-  '<div class="row" style="margin-top:8px"><label style="flex:3">Clave de TomTom (opcional, tránsito en vivo)<input type="password" id="zc_tt" value="'+esc(ZCFG.tt)+'" placeholder="Gratis en developer.tomtom.com" autocomplete="off"></label><button class="pri" style="flex:1" onclick="zCfgSave()">Guardar</button></div><small>Registra la <b>zona</b> de cada jornada en Registrar: con unas 6 jornadas el agente empieza a usar tu rendimiento real por zona.</small><div id="zcm"></div></details>';
+  '<div class="row" style="margin-top:8px"><label style="flex:3">Clave de TomTom (opcional, tránsito en vivo)<input type="password" id="zc_tt" value="'+esc(ZCFG.tt)+'" placeholder="Gratis en developer.tomtom.com" autocomplete="off"></label><button style="flex:1" onclick="zTTTest()">Probar conexión</button><button class="pri" style="flex:1" onclick="zCfgSave()">Guardar</button></div><div id="zttm"></div><small>Registra la <b>zona</b> de cada jornada en Registrar: con unas 6 jornadas el agente empieza a usar tu rendimiento real por zona.</small><div id="zcm"></div></details>';
  el.innerHTML=h}
 function zCfgSave(){var n=function(i,d,mx){var v=+$(i).value;return isFinite(v)&&v>=0?Math.min(mx,v):d};ZCFG.on=$('zc_on').checked;ZCFG.auto=$('zc_auto').checked;ZCFG.web=$('zc_web').checked;ZCFG.familia=$('zc_fam').checked;ZCFG.rem=$('zc_rem').checked;
- ZCFG.km=n('zc_km',155,400);ZCFG.peaje=n('zc_pj',200,5000);ZCFG.horas=n('zc_hr',2.5,8);ZCFG.glpkm=n('zc_gk',5,50);ZCFG.tt=$('zc_tt').value.trim();zSaveCfg();var z=zGet();if(z){zScore(z);zPut(z)}zRender();var m=$('zcm');if(m)m.innerHTML='<div class="warn ok">Ajustes guardados. Toca “Actualizar” para volver a analizar.</div>'}
+ ZCFG.km=n('zc_km',155,400);ZCFG.peaje=n('zc_pj',200,5000);ZCFG.horas=n('zc_hr',2.5,8);ZCFG.glpkm=n('zc_gk',5,50);ZCFG.tt=$('zc_tt').value.replace(/\s+/g,'');zSaveCfg();var z=zGet();if(z){zScore(z);zPut(z)}zRender();var m=$('zcm');if(m)m.innerHTML='<div class="warn ok">Ajustes guardados. Toca “Actualizar” para volver a analizar.</div>'}
 
 /* =====================================================================================
    FASE 2: jornada en vivo, vehículo, importar Uber, presupuesto del hogar, pagos sugeridos y cierre semanal.
