@@ -1707,8 +1707,11 @@ function fiUbAI(){fiAIInto('fiubx','Analiza la rentabilidad de las jornadas de U
    5) Tu historial por zona (campo "Zona" del registro diario).
    La puntuación y la decisión las calcula JS; la IA solo ajusta por noticias (entre −40 y +20 por zona, validado) y lo explica.
    ===================================================================================== */
-var ZONAS={sde:{n:'Santo Domingo Este',c:'SDE',lat:18.4885,lon:-69.857,tt:[[18.4936,-69.8536],[18.4805,-69.8335]]},dn:{n:'Distrito Nacional',c:'DN',lat:18.474,lon:-69.93,tt:[[18.4719,-69.9396],[18.488,-69.931]]},
- sdn:{n:'Santo Domingo Norte',c:'SDN',lat:18.542,lon:-69.91,tt:[[18.5405,-69.905],[18.555,-69.92]]},stgo:{n:'Santiago de los Caballeros',c:'Santiago',lat:19.4517,lon:-70.697,tt:[[19.462,-70.686],[19.452,-70.697]]},otra:{n:'Otra zona',c:'Otra'}};
+// tt: puntos de tránsito sobre avenidas principales (coordenadas tomadas de OpenStreetMap y comprobadas sobre la vía).
+var ZONAS={sde:{n:'Santo Domingo Este',c:'SDE',lat:18.4885,lon:-69.857,tt:[[18.50922,-69.86055,'Av. San Vicente de Paúl'],[18.48438,-69.85699,'Autopista Las Américas'],[18.5002,-69.86902,'Av. Venezuela']]},
+ dn:{n:'Distrito Nacional',c:'DN',lat:18.474,lon:-69.93,tt:[[18.48319,-69.9343,'Av. John F. Kennedy'],[18.47803,-69.94474,'Av. Winston Churchill'],[18.48189,-69.91427,'Av. Máximo Gómez']]},
+ sdn:{n:'Santo Domingo Norte',c:'SDN',lat:18.542,lon:-69.91,tt:[[18.53268,-69.90697,'Av. Hermanas Mirabal'],[18.5467,-69.87981,'Av. Charles de Gaulle'],[18.55341,-69.94457,'Av. Jacobo Majluta']]},
+ stgo:{n:'Santiago de los Caballeros',c:'Santiago',lat:19.4517,lon:-70.697,tt:[[19.45993,-70.6859,'Av. Estrella Sadhalá'],[19.45344,-70.69759,'Av. Juan Pablo Duarte'],[19.46964,-70.71286,'Av. 27 de Febrero']]},otra:{n:'Otra zona',c:'Otra'}};
 var ZK=['sde','dn','sdn','stgo'],ZSD=['sde','dn','sdn'];
 // Ajustes del agente ('fin-zcfg'): peaje = total de peajes de ida a Santiago (ajústalo), glpkm = RD$ de GLP por km si aún no registras km.
 var ZCFG={on:true,auto:true,web:true,tt:'',km:155,peaje:200,horas:2.5,glpkm:5,familia:true,rem:true};
@@ -1745,7 +1748,7 @@ function zTrafEst(day,hol,hr){var dow=new Date(day+'T00:00').getDay(),lab=dow>=1
 // Tránsito en vivo (opcional): relación velocidad actual / velocidad libre en dos corredores por zona.
 // Un punto de TomTom: devuelve la velocidad o el motivo del fallo en palabras claras.
 function zTTPoint(p,key){var c=new AbortController(),t=setTimeout(function(){c.abort()},8000);
- return fetch('https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json?point='+p[0]+','+p[1]+'&unit=KMPH&key='+encodeURIComponent(key),{signal:c.signal,cache:'no-store'}).then(function(r){clearTimeout(t);return r.text().then(function(tx){var j=null;try{j=JSON.parse(tx)}catch(e){}
+ return fetch('https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/22/json?point='+p[0]+','+p[1]+'&unit=KMPH&key='+encodeURIComponent(key),{signal:c.signal,cache:'no-store'}).then(function(r){clearTimeout(t);return r.text().then(function(tx){var j=null;try{j=JSON.parse(tx)}catch(e){}
   if(r.ok&&j&&j.flowSegmentData){var f=j.flowSegmentData;return{ok:1,r:f.freeFlowSpeed?f.currentSpeed/f.freeFlowSpeed:1,cl:!!f.roadClosure,cur:f.currentSpeed,free:f.freeFlowSpeed}}
   var m=(j&&(j.detailedError&&j.detailedError.message||j.error||j.errorText))||tx.slice(0,120);
   return{ok:0,st:r.status,err:r.status==401||r.status==403?'la clave no es válida o no tiene permiso para Traffic API':r.status==429?'llegaste al límite de consultas de hoy':r.status==400?'TomTom no encontró una calle en ese punto':'HTTP '+r.status,det:String(m||'')}})},
@@ -1759,8 +1762,8 @@ async function zTTTest(){var m=$('zttm'),key=($('zc_tt')&&$('zc_tt').value||'').
  if(!key){m.innerHTML='<div class="warn">Primero pega tu clave de TomTom en el campo.</div>';return}
  if(!navigator.onLine){m.innerHTML='<div class="warn">Sin internet: conéctate y vuelve a probar.</div>';return}
  m.innerHTML=fiLoading('Probando la conexión con TomTom');
- var R=await Promise.all(ZK.map(function(k){return zTTPoint(ZONAS[k].tt[0],key).then(function(x){return{k:k,x:x}})})),okN=R.filter(function(o){return o.x.ok}).length;
- var rows=R.map(function(o){var x=o.x;return '<div style="font-size:13px;margin-top:6px">'+(x.ok?'✅':'❌')+' <b>'+ZONAS[o.k].c+':</b> <span class="sub">'+(x.ok?Math.round(x.cur)+' km/h ahora (normal '+Math.round(x.free)+') · '+Math.round(x.r*100)+'%'+(x.cl?' · vía cerrada':''):esc(x.err)+(x.det?' <i>('+esc(x.det.slice(0,90))+')</i>':''))+'</span></div>'}).join('');
+ var R=await Promise.all(ZK.map(function(k){return Promise.all(ZONAS[k].tt.map(function(p){return zTTPoint(p,key)})).then(function(a){var i=a.findIndex(function(x){return x.ok});return{k:k,x:a[i<0?0:i],p:ZONAS[k].tt[i<0?0:i],n:a.filter(function(x){return x.ok}).length,t:a.length}})})),okN=R.filter(function(o){return o.x.ok}).length;
+ var rows=R.map(function(o){var x=o.x;return '<div style="font-size:13px;margin-top:6px">'+(x.ok?'✅':'❌')+' <b>'+ZONAS[o.k].c+'</b> ('+esc(o.p[2])+(x.ok?'; '+o.n+' de '+o.t+' avenidas responden':'')+'): <span class="sub">'+(x.ok?Math.round(x.cur)+' km/h ahora (normal '+Math.round(x.free)+') · '+Math.round(x.r*100)+'%'+(x.cl?' · vía cerrada':''):esc(x.err)+(x.det?' <i>('+esc(x.det.slice(0,90))+')</i>':''))+'</span></div>'}).join('');
  var auth=R.some(function(o){return o.x.st==401||o.x.st==403}),msg=okN==R.length?'<div class="warn ok">¡Conexión con TomTom correcta! Toca “Guardar” y luego “Actualizar”.</div>':okN?'<div class="warn ok">TomTom responde ('+okN+' de '+R.length+' zonas). Guarda y actualiza.</div>':auth?'<div class="warn">TomTom rechazó la clave. Revisa en developer.tomtom.com → Dashboard → Keys que copiaste la clave completa (sin espacios) y que tenga marcado <b>Traffic API</b>; las claves nuevas pueden tardar unos minutos en activarse.</div>':'<div class="warn">No se pudo usar TomTom. Mira el motivo en cada zona.</div>';
  m.innerHTML=msg+rows}
 // Tu historial por zona: neto (bruto − gastos) por jornada y por hora.
