@@ -718,6 +718,7 @@ function runTests(){var T=[],saved=S,near=function(a,b){return Math.abs(a-b)<0.0
  t('Zona: con tormenta en todas las zonas recomienda no trabajar',function(){var r=ZT({sde:W(1),dn:W(1),sdn:W(1),stgo:W(1)});return r.tipo=='descanso'});
  t('Zona: la lista interna de feriados incluye fechas fijas y Viernes Santo 2026 (3 de abril)',function(){var L=zHolLocal(2026).map(function(h){return h.d});return L.indexOf('2026-02-27')>=0&&L.indexOf('2026-04-03')>=0&&L.indexOf('2026-06-04')>=0});
  t('Zona: los feriados movibles se trasladan a lunes (Reyes 2026 → 5 ene, Trabajo → 4 may, Constitución → 9 nov; Duarte cae lunes 26 ene)',function(){var L=zHolLocal(2026).map(function(h){return h.d});return L.indexOf('2026-01-05')>=0&&L.indexOf('2026-05-04')>=0&&L.indexOf('2026-11-09')>=0&&L.indexOf('2026-01-26')>=0&&L.indexOf('2026-01-06')<0});
+ t('Zona: el tránsito estimado marca hora pico un martes a las 7 a. m. en SDE y calles despejadas un domingo',function(){return zTrafEst('2026-11-03',null,7).sde.lv=='alto'&&zTrafEst('2026-11-01',null,7).dn.lv=='bajo'&&zTrafEst('2026-11-09','Día de la Constitución',7).sde.lv=='bajo'});
  t('Historial: unir los registros de un día conserva el neto total del día',function(){var s=mk(A(),[{d:'2026-01-05',g:3000,e:{glp:300},x:[],h:4},{d:'2026-01-05',g:2000,e:{comida:200},x:[{c:'Mezcla',v:500}],h:3}],X());return run(s,function(){var b=fiDays('2026-01-05','2026-01-05')[0].n;mergeDayCore('2026-01-05');var a=fiDays('2026-01-05','2026-01-05')[0];return S.logs.length==1&&near(a.n,b)&&a.h==7&&S.logs[0].x.length==1})});
  // Fase 2
  t('Jornada: el turno sale de la hora de inicio y fin',function(){return turnoOf(6,11)=='m'&&turnoOf(12,17)=='t'&&turnoOf(18,23)=='n'&&turnoOf(7,18)=='x'&&turnoOf(20,2)=='n'});
@@ -1701,7 +1702,7 @@ function fiUbAI(){fiAIInto('fiubx','Analiza la rentabilidad de las jornadas de U
 /* =====================================================================================
    AGENTE "ZONA DEL DÍA": al abrir la app (una vez al día) recomienda si conviene trabajar y en qué zona.
    Fuentes, cada una con su fallback (si una falla, las demás siguen):
-   1) Clima: Open-Meteo (gratis, sin clave). 2) Feriados: Nager.Date. 3) Tránsito en vivo: TomTom (opcional, tu clave).
+   1) Clima: Open-Meteo (gratis, sin clave). 2) Feriados: calendario oficial interno (Ley 139-97). 3) Tránsito: en vivo con TomTom (tu clave) o, sin clave, estimado por horas pico.
    4) Noticias de hoy (tránsito, cierres, protestas, paros, apagones, alertas COE/ONAMET, eventos): Gemini con búsqueda web de OpenRouter.
    5) Tu historial por zona (campo "Zona" del registro diario).
    La puntuación y la decisión las calcula JS; la IA solo ajusta por noticias (entre −40 y +20 por zona, validado) y lo explica.
@@ -1714,7 +1715,7 @@ var ZCFG={on:true,auto:true,web:true,tt:'',km:155,peaje:200,horas:2.5,glpkm:5,fa
 try{var zc0=JSON.parse(localStorage.getItem('fin-zcfg')||'{}');for(var zk0 in zc0)if(zk0 in ZCFG)ZCFG[zk0]=zc0[zk0]}catch(e){}
 var ZST={busy:0,msg:''};
 function zSaveCfg(){try{localStorage.setItem('fin-zcfg',JSON.stringify(ZCFG))}catch(e){}}
-function zGet(){try{var z=JSON.parse(localStorage.getItem('fin-zona')||'null');return z&&z.hoy==today()?z:null}catch(e){return null}}
+function zGet(){try{var z=JSON.parse(localStorage.getItem('fin-zona')||'null');return z&&z.hoy==today()&&z.v==2?z:null}catch(e){return null}}
 function zPut(z){try{localStorage.setItem('fin-zona',JSON.stringify(z))}catch(e){}}
 function fetchT(u,ms,o){var c=new AbortController(),t=setTimeout(function(){c.abort()},ms||9000);return fetch(u,Object.assign({signal:c.signal,cache:'no-store'},o||{})).then(function(r){clearTimeout(t);if(!r.ok)throw new Error('HTTP '+r.status);return r.json()},function(e){clearTimeout(t);throw e})}
 // Clima de las 4 zonas para el día objetivo (hoy; o mañana si ya pasan de las 9 p. m.), de 6 a. m. a 10 p. m.
@@ -1725,15 +1726,22 @@ async function zWeather(day){var u='https://api.open-meteo.com/v1/forecast?latit
    r.prob=Math.max(r.prob,p);r.mm+=mm;r.mmh=Math.max(r.mmh,mm);if(c>=95)r.storm=true;if(mm>=8||c==65||c==82)r.heavy=true;r.wind=Math.max(r.wind,w);if(tp!=null)r.tmax=r.tmax==null?tp:Math.max(r.tmax,tp);if(mm>=0.5)r.rainH++;
    if(mm<0.3&&p<50&&c<95){if(!cur)st=hr;cur++;if(cur>best){best=cur;r.dry=[st,hr+1]}}else cur=0});
   out[k]=r});return out}
-// Respaldo si Nager.Date no responde: feriados de RD. Reyes, Duarte, Trabajo y Constitución se trasladan a lunes (Ley 139-97):
+// Feriados de RD. Reyes, Duarte, Trabajo y Constitución se trasladan a lunes (Ley 139-97):
 // martes o miércoles → lunes anterior; jueves o viernes → lunes siguiente.
 function zHolMove(dstr){var t=new Date(dstr+'T00:00'),w=t.getDay();if(w==2||w==3)t.setDate(t.getDate()-(w-1));else if(w==4||w==5)t.setDate(t.getDate()+(8-w));return ds(t)}
 function zHolLocal(y){var L=zHolFixed(y),mv=['01-06','01-26','05-01','11-06'];return L.map(function(h){return mv.indexOf(h.d.slice(5))>=0?{d:zHolMove(h.d),n:h.n}:h})}
 function zHolFixed(y){y=+y;var a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),da=(h+l-7*m+114)%31+1,ea=new Date(y,mo-1,da),off=function(n){var t=new Date(ea);t.setDate(t.getDate()+n);return ds(t)};
  return [['01-01','Año Nuevo'],['01-06','Día de Reyes'],['01-21','Día de la Altagracia'],['01-26','Día de Duarte'],['02-27','Día de la Independencia'],['05-01','Día del Trabajo'],['08-16','Día de la Restauración'],['09-24','Día de las Mercedes'],['11-06','Día de la Constitución'],['12-25','Navidad']].map(function(x){return{d:y+'-'+x[0],n:x[1]}}).concat([{d:off(-2),n:'Viernes Santo'},{d:off(60),n:'Corpus Christi'}])}
-async function zHoliday(day){var y=day.slice(0,4),key='fin-hol-'+y,L=null,src='ok';try{L=JSON.parse(localStorage.getItem(key)||'null')}catch(e){}
- if(!L){try{L=(await fetchT('https://date.nager.at/api/v3/PublicHolidays/'+y+'/DO',8000)).map(function(h){return{d:h.date,n:h.localName||h.name}});try{localStorage.setItem(key,JSON.stringify(L))}catch(e){}}catch(e){L=zHolLocal(y);src='lista interna (Nager.Date no respondió)'}}
- var f=L.filter(function(h){return h.d==day})[0];return{n:f?f.n:null,src:src}}
+// Feriados: calendario oficial calculado en la app. Nager.Date se quitó: rechaza las consultas desde páginas web (HTTP 502)
+// y no aplica el traslado a lunes de la Ley 139-97. Funciona sin internet.
+async function zHoliday(day){var f=zHolLocal(day.slice(0,4)).filter(function(h){return h.d==day})[0];return{n:f?f.n:null,src:'ok · calendario oficial de RD (Ley 139-97)'}}
+// Tránsito estimado sin TomTom: horas pico típicas de cada zona según la hora y el día. Solo informa; no cambia la puntuación.
+function zTrafEst(day,hol,hr){var dow=new Date(day+'T00:00').getDay(),lab=dow>=1&&dow<=5&&!hol,out={};
+ ZK.forEach(function(k){var lv='bajo',tx;
+  if(lab){if(k=='stgo'){if(hr>=7&&hr<9||hr>=17&&hr<19)lv='medio'}else if(hr>=6&&hr<9||hr>=16&&hr<20)lv='alto';else if(hr>=12&&hr<14&&k=='dn')lv='medio';else if(hr>=9&&hr<16)lv='medio'}
+  else if((dow==5||dow==6)&&hr>=19&&hr<24&&k!='stgo')lv='medio';
+  tx=lv=='alto'?(k=='dn'?'hora pico en el Distrito (entradas y salidas)':'hora pico hacia y desde el Distrito'):lv=='medio'?'movimiento normal':'calles despejadas';
+  out[k]={lv:lv,tx:tx}});return out}
 // Tránsito en vivo (opcional): relación velocidad actual / velocidad libre en dos corredores por zona.
 async function zTraffic(){if(!ZCFG.tt)return null;var out={};
  await Promise.all(ZK.map(function(k){return Promise.all(ZONAS[k].tt.map(function(p){return fetchT('https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json?point='+p[0]+','+p[1]+'&unit=KMPH&key='+encodeURIComponent(ZCFG.tt),8000).then(function(j){var f=j.flowSegmentData;return f?{r:f.freeFlowSpeed?f.currentSpeed/f.freeFlowSpeed:1,cl:!!f.roadClosure}:null},function(){return null})})).then(function(a){a=a.filter(Boolean);if(a.length)out[k]={r:fiSum(a,function(x){return x.r})/a.length,cl:a.some(function(x){return x.cl})}})}));
@@ -1751,6 +1759,7 @@ function zScore(z){var day=z.d,dt=new Date(day+'T00:00'),dow=dt.getDay(),dd=+day
   if(w){if(w.storm){s-=45;why.push('− Tormenta eléctrica prevista ('+w.prob+'% de lluvia)')}else if(w.heavy){s-=18;why.push('− Lluvia fuerte (hasta '+w.mmh.toFixed(1)+' mm/h): sube la demanda, pero hay riesgo de inundación y tapones')}else if(w.rainH>=2){s+=5;why.push('+ Lluvia moderada ('+w.rainH+' h): suele subir la demanda')}else why.push('+ Sin lluvia importante ('+w.prob+'% máx.)');
    if(w.wind>=50){s-=35;why.push('− Viento muy fuerte ('+Math.round(w.wind)+' km/h)')}else if(w.wind>=35){s-=10;why.push('− Viento fuerte ('+Math.round(w.wind)+' km/h)')}}
   if(t){if(t.r<0.5){s-=12;why.push('− Tránsito muy lento ahora ('+Math.round(t.r*100)+'% de la velocidad normal)')}else if(t.r<0.7){s-=5;why.push('− Tránsito lento ('+Math.round(t.r*100)+'%)')}else why.push('+ Tránsito fluido ('+Math.round(t.r*100)+'%)');if(t.cl){s-=10;why.push('− Cierre de vía detectado')}}
+  else if(z.TE&&z.TE[k])why.push('• Tránsito estimado '+(z.d==today()?'ahora':'a esta hora')+': '+z.TE[k].tx+' (horario típico, no es en vivo)');
   if(h&&h.c>=3&&H.A.c>=6){var a=h.nph!=null&&H.A.nph?h.nph/H.A.nph:h.nd/H.A.nd,adj=Math.max(-20,Math.min(20,(a-1)*60));s+=adj;why.push((adj>=0?'+ ':'− ')+'Tu historial aquí: '+(h.nph!=null?rd(h.nph)+'/h':rd(h.nd)+'/jornada')+' vs. '+(h.nph!=null&&H.A.nph?rd(H.A.nph)+'/h':rd(H.A.nd))+' en promedio ('+h.c+' jornadas)')}
   if(k=='stgo'){s-=8;why.push('− Viaje largo: '+ZCFG.km+' km y unas '+ZCFG.horas+' h de manejo de ida')}
   var aj=z.ai&&z.ai.ajustes?+z.ai.ajustes[k]||0:0;if(aj){s+=aj;why.push((aj>0?'+ ':'− ')+'Noticias de hoy (IA)')}
@@ -1785,11 +1794,12 @@ async function zNews(z){var lines=ZK.map(function(k){var o=z.Z[k],w=z.W&&z.W[k];
  var al=(Array.isArray(j.alertas)?j.alertas:[]).filter(function(a){return a&&typeof a.texto=='string'&&a.texto.trim()}).slice(0,6).map(function(a){return{zona:ZONAS[a.zona]?a.zona:'todas',texto:a.texto.slice(0,220),fuente:String(a.fuente||'').slice(0,60)}});
  return{ajustes:aj,alertas:al,resumen:typeof j.resumen=='string'?j.resumen.slice(0,600):'',cites:o.cites||[],web:!!(ZCFG.web&&AIS.prov=='gemini'&&!o.webFail)}}
 async function zRun(force){if(ZST.busy)return;var old=zGet();if(old&&!force){zRender();return}if(!ZCFG.on)return;ZST.busy=1;ZST.msg='Revisando clima, feriados'+(ZCFG.tt?', tránsito':'')+' y tu historial';zRender();
- var h=new Date().getHours(),day=h>=21?fiAdd(today(),1):today(),z={hoy:today(),d:day,ts:Date.now(),src:{},H:zHist()};
+ var h=new Date().getHours(),day=h>=21?fiAdd(today(),1):today(),z={v:2,hoy:today(),d:day,ts:Date.now(),src:{},H:zHist()};
  var R=await Promise.allSettled([zWeather(day),zHoliday(day),zTraffic()]);
  z.W=R[0].status=='fulfilled'?R[0].value:null;z.src.clima=z.W?'ok':'Sin datos del clima ('+(navigator.onLine?'Open-Meteo no respondió':'sin internet')+')';
  z.hol=R[1].status=='fulfilled'?R[1].value.n:null;z.src.feriados=R[1].status=='fulfilled'?R[1].value.src:'No se pudo consultar';
- z.T=R[2].status=='fulfilled'?R[2].value:null;z.src.transito=!ZCFG.tt?'No configurado (opcional)':z.T?'ok':'TomTom no respondió';
+ z.T=R[2].status=='fulfilled'?R[2].value:null;z.TE=z.T?null:zTrafEst(day,z.hol,new Date().getHours());
+ z.src.transito=z.T?'ok · en vivo (TomTom)':'estimado por horas pico'+(ZCFG.tt?' (TomTom no respondió)':' · para tránsito en vivo, añade tu clave gratis de TomTom en Ajustes');
  z.src.historial=z.H.A.c?z.H.A.c+' jornadas con zona':'Sin jornadas con zona todavía';
  zScore(z);z.src.noticias=aiReady()&&navigator.onLine?'Consultando…':'No disponible ('+(navigator.onLine?'configura la IA':'sin internet')+')';zPut(z);ZST.msg=aiReady()&&navigator.onLine?'Buscando noticias de hoy con Gemini':'';zRender();
  if(aiReady()&&navigator.onLine){try{z.ai=await zNews(z);zScore(z);z.src.noticias=z.ai.web?'ok · búsqueda web':'IA sin búsqueda web (solo interpreta el clima)'}catch(e){z.src.noticias='No disponible: '+(e.message||'error')}zPut(z)}
@@ -1808,13 +1818,13 @@ function zCard(compact){var z=zGet(),h='<div class="row" style="align-items:cent
  if(z.ai&&z.ai.resumen)h+='<div class="msg a" style="max-width:none;margin-top:8px">'+fiFmt(z.ai.resumen)+'</div>';
  if(z.ai&&z.ai.alertas.length)h+=z.ai.alertas.slice(0,compact?2:6).map(function(a){return '<div class="fi-l"><span>⚠️</span><span><b>'+(ZONAS[a.zona]?ZONAS[a.zona].c:'Todas')+':</b> '+esc(a.texto)+(a.fuente?' <small>('+esc(a.fuente)+')</small>':'')+'</span></div>'}).join('');
  if(ZST.busy)h+=fiLoading(ZST.msg);
- h+='<div class="row" style="margin-top:10px;align-items:center"><small style="flex:3">Actualizado '+new Date(z.ts).toLocaleTimeString('es-DO',{hour:'numeric',minute:'2-digit'})+' · Clima '+(z.src.clima=='ok'?'✔':'✖')+' · Noticias '+(z.src.noticias&&z.src.noticias.indexOf('ok')==0?'✔':'✖')+' · Tránsito '+(z.src.transito=='ok'?'✔':'–')+'</small>'+(compact?'<button style="flex:none;min-width:0" onclick="setTab(\'ia\',\'zona\')">Detalle</button>':'')+'<button style="flex:none;min-width:0" onclick="zRun(1)"'+(ZST.busy?' disabled':'')+'>Actualizar</button></div>';
+ h+='<div class="row" style="margin-top:10px;align-items:center"><small style="flex:3">Actualizado '+new Date(z.ts).toLocaleTimeString('es-DO',{hour:'numeric',minute:'2-digit'})+' · Clima '+(z.src.clima=='ok'?'✔':'✖')+' · Noticias '+(z.src.noticias&&z.src.noticias.indexOf('ok')==0?'✔':'✖')+' · Tránsito '+(z.T?'✔':'≈ estimado')+'</small>'+(compact?'<button style="flex:none;min-width:0" onclick="setTab(\'ia\',\'zona\')">Detalle</button>':'')+'<button style="flex:none;min-width:0" onclick="zRun(1)"'+(ZST.busy?' disabled':'')+'>Actualizar</button></div>';
  return h}
 function zR_full(){var el=$('fi_zona');if(!el)return;var z=zGet(),h=zCard(false);
  if(z){h+='<b style="display:block;margin-top:16px">Comparación de zonas</b>'+ZK.map(function(k){var o=z.Z[k],w=z.W&&z.W[k];return '<details class="arow" style="margin-top:8px"'+(z.rec.k==k?' open':'')+'><summary style="color:var(--tx)">'+zIcon(w)+' <b>'+ZONAS[k].n+'</b> · '+o.s+'/100'+(o.exp!=null?' · neto estimado '+rd(o.exp):'')+'</summary>'+bar(o.s,7)+(w?'<small>Lluvia máx. '+w.prob+'% · '+w.mm.toFixed(1)+' mm en el día · viento '+Math.round(w.wind)+' km/h'+(w.tmax!=null?' · '+Math.round(w.tmax)+'°C':'')+'</small>':'')+o.why.map(function(x){return '<div style="font-size:13px;margin-top:4px">'+esc(x)+'</div>'}).join('')+'</details>'}).join('');
   var C=z.cost;h+='<b style="display:block;margin-top:16px">¿Ir a Santiago?</b><p class="sub" style="margin:4px 0">Costo de ida y vuelta: GLP '+rd(C.fuel)+' ('+ZCFG.km+' km × 2 a RD$'+C.fk.toFixed(1)+'/km) + peajes '+rd(C.toll)+(C.lost?' + '+rd(C.lost)+' de horas sin producir':'')+' = <b>'+rd(C.tot)+'</b>. La app recomienda Santiago solo si Santo Domingo está por debajo de 50 y Santiago por encima de 60, y aun así rinde más.</p>';
   if(z.ai&&z.ai.cites.length)h+='<b style="display:block;margin-top:14px">Fuentes consultadas</b>'+z.ai.cites.map(function(c){return /^https:\/\//.test(c.url)?'<div style="font-size:13px;margin-top:4px"><a href="'+esc(c.url)+'" target="_blank" rel="noopener noreferrer">'+esc(c.t||c.url.replace(/^https:\/\/(www\.)?/,'').slice(0,60))+'</a></div>':''}).join('');
-  h+='<b style="display:block;margin-top:14px">Estado de las fuentes</b>'+[['Clima (Open-Meteo)',z.src.clima],['Feriados (Nager.Date)',z.src.feriados],['Tránsito en vivo (TomTom)',z.src.transito],['Noticias (Gemini + web)',z.src.noticias],['Tu historial por zona',z.src.historial]].map(function(x){return '<div class="leg"><span>'+x[0]+'</span><span><small>'+esc(x[1]||'—')+'</small></span></div>'}).join('')}
+  h+='<b style="display:block;margin-top:14px">Estado de las fuentes</b>'+[['Clima (Open-Meteo)',z.src.clima],['Feriados',z.src.feriados],['Tránsito',z.src.transito],['Noticias (Gemini + web)',z.src.noticias],['Tu historial por zona',z.src.historial]].map(function(x){return '<div class="leg"><span>'+x[0]+'</span><span><small>'+esc(x[1]||'—')+'</small></span></div>'}).join('')}
  var ck=function(b){return b?' checked':''};
  h+='<details style="margin-top:16px"><summary>Ajustes del agente</summary><label style="flex-direction:row;align-items:center;gap:8px;margin-top:10px"><input type="checkbox" id="zc_on"'+ck(ZCFG.on)+'> Agente activado</label><label style="flex-direction:row;align-items:center;gap:8px;margin-top:6px"><input type="checkbox" id="zc_auto"'+ck(ZCFG.auto)+'> Analizar automáticamente al abrir la app (una vez al día)</label><label style="flex-direction:row;align-items:center;gap:8px;margin-top:6px"><input type="checkbox" id="zc_web"'+ck(ZCFG.web)+'> Buscar noticias en la web con Gemini (≈US$0.01–0.04 por análisis)</label><label style="flex-direction:row;align-items:center;gap:8px;margin-top:6px"><input type="checkbox" id="zc_fam"'+ck(ZCFG.familia)+'> Puedo quedarme con mi familia cerca de Santiago</label><label style="flex-direction:row;align-items:center;gap:8px;margin-top:6px"><input type="checkbox" id="zc_rem"'+ck(ZCFG.rem)+'> Avisarme a la hora de salir (con la app abierta y los avisos activados)</label>'+
   '<div class="row" style="margin-top:10px"><label>Km de ida a Santiago<input type="number" id="zc_km" value="'+ZCFG.km+'"></label><label>Peajes de ida (RD$)<input type="number" id="zc_pj" value="'+ZCFG.peaje+'"></label><label>Horas de manejo de ida<input type="number" step="0.5" id="zc_hr" value="'+ZCFG.horas+'"></label><label>GLP por km (RD$, si no registras km)<input type="number" step="0.1" id="zc_gk" value="'+ZCFG.glpkm+'"></label></div>'+
