@@ -5,14 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Mis Finanzas</title>
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#0d2a22">
+<meta name="theme-color" content="#eef1f3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#15191d" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Finanzas">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
 <style>
 /* Los colores (variables) se definen una sola vez, más abajo, en la capa de tema final. */
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -192,12 +194,91 @@ details summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--ac)}
 label.fbtn{flex-direction:row;align-items:center;justify-content:center;gap:6px;font-size:14px;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px 16px;cursor:pointer}
 label.fbtn:hover{border-color:var(--ac);background:var(--ac2)}
 .fi-l{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--bd);font-size:14px;align-items:flex-start}.fi-l:last-child{border-bottom:0}.fi-l>span:first-child{flex:none}
+/* =====================================================================================
+   TEMA "TABLERO DE RUTA" (capa final: manda sobre todo lo anterior).
+   Pensado para mirar el teléfono en el carro y a pleno sol: asfalto, amarillo de señal vial y números grandes.
+   --sig = amarillo de señal (marca, botón principal, pestaña activa y el letrero de "Hoy").
+   --ac  = verde "ganancia" (lo bueno/positivo; el código lo usa así). --rd = deuda/peligro. --wr = aviso.
+   ===================================================================================== */
+:root{--fd:'Barlow Condensed','Arial Narrow',system-ui,sans-serif;--fb:'Barlow',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+ --bg:#eef1f3;--card:#fff;--tx:#111518;--mu:#4f5a63;--bd:#d5dbe0;--ac:#137a43;--ac2:#e3f1e8;--onac:#fff;--sig:#f2c230;--onsig:#15191d;
+ --wr:#7a5600;--wb:#fdf3d2;--rd:#b42318;--gold:#7a5600;--ink:#1c2126;--navbg:#1c2126;--navtx:#f2c230;
+ --g:#1c2126;--sh:0 1px 2px rgba(17,21,24,.06);color-scheme:light}
+@media(prefers-color-scheme:dark){:root:not([data-theme='light']){--bg:#15191d;--card:#1e2328;--tx:#f2f4f5;--mu:#a3adb5;--bd:#2e353c;--ac:#3ecf7f;--ac2:#1b2e24;--onac:#08210f;
+ --wr:#f5c84c;--wb:#2c2612;--rd:#ff7b72;--gold:#f2c230;--ink:#0f1215;--navbg:#f2c230;--navtx:#15191d;--g:#f2c230;--sh:none;color-scheme:dark}}
+:root[data-theme='dark']{--bg:#15191d;--card:#1e2328;--tx:#f2f4f5;--mu:#a3adb5;--bd:#2e353c;--ac:#3ecf7f;--ac2:#1b2e24;--onac:#08210f;
+ --wr:#f5c84c;--wb:#2c2612;--rd:#ff7b72;--gold:#f2c230;--ink:#0f1215;--navbg:#f2c230;--navtx:#15191d;--g:#f2c230;--sh:none;color-scheme:dark}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{font-family:var(--fb);font-size:16px;line-height:1.5;letter-spacing:0;background:var(--bg);-webkit-tap-highlight-color:transparent}
+button,a,summary,label,input,select,textarea{touch-action:manipulation}
+::selection{background:var(--sig);color:var(--onsig)}
+/* Tarjetas tranquilas: sin animación al cambiar de pestaña, borde fino y radio menor. */
+.card{animation:none;border-radius:16px;padding:18px 16px;box-shadow:var(--sh);transition:none}.card:hover{border-color:var(--bd)}
+h2{font-family:var(--fd);font-weight:700;font-size:24px;line-height:1.15;letter-spacing:0;text-wrap:balance}
+.sub{font-size:14.5px;margin:-4px 0 14px}small{font-size:13px}
+/* Etiquetas en minúscula normal (no mayúsculas con espaciado). */
+.fi-ey,.eyebrow,.kpi span,th,.tag,.recs>b,.ac .t{text-transform:none;letter-spacing:0}
+.fi-ey{font-size:13px;font-weight:600;color:var(--mu);margin-bottom:2px}
+th{font-size:12.5px;font-weight:600}.tag{font-size:12px;font-weight:600}.recs>b{font-size:13px}
+.kpi span{font-size:13px;font-weight:500;color:var(--mu)}
+.kpi b,.ac .bal,.verd .big{font-family:var(--fd);font-weight:700;letter-spacing:0}
+.kpi{border-radius:12px}.kpi:first-child{background:var(--ink);color:#fff}.kpi:first-child span{color:#c9d1d7}.kpi:first-child b{color:var(--sig)}
+/* Campos: 16 px para que Safari del iPhone no haga zoom al tocarlos. */
+input,select,textarea,td input,td select{font-size:16px}
+input:focus,select:focus,textarea:focus{border-color:var(--tx);box-shadow:0 0 0 3px color-mix(in srgb,var(--sig) 55%,transparent)}
+:focus-visible{outline:3px solid var(--sig);outline-offset:2px}
+:root:not([data-theme='dark']) :focus-visible{outline-color:var(--ink)}
+@media(prefers-color-scheme:dark){:root:not([data-theme='light']) :focus-visible{outline-color:var(--sig)}}
+/* Botones: mínimo 44 px de alto (recomendación de Apple). */
+button,label.fbtn{min-height:44px;font-size:15px}
+.x{min-width:40px;min-height:40px}.chip{min-height:36px}
+.pri{background:var(--sig)!important;color:var(--onsig)!important;box-shadow:none;font-weight:700}
+.pri:hover{filter:brightness(1.05)}
+button:hover{border-color:var(--tx);background:var(--card)}
+.warn{font-size:14.5px}.leg{font-size:15px}
+details summary{color:var(--tx);text-decoration:underline;text-underline-offset:3px;min-height:44px;display:flex;align-items:center;gap:6px}
+.bar i{background:var(--ac)}
+/* Letrero de "Hoy": lo único llamativo de la pantalla. */
+.hero{background:var(--sig);color:var(--onsig);border:0;border-radius:18px;box-shadow:none;padding:16px 18px 18px}
+.hero::after{content:none}
+.hero .htop{display:flex;align-items:baseline;gap:10px;padding-right:52px;flex-wrap:wrap}
+.hero h1{font-family:var(--fd);font-weight:700;font-size:20px;line-height:1.2;color:var(--onsig);margin:0}
+.hero #hd{font-size:14px;font-weight:500;color:color-mix(in srgb,var(--onsig) 78%,transparent);text-transform:none;letter-spacing:0;margin:0}
+.hero #th{top:10px;right:10px;width:44px;height:44px;background:rgba(21,25,29,.1);border:0;color:var(--onsig)}
+.hero #th:hover{background:rgba(21,25,29,.18)}
+#hday{margin-top:10px}#hday .hl{display:block;font-size:15px;font-weight:600}
+#hday .hn{display:block;font-family:var(--fd);font-weight:700;font-size:58px;line-height:1;letter-spacing:-.01em;margin:2px 0 6px}
+#hday .hs{display:block;font-size:14.5px;font-weight:500}
+#hday .hz{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:6px 12px;border-radius:99px;background:var(--onsig);color:var(--sig);font-weight:600;font-size:15px;min-height:44px;padding:8px 16px;border:0}
+.hero.compact{padding:12px 16px;border-radius:14px;background:var(--card);border:1px solid var(--bd);color:var(--tx)}
+.hero.compact h1,.hero.compact #th{color:var(--tx)}.hero.compact #hd{color:var(--mu)}.hero.compact #th{background:transparent;width:44px;height:44px}.hero.compact #hday{display:none}.hero.compact h1{font-size:19px}.hero.compact #th{top:4px;right:6px}
+/* Subsecciones */
+#subnav button{min-height:44px;font-size:15px;color:var(--tx)}
+#subnav button.on{background:var(--navbg);color:var(--navtx);box-shadow:none}
+#subnav button.back{background:transparent;border-style:dashed}
+.seg button.on{background:var(--navbg);color:var(--navtx)}
+/* Barra de abajo: 5 pestañas y el micrófono al lado (no tapa el contenido). */
+#nav .in{border-radius:22px;background:color-mix(in srgb,var(--card) 88%,transparent)}
+#nav button{font-size:12px;color:var(--mu);min-height:52px}
+#nav button.on{background:var(--navbg);color:var(--navtx);box-shadow:none}
+#nav svg{width:23px;height:23px}
+#fab{background:var(--sig);color:var(--onsig);box-shadow:0 10px 24px -10px rgba(0,0,0,.55)}
+@media(max-width:979px){#nav{justify-content:flex-start}#nav .in{max-width:none;margin-right:68px}
+ #fab{right:12px;bottom:calc(17px + env(safe-area-inset-bottom,0px));width:60px;height:60px}}
+/* Menú "Más" */
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:8px 0 18px}
+.mgrid button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:12px 14px;min-height:64px;border-radius:12px}
+.mgrid button small{font-weight:500}
+.mhead{font-family:var(--fd);font-weight:700;font-size:20px;margin:6px 0 2px}
+.sr{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(prefers-reduced-motion:reduce){#sheet .box{animation:none}}
 </style>
 </head>
 <body>
 <main>
-<div class="hero"><button id="th" onclick="toggleTheme()" aria-label="Cambiar tema claro u oscuro"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></svg></button><span class="eyebrow" id="hd"></span><h1>Mis Finanzas</h1>
-<p class="hero-sub">Tu dinero en orden: primero lo prioritario, luego tu fondo, tu ahorro y tus metas.</p></div>
+<div class="hero"><button id="th" onclick="toggleTheme()" aria-label="Cambiar tema claro u oscuro"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></svg></button><div class="htop"><h1>Mis Finanzas</h1><span id="hd"></span></div>
+<div id="hday" aria-live="polite"></div></div>
+<div id="srl" class="sr" aria-live="polite" role="status"></div>
 <div id="recov"></div>
 <div id="subnav"></div>
 <div class="card" id="zona"></div>
@@ -272,7 +353,7 @@ label.fbtn:hover{border-color:var(--ac);background:var(--ac2)}
   <div id="hedit"></div><div class="scroll"><table id="hist"></table></div>
   <button onclick="reset(this)" style="margin-top:8px">Reiniciar todo</button></div>
 <div class="card" id="cal"></div><div class="card" id="simd"></div><div class="card" id="cob"></div><div class="card" id="rend"></div><div class="card" id="mes"></div><div class="card" id="ost"></div><div class="card" id="payc"></div><div class="card" id="odet"></div><div class="card" id="accs"></div><div class="card" id="movc"></div><div class="card" id="vt"></div><div class="card" id="pdfc"></div><div class="card" id="resp"></div><div class="card" id="pwa"></div>
-<div class="card" id="veh"></div><div class="card" id="impu"></div><div class="card" id="pres"></div><div class="card" id="cierre"></div><div class="card" id="sugp"></div>
+<div class="card" id="masm"></div><div class="card" id="veh"></div><div class="card" id="impu"></div><div class="card" id="pres"></div><div class="card" id="cierre"></div><div class="card" id="sugp"></div>
 <div class="card" id="fi_zona"></div><div class="card" id="fi_cop"></div><div class="card" id="fi_diag"></div><div class="card" id="fi_wi"></div><div class="card" id="fi_af"></div><div class="card" id="fi_st"></div><div class="card" id="fi_fc"></div><div class="card" id="fi_au"></div><div class="card" id="fi_ub"></div><div class="card" id="fi_ob"></div><div class="card" id="fi_ad"></div><div class="card" id="fi_me"></div><div class="card" id="fi_cfg"></div>
 <div hidden>
 </div>
@@ -288,7 +369,7 @@ label.fbtn:hover{border-color:var(--ac);background:var(--ac2)}
 </div>
 </main>
 <button id="fab" aria-label="Asistente de voz" onclick="openSheet()"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
-<div id="sheet" hidden onclick="if(event.target==this)closeSheet()"><div class="box" id="sbox"></div></div>
+<div id="sheet" hidden onclick="if(event.target==this)closeSheet()"><div class="box" id="sbox" role="dialog" aria-modal="true" aria-label="Asistente de voz y texto"></div></div>
 <nav id="nav" aria-label="Secciones"></nav>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
@@ -590,7 +671,8 @@ function aiContext(B){var t=today(),F=sim().st,T=totals(S.logs),fc=forecast(),to
   prediccion_semana:fc.ok?{esperado:Math.round(fc.p50),pesimista:Math.round(fc.p10),optimista:Math.round(fc.p90),minimo_semanal:Math.round(fc.min),prob_cubrir_minimo_pct:Math.round(fc.prob*100)}:'datos insuficientes'};
  if(B){var s={dias:B.days.length,bruto:0,gastos:0,extras:0,neto:0};B.days.forEach(function(d){s.bruto+=d.g;s.gastos+=d.e;s.extras+=d.x;s.neto+=d.n});for(var k in s)s[k]=Math.round(s[k]);c.semana_del_reporte=s}return c}
 function openSheet(){AIP='';$('sheet').hidden=false;SHV='main';buildSheet();setTimeout(function(){var i=$('aiin');if(i)i.focus()},50)}
-function closeSheet(){$('sheet').hidden=true;if(RECON&&REC)try{REC.stop()}catch(e){}}
+function closeSheet(){$('sheet').hidden=true;if(RECON&&REC)try{REC.stop()}catch(e){}var f=$('fab');if(f)f.focus()}
+document.addEventListener('keydown',function(e){if(e.key=='Escape'&&!$('sheet').hidden)closeSheet()});
 function buildSheet(){
  $('sbox').innerHTML='<div class="row" style="align-items:center;margin-bottom:8px"><h2 style="margin:0;flex:3">Asistente</h2><button onclick="closeSheet();setTab(\'ia\',\'cop\')" style="flex:none;min-width:0">Copiloto</button><button onclick="closeSheet();setTab(\'ia\',\'cfg\')" aria-label="Ajustes de IA" style="flex:none;min-width:0">Ajustes</button><button class="x" onclick="closeSheet()" style="flex:none;min-width:0">\u2715</button></div>'+
  '<div id="svmain"><div class="row"><textarea id="aiin" rows="2" placeholder="Di o escribe: gast\u00e9 800 en GLP y 300 en comida" style="flex:3"></textarea><button class="mic" id="micb" onclick="micToggle()" aria-label="Dictar por voz"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button></div>'+
@@ -1095,20 +1177,47 @@ function weeksOf(ym){var s={};S.logs.forEach(function(x){var k=wkMon(x.d);if(k.s
 function wkLabel(k){var n=Math.ceil(+k.slice(8)/7),e=new Date(k+'T00:00'),m=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];e.setDate(e.getDate()+6);return 'Semana '+n+' ('+(+k.slice(8))+' '+m[+k.slice(5,7)-1]+' al '+e.getDate()+' '+m[e.getMonth()]+')'}
 function fillWeeks(){var w=weeksOf($('pdm').value),sel=$('pdw');sel.innerHTML=w.length?w.map(function(k){return '<option value="'+k+'">'+wkLabel(k)+'</option>'}).join(''):'<option value="">Sin semanas registradas</option>';sel.selectedIndex=Math.max(0,w.length-1)}
 function renderPdf(){var ms=weekMonths();$('pdfc').innerHTML='<h2>Reporte semanal en PDF</h2><p class="sub">Elige el mes y la semana (de lunes a domingo; la semana 1 es la que empieza en el primer lunes del mes). El informe incluye resumen, reparto del dinero, gastos e ingresos extras, análisis día por día, estado de deudas y ahorro, y retroalimentación para la semana siguiente.</p><div class="row"><label>Mes<select id="pdm" onchange="fillWeeks()">'+ms.map(function(m){return '<option value="'+m+'">'+mname(m)+'</option>'}).join('')+'</select></label><label>Semana<select id="pdw"></select></label><button class="pri" onclick="makePdf()">Descargar reporte PDF</button></div><div id="pdmsg"></div>';fillWeeks()}
-function all(){ens();ens2();$("dpw").value=S.dpw;$("cush").value=cush();kpis();renderWk();tb();renderGoals();renderSup();split();esc2();hist();draw();prev();rPend();renderCal();renderSim();renderCob();renderRend();renderMes();renderPdf();renderResp();renderAcc();renderMov();renderOst();renderPay();renderOdet();renderPred();renderSubnav();fiSummary();p2All();if(TAB=='ia'&&['cop','st','wi','af'].indexOf(subOf('ia'))<0)renderFI()}
+function all(){ens();ens2();$("dpw").value=S.dpw;$("cush").value=cush();kpis();renderWk();tb();renderGoals();renderSup();split();esc2();hist();draw();prev();rPend();renderCal();renderSim();renderCob();renderRend();renderMes();renderPdf();renderResp();renderAcc();renderMov();renderOst();renderPay();renderOdet();renderPred();renderSubnav();fiSummary();p2All();heroUpd();if(TAB=='ia'&&['cop','st','wi','af'].indexOf(subOf('ia'))<0)renderFI()}
 var TABS=[["inicio",'<svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-5h4v5"/></svg>',"Inicio"],["ia",'<svg viewBox="0 0 24 24"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M18.5 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>',"IA"],["reg",'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>',"Registrar"],["cta",'<svg viewBox="0 0 24 24"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3"/><path d="M4 7.5V17a2 2 0 0 0 2 2h13a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1H6.5A2.5 2.5 0 0 1 4 7.5Z"/><circle cx="16.5" cy="13.5" r="1.1"/></svg>',"Cuentas"],["deu",'<svg viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h4"/></svg>',"Deudas"],["hog",'<svg viewBox="0 0 24 24"><path d="M5 9h14l-1.4 9.2a2 2 0 0 1-2 1.8H8.4a2 2 0 0 1-2-1.8L5 9Z"/><path d="M9 9l3-5 3 5"/></svg>',"Hogar"],["ana",'<svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M21 20H3"/></svg>',"Análisis"]];
-var SUBS={inicio:[['res','Resumen'],['hoy','Hoy y semana'],['pred','Predicci\u00f3n']],ia:[['zona','Zona del día'],['cop','Copiloto'],['diag','Diagn\u00f3stico'],['wi','What If'],['af','\u00bfMe alcanza?'],['st','Registro IA'],['fc','Pron\u00f3stico'],['au','Autopsia'],['ub','Uber'],['ob','Objetivos'],['ad','Auditor'],['me','Memoria'],['cfg','Ajustes IA']],reg:[['dia','Registrar'],['dist','Distribuci\u00f3n'],['hist','Historial'],['imp','Importar Uber'],['veh','Veh\u00edculo']],cta:[['cue','Cuentas'],['mov','Movimientos'],['cierre','Cierre semanal']],deu:[['est','Estado'],['pag','Pagos'],['obl','Obligaciones'],['meta','Metas'],['sim','Simulador']],hog:[['sup','S\u00faper'],['pres','Presupuesto'],['cob','Por cobrar'],['rep','Reparto']],ana:[['tend','Tendencias'],['pdf','Reporte PDF'],['resp','Respaldo'],['mas','M\u00e1s']]},SUB={},TAB='inicio';
-function tabs(){var map=[['#kpis','inicio','res'],['#zona','inicio','res'],['#jor','inicio','res'],['#veh','reg','veh'],['#impu','reg','imp'],['#pres','hog','pres'],['#cierre','cta','cierre'],['#sugp','deu','pag'],['#fisum','inicio','res'],['#fi_zona','ia','zona'],['#fi_cop','ia','cop'],['#fi_diag','ia','diag'],['#fi_wi','ia','wi'],['#fi_af','ia','af'],['#fi_st','ia','st'],['#fi_fc','ia','fc'],['#fi_au','ia','au'],['#fi_ub','ia','ub'],['#fi_ob','ia','ob'],['#fi_ad','ia','ad'],['#fi_me','ia','me'],['#fi_cfg','ia','cfg'],['#hoy','inicio','hoy'],['#wk','inicio','hoy'],['#pred','inicio','pred'],['#fecha','reg','dia'],['#pie','reg','dist'],['#hist','reg','hist'],['#accs','cta','cue'],['#movc','cta','mov'],['#ost','deu','est'],['#cal','deu','est'],['#payc','deu','pag'],['#tb','deu','obl'],['#odet','deu','obl'],['#goals','deu','meta'],['#simd','deu','sim'],['#sup','hog','sup'],['#cob','hog','cob'],['#split','hog','rep'],['#esc','hog','rep'],['#rend','ana','tend'],['#mes','ana','tend'],['#pdfc','ana','pdf'],['#resp','ana','resp'],['#vt','ana','mas']];
+var SUBS={inicio:[['res','Resumen'],['hoy','Hoy y semana'],['pred','Predicci\u00f3n']],ia:[['zona','Zona del día'],['cop','Copiloto'],['diag','Diagn\u00f3stico'],['wi','What If'],['af','\u00bfMe alcanza?'],['st','Registro IA'],['fc','Pron\u00f3stico'],['au','Autopsia'],['ub','Uber'],['ob','Objetivos'],['ad','Auditor'],['me','Memoria'],['cfg','Ajustes IA']],reg:[['dia','Registrar'],['dist','Distribuci\u00f3n'],['hist','Historial'],['imp','Importar Uber'],['veh','Veh\u00edculo']],cta:[['cue','Cuentas'],['mov','Movimientos'],['cierre','Cierre semanal']],deu:[['est','Estado'],['pag','Pagos'],['obl','Obligaciones'],['meta','Metas'],['sim','Simulador']],hog:[['sup','S\u00faper'],['pres','Presupuesto'],['cob','Por cobrar'],['rep','Reparto']],ana:[['tend','Tendencias'],['pdf','Reporte PDF'],['resp','Respaldo'],['mas','App y avisos']],mas:[['menu','Todo']]},SUB={},TAB='inicio';
+TABS.push(['mas','','M\u00e1s']);
+function tabs(){var map=[['#kpis','inicio','res'],['#zona','inicio','res'],['#jor','inicio','res'],['#veh','reg','veh'],['#impu','reg','imp'],['#pres','hog','pres'],['#cierre','cta','cierre'],['#sugp','deu','pag'],['#fisum','inicio','res'],['#fi_zona','ia','zona'],['#fi_cop','ia','cop'],['#fi_diag','ia','diag'],['#fi_wi','ia','wi'],['#fi_af','ia','af'],['#fi_st','ia','st'],['#fi_fc','ia','fc'],['#fi_au','ia','au'],['#fi_ub','ia','ub'],['#fi_ob','ia','ob'],['#fi_ad','ia','ad'],['#fi_me','ia','me'],['#fi_cfg','ia','cfg'],['#hoy','inicio','hoy'],['#wk','inicio','hoy'],['#pred','inicio','pred'],['#fecha','reg','dia'],['#pie','reg','dist'],['#hist','reg','hist'],['#accs','cta','cue'],['#movc','cta','mov'],['#ost','deu','est'],['#cal','deu','est'],['#payc','deu','pag'],['#tb','deu','obl'],['#odet','deu','obl'],['#goals','deu','meta'],['#simd','deu','sim'],['#sup','hog','sup'],['#cob','hog','cob'],['#split','hog','rep'],['#esc','hog','rep'],['#rend','ana','tend'],['#mes','ana','tend'],['#pdfc','ana','pdf'],['#resp','ana','resp'],['#vt','ana','mas'],['#masm','mas','menu']];
  document.querySelectorAll('main > .card, main > .grid > .card').forEach(function(e){var t='ana',s='mas';map.forEach(function(p){if(e.id==p[0].slice(1)||e.querySelector(p[0])){t=p[1];s=p[2]}});e.dataset.tab=t;e.dataset.sub=s});
  document.querySelectorAll('main > .grid').forEach(function(g){g.style.display='block'})}
 function subOf(t){var s=SUB[t];return SUBS[t].some(function(x){return x[0]==s})?s:SUBS[t][0][0]}
-function renderSubnav(){var t=TAB,sb=subOf(t);$('subnav').innerHTML=SUBS[t].map(function(x){var n=0;if(t=='deu'&&x[0]=='est'){try{sorted().forEach(function(i){if(!i.sv&&i.freq!='d'&&oblStatus(i).st=='Vencida')n++})}catch(e){}}
- return '<button class="'+(x[0]==sb?'on':'')+'" data-s="'+x[0]+'" onclick="setSub(this.dataset.s)">'+x[1]+(n?'<i class="dot2">'+n+'</i>':'')+'</button>'}).join('')}
-function setTab(t,s){if(!SUBS[t])t='inicio';TAB=t;if(s)SUB[t]=s;var sb=subOf(t);try{localStorage.setItem('fin-tab',t);localStorage.setItem('fin-subs',JSON.stringify(SUB))}catch(e){}
+// Barra de abajo con 5 pestañas. Las secciones internas (TABS/SUBS) no cambian: "Dinero" agrupa Cuentas y Hogar,
+// y "Más" abre un menú con IA y Análisis. Así todos los setTab('ia',…) y enlaces existentes siguen funcionando.
+var NAVT=[['inicio',TABS[0][1],'Hoy',['inicio']],['reg',TABS[2][1],'Registrar',['reg']],['din',TABS[3][1],'Dinero',['cta','hog']],['deu',TABS[4][1],'Deudas',['deu']],
+ ['mas','<svg viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18.5" cy="12" r="1.6"/></svg>','Más',['mas','ia','ana']]];
+function navOf(t){return NAVT.filter(function(x){return x[3].indexOf(t)>=0})[0]||NAVT[0]}
+function navGo(k){if(k=='din')setTab(TAB=='cta'||TAB=='hog'?TAB:(localStorage.getItem('fin-din')||'cta'));else setTab(k)}
+function vencN(){var n=0;try{sorted().forEach(function(i){if(!i.sv&&i.freq!='d'&&oblStatus(i).st=='Vencida')n++})}catch(e){}return n}
+function renderSubnav(){var t=TAB,el=$('subnav'),g=navOf(t),L=[];
+ if(t=='mas'){el.innerHTML='';el.hidden=true;return}el.hidden=false;
+ (g[0]=='din'?['cta','hog']:[t]).forEach(function(tt){SUBS[tt].forEach(function(x){L.push([tt,x[0],x[1]])})});
+ var back=t=='ia'||t=='ana'?'<button class="back" onclick="setTab(\'mas\')" aria-label="Volver al menú Más">‹ Más</button>':'';
+ el.innerHTML=back+L.map(function(x){var on=x[0]==t&&x[1]==subOf(t),n=x[0]=='deu'&&x[1]=='est'?vencN():0;
+  return '<button class="'+(on?'on':'')+'" aria-pressed="'+on+'" data-t="'+x[0]+'" data-s="'+x[1]+'" onclick="setTab(this.dataset.t,this.dataset.s)">'+x[2]+(n?'<i class="dot2" aria-label="'+n+' vencidas">'+n+'</i>':'')+'</button>'}).join('');
+ var a=el.querySelector('.on');if(a)el.scrollLeft=Math.max(0,a.offsetLeft-(el.clientWidth-a.offsetWidth)/2)}
+function setTab(t,s){if(!SUBS[t])t='inicio';TAB=t;if(s)SUB[t]=s;var sb=subOf(t);try{localStorage.setItem('fin-tab',t);localStorage.setItem('fin-subs',JSON.stringify(SUB));if(t=='cta'||t=='hog')localStorage.setItem('fin-din',t)}catch(e){}
  document.querySelectorAll('[data-tab]').forEach(function(e){e.hidden=!(e.dataset.tab==t&&e.dataset.sub==sb)});
- $('nav').innerHTML='<div class="brand"><i>MF</i><b>Mis Finanzas</b><small>Panel personal</small></div><div class="in">'+TABS.map(function(x){return '<button class="'+(x[0]==t?'on':'')+'" data-t="'+x[0]+'" onclick="setTab(this.dataset.t)"><b>'+x[1]+'</b>'+x[2]+'</button>'}).join('')+'</div>';
- renderSubnav();var h=document.querySelector('.hero');if(h)h.classList.toggle('compact',t!='inicio');if(t=='ia')renderFI();window.scrollTo(0,0)}
+ var g=navOf(t)[0];
+ $('nav').innerHTML='<div class="brand"><i>MF</i><b>Mis Finanzas</b><small>Panel personal</small></div><div class="in">'+NAVT.map(function(x){var on=x[0]==g,n=x[0]=='deu'?vencN():0;return '<button class="'+(on?'on':'')+'"'+(on?' aria-current="page"':'')+' data-t="'+x[0]+'" onclick="navGo(this.dataset.t)"><b aria-hidden="true">'+x[1]+'</b>'+x[2]+(n?'<span class="sr"> ('+n+' vencidas)</span>':'')+'</button>'}).join('')+'</div>';
+ renderSubnav();var h=document.querySelector('.hero');if(h)h.classList.toggle('compact',t!='inicio');if(t=='ia')renderFI();if(t=='mas')renderMas();heroUpd();window.scrollTo(0,0)}
 function setSub(s){SUB[TAB]=s;setTab(TAB)}
+// Menú "Más": todas las secciones de IA y Análisis en una cuadrícula, con una línea que dice para qué sirve cada una.
+var MASD={zona:'Dónde y si conviene trabajar hoy',cop:'Pregúntale a la IA sobre tu dinero',diag:'Tu salud financiera de 0 a 100',wi:'Qué pasa si cambias algo',af:'Antes de comprar algo',st:'Registrar con texto o voz',fc:'Cómo vas a cerrar el mes',au:'Qué pasó en un mes',ub:'Rendimiento por hora y km',ob:'Tus metas y su avance',ad:'Revisa errores y duplicados',me:'Lo que la IA recuerda de ti',cfg:'Clave y límites de la IA',tend:'Cómo te ha ido por semana y mes',pdf:'Reporte semanal para guardar',resp:'Copia de seguridad e importar',mas:'Instalar la app y avisos'};
+function renderMas(){var el=$('masm');if(!el)return;var b=function(t,x){return '<button data-t="'+t+'" data-s="'+x[0]+'" onclick="setTab(this.dataset.t,this.dataset.s)"><span>'+x[1]+'</span><small>'+(MASD[x[0]]||'')+'</small></button>'};
+ el.innerHTML='<h2>Más</h2><p class="mhead">Inteligencia (IA)</p><div class="mgrid">'+SUBS.ia.map(function(x){return b('ia',x)}).join('')+'</div><p class="mhead">Análisis y respaldo</p><div class="mgrid">'+SUBS.ana.map(function(x){return b('ana',x)}).join('')+'</div>'}
+// Letrero de "Hoy": cuánto falta para cubrir el día y la zona recomendada. Lo más importante, arriba y grande.
+function heroUpd(){var el=$('hday');if(!el)return;if(TAB!='inicio'){el.innerHTML='';return}
+ try{var n=jNeed(),f=Math.max(0,n.need-n.hoy),z=zGet(),zl='';
+  if(z&&z.rec&&z.d==today())zl='<button class="hz" onclick="setTab(\'ia\',\'zona\')">'+(z.rec.tipo=='descanso'?'Hoy conviene descansar':z.rec.tipo=='santiago'?'Hoy conviene Santiago':'Zona: '+ZONAS[z.rec.k].n)+'</button>';
+  el.innerHTML=n.need>0&&f>0?'<span class="hl">Te faltan hoy</span><span class="hn">'+rd(f)+'</span><span class="hs">Llevas '+rd(n.hoy)+' de '+rd(n.need)+' netos que necesitas hoy</span>'+zl:
+   '<span class="hl">'+(n.need>0?'Cuota de hoy cubierta':'Hoy llevas')+'</span><span class="hn">'+rd(n.hoy)+'</span><span class="hs">'+(n.need>0?'Meta del día: '+rd(n.need)+' netos':'Agrega tus obligaciones para calcular tu meta del día')+'</span>'+zl}catch(e){el.innerHTML=''}}
+// Lector de pantalla: anuncia los avisos nuevos (guardado, errores, respuestas de la IA) sin repetir.
+(function(){var last='',tm=0;function say(t){t=(t||'').replace(/\s+/g,' ').trim().slice(0,240);if(!t||t==last)return;last=t;clearTimeout(tm);tm=setTimeout(function(){var r=$('srl');if(r)r.textContent=t},150)}
+ new MutationObserver(function(ms){ms.forEach(function(m){m.addedNodes.forEach(function(n){if(n.nodeType!=1)return;var el=n.matches('.warn.ok,.fi-err,.msg.a')?n:n.querySelector('.warn.ok,.fi-err');if(el&&el.offsetParent)say(el.textContent)})})}).observe(document.body,{childList:true,subtree:true})})();
 function toggleTheme(){var r=document.documentElement,dk=r.dataset.theme=="dark"||(r.dataset.theme!="light"&&matchMedia("(prefers-color-scheme:dark)").matches);r.dataset.theme=dk?"light":"dark";try{localStorage.setItem("fin-theme",r.dataset.theme)}catch(e){}}
 /* =====================================================================================
    INTELIGENCIA FINANCIERA (Mis Finanzas AI)
@@ -1843,7 +1952,7 @@ async function zRun(force){if(ZST.busy)return;var old=zGet();if(old&&!force){zRe
  if(aiReady()&&navigator.onLine){try{z.ai=await zNews(z);zScore(z);z.src.noticias=z.ai.web?'ok · búsqueda web':'IA sin búsqueda web (solo interpreta el clima)'}catch(e){z.src.noticias='No disponible: '+(e.message||'error')}zPut(z)}
  ZST.busy=0;ZST.msg='';zRender();try{fiSummary();regZoneDefault();renderJor()}catch(e){}zRemind()}
 function zBoot(){if(!ZCFG.on)return zRender();if(ZCFG.auto&&!zGet())zRun();else{zRender();setTimeout(zRemind,3000)}}
-function zRender(){var el=$('zona');if(el)el.innerHTML=zCard(true);if(TAB=='ia'&&subOf('ia')=='zona')zR_full()}
+function zRender(){var el=$('zona');if(el)el.innerHTML=zCard(true);heroUpd();if(TAB=='ia'&&subOf('ia')=='zona')zR_full()}
 function zIcon(w){return !w?'❓':w.storm?'⛈️':w.heavy?'🌧️':w.rainH>=2?'🌦️':'☀️'}
 function zCard(compact){var z=zGet(),h='<div class="row" style="align-items:center"><div style="flex:3;min-width:200px"><span class="fi-ey">Zona del día'+(z&&z.d!=today()?' · mañana':'')+'</span>';
  if(!ZCFG.on)return h+'<h2 style="margin:0">Agente desactivado</h2></div><button style="flex:none;min-width:0" onclick="ZCFG.on=true;zSaveCfg();zRun(1)">Activar</button></div>';
@@ -1906,7 +2015,7 @@ function jNeed(){var t=today(),need=dailyNeed(),hoy=fiSum(S.logs.filter(function
 function renderJor(){var el=$('jor');if(!el)return;clearInterval(JT);var J=S.shift,n=jNeed(),P=fiProfile(),vd=vehDue().filter(function(x){return x.st!='ok'});
  var vline=vd.length?'<div class="fi-l"><span>🔧</span><span>'+vd.slice(0,2).map(function(x){return esc(x.n)+(x.st=='vencido'?' <b style="color:var(--rd)">vencido</b>':' pronto')}).join(' · ')+' <a href="#" onclick="setTab(\'reg\',\'veh\');return false">Ver</a></span></div>':'';
  if(!J){var z=zGet(),zk=z&&z.rec&&z.rec.k&&z.d==today()?z.rec.k:'';
-  el.innerHTML='<span class="fi-ey">Jornada</span><h2 style="margin:0">'+(n.hoy>=n.need?'Cuota de hoy cubierta 🎯':'Hoy te faltan '+rd(Math.max(0,n.need-n.hoy))+' netos')+'</h2><p class="sub" style="margin:4px 0 8px">Empieza la jornada para medir horas y km, y ver cuánto necesitas ganar por hora.</p>'+
+  el.innerHTML='<h2 style="margin:0">Empieza tu jornada</h2><p class="sub" style="margin:4px 0 8px">Mide horas y km, y te digo cuánto necesitas ganar por hora para '+(n.hoy>=n.need?'seguir sumando (la cuota de hoy ya está cubierta).':'cubrir los '+rd(Math.max(0,n.need-n.hoy))+' que faltan.')+'</p>'+
    '<div class="row"><label>Zona<select id="jz">'+zoneOpts(zk)+'</select></label><label>Odómetro al salir (km)<input type="number" id="jk0" min="0" value="'+(S.veh&&S.veh.odo||'')+'" placeholder="Opcional"></label><label>Horas que piensas trabajar<input type="number" id="jpl" min="1" max="18" step="0.5" value="'+Math.round(P.h||9)+'"></label><button class="pri" onclick="jStart()">Empezar jornada</button></div>'+vline;return}
  if(J.end){el.innerHTML='<span class="fi-ey">Jornada terminada</span><h2 style="margin:0">'+hmin(J.end-J.start)+(J.km1&&J.km0?' · '+(J.km1-J.km0)+' km':'')+'</h2><p class="sub" style="margin:4px 0 8px">Completa el bruto y los gastos para guardar el día.</p><div class="row"><button class="pri" onclick="jFill()">Completar registro</button><button class="x" style="flex:none" onclick="jCancel(this)">Descartar</button></div>';return}
  var hrs=(Date.now()-J.start)/36e5,left=Math.max(0.25,(+J.plan||9)-hrs),net=Math.max(0,(+J.g||0)-(+J.ex||0)),falta=Math.max(0,n.need-n.hoy-net),ph=falta/left,bph=(falta+P.ex*Math.max(0,1-hrs/(+J.plan||9)))/left;
