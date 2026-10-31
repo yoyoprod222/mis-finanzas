@@ -163,6 +163,10 @@ details summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--ac)}
 @keyframes up{from{transform:translateY(30px);opacity:0}}
 .mic{width:48px;flex:none!important;min-width:48px!important;padding:0!important;display:grid;place-items:center}.mic.rec{background:var(--rd)!important;color:#fff!important;border-color:transparent!important;animation:pulse 1s infinite}
 @keyframes pulse{50%{opacity:.6}}
+#undob{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));z-index:60;display:flex;align-items:center;gap:12px;max-width:calc(100% - 32px);padding:8px 8px 8px 16px;border-radius:99px;background:var(--tx);color:var(--bg);box-shadow:0 12px 30px -8px rgba(0,0,0,.45);font-size:14px;transform:translate(-50%,20px);opacity:0;pointer-events:none;transition:transform .2s,opacity .2s}
+#undob.on{transform:translate(-50%,0);opacity:1;pointer-events:auto}
+#undob span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#undob button{flex:none;min-width:0;width:auto;border:0;border-radius:99px;padding:8px 14px;background:var(--ac);color:#fff;font-weight:600;font-size:14px}
 .chip{display:inline-block;margin:4px 6px 0 0;padding:6px 12px;border-radius:99px;font-size:12.5px;font-weight:500}
 .arow{border:1px solid var(--bd);border-radius:14px;padding:10px;margin-top:8px;background:var(--bg)}.arow .row{align-items:end}
 @media(min-width:980px){#fab{bottom:28px}}
@@ -639,7 +643,7 @@ function renderMlist(){var q=MQ.toLowerCase(),L=S.mov.filter(function(m){return(
 var PF='';
 function payTot(id){return PAYS().filter(function(p){return p.oid==id}).reduce(function(s,p){return s+p.amt},0)}
 function oblRes(T){var r=0;S.items.forEach(function(i){if(!i.sv)r+=Math.max(0,(T['i'+i.id]||0)-payTot(i.id))});return r}
-function periodOf(it){var t=new Date(today()+'T00:00'),y=t.getFullYear(),m=t.getMonth(),d=t.getDate();
+function periodOf(it,ref){var t=new Date((ref||today())+'T00:00'),y=t.getFullYear(),m=t.getMonth(),d=t.getDate();
  if(it.freq=='m')return{a:ds(new Date(y,m,1)),b:ds(new Date(y,m+1,0))};
  if(it.freq=='q')return d<=15?{a:ds(new Date(y,m,1)),b:ds(new Date(y,m,15))}:{a:ds(new Date(y,m,16)),b:ds(new Date(y,m+1,0))};
  if(it.freq=='w'){var mo=new Date(y,m,d-(t.getDay()+6)%7);return{a:ds(mo),b:ds(new Date(mo.getFullYear(),mo.getMonth(),mo.getDate()+6))}}
@@ -648,7 +652,10 @@ function dueIn(it,per){if(!it.due)return null;var a=new Date(per.a+'T00:00'),y=a
  if(it.freq=='m')dt=new Date(y,m,Math.min(it.due,dim));else if(it.freq=='q')dt=new Date(y,m,Math.min(it.due+(a.getDate()==16?15:0),dim));
  else if(it.freq=='w')dt=new Date(y,m,a.getDate()+Math.min(7,Math.max(1,it.due))-1);else return null;
  return{date:ds(dt),days:Math.round((dt-new Date(today()+'T00:00'))/864e5)}}
-function oblStatus(it){var per=periodOf(it),paid=PAYS().filter(function(p){return p.oid==it.id&&p.d>=per.a&&p.d<=per.b}).reduce(function(s,p){return s+p.amt},0),dd=dueIn(it,per),od=dd&&dd.days<0&&paid<it.amt-0.5;
+// it.rst = día en que se reinició el conteo: los vencimientos de ese período hasta ese día ya no cuentan; se mira el siguiente.
+function oblStatus(it){var per=periodOf(it),dd0=dueIn(it,per);
+ if(it.rst&&it.rst>=per.a&&dd0&&dd0.date<=it.rst){var nx=new Date(per.b+'T00:00');nx.setDate(nx.getDate()+1);return{paid:0,dd:dueIn(it,periodOf(it,ds(nx))),st:'Pendiente',rst:1}}
+ var paid=PAYS().filter(function(p){return p.oid==it.id&&p.d>=per.a&&p.d<=per.b}).reduce(function(s,p){return s+p.amt},0),dd=dueIn(it,per),od=dd&&dd.days<0&&paid<it.amt-0.5;
  return{paid:paid,dd:dd,st:paid>=it.amt-0.5?'Pagada':od?'Vencida':paid>0?'Parcial':'Pendiente'}}
 function pushPay(oid,amt,d,acc,note){ens3();if(!(amt>0)||!/^\d{4}-\d{2}-\d{2}$/.test(d))return 0;var it=S.items.filter(function(i){return i.id==oid})[0];if(!it)return 0;
  var id=S.npay++,p={id:id,d:d,oid:oid,amt:amt,note:note||''};
@@ -786,7 +793,7 @@ document.addEventListener('keydown',function(e){if(e.key=='Escape'&&!$('sheet').
 function buildSheet(){
  $('sbox').innerHTML='<div class="row" style="align-items:center;margin-bottom:8px"><h2 style="margin:0;flex:3">Asistente</h2><button onclick="closeSheet();setTab(\'ia\',\'cop\')" style="flex:none;min-width:0">Copiloto</button><button onclick="closeSheet();setTab(\'ia\',\'cfg\')" aria-label="Ajustes de IA" style="flex:none;min-width:0">Ajustes</button><button class="x" onclick="closeSheet()" style="flex:none;min-width:0">\u2715</button></div>'+
  '<div id="svmain"><div class="row"><textarea id="aiin" rows="2" placeholder="Di o escribe: gast\u00e9 800 en GLP y 300 en comida" style="flex:3"></textarea><button class="mic" id="micb" onclick="micToggle()" aria-label="Dictar por voz"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button></div>'+
- '<div class="row" style="margin-top:8px"><button class="pri" onclick="runAI()">Enviar</button></div><div style="margin-top:6px">'+['gast\u00e9 800 en GLP','gan\u00e9 4,500 en Uber y 600 en comida','pagu\u00e9 la luz 1,000','pasa 3,000 del banco a efectivo','\u00bfC\u00f3mo voy esta semana?','\u00bfPuedo pagar la tarjeta?'].map(function(q){return '<button class="chip" onclick="useChip(this)">'+q+'</button>'}).join('')+'</div><div id="aiout"></div></div>'}
+ '<div class="row" style="margin-top:8px"><button class="pri" onclick="runAI()">Enviar</button></div>'+'<div id="aiout"></div></div>'}
 // Los ajustes de IA viven en Inteligencia financiera \u2192 Ajustes IA (fiR_cfg). Estas funciones leen ese formulario.
 function saveSet(quiet){var g=function(i){return $(i)},o=$('ficfgm');if(!g('fiprov'))return;
  AIS.prov=g('fiprov').value=='claude'?'claude':'gemini';AIS.key=g('fikey').value.trim();AIS.model=g('fimod').value.trim()||AI_DEF_MODEL;
@@ -809,7 +816,7 @@ function micToggle(){var SR=window.SpeechRecognition||window.webkitSpeechRecogni
    :e.error=='network'?(navigator.onLine?'Este navegador no tiene servicio de dictado dentro de la p\u00e1gina.':'El dictado necesita internet y no hay conexi\u00f3n.')+kb
    :'No se pudo escuchar ('+esc(e.error)+').'+kb);
   var t=$(P+'aiin');if(t)t.focus()};
- REC.onend=function(){RECON=false;var m=$(P+'micb');if(m)m.classList.remove('rec');if(!AIERR&&$(P+'aiin')&&$(P+'aiin').value.trim()){AIP=P;runAI()}};
+ REC.onend=function(){RECON=false;var m=$(P+'micb');if(m)m.classList.remove('rec');if(!AIERR&&$(P+'aiin')&&$(P+'aiin').value.trim()){AIP=P;if(P=='st'&&$('fi_cop')&&$('fi_cop').contains($('staiin')))copSend();else runAI()}};
  try{REC.start();RECON=true;$(P+'micb').classList.add('rec')}catch(e){aiMsg('No se pudo iniciar el micr\u00f3fono.')}}
 async function interpret(text){var L=isQ(text)?null:localParse(text);if(L&&L.acts.length)return{kind:'acts',acts:L.acts,date:L.date,src:'local'};
  if(!aiReady())return{kind:'none'};var raw=await aiAsk(SYS(),'Datos:'+JSON.stringify(aiContext())+'\nUsuario: '+text),j=jsonOf(raw);
@@ -1081,7 +1088,16 @@ function oblEdit(i,n,d){var isD=i.total>0,
   (isD?'<div class="row" style="margin-top:8px"><label>Tasa anual (%)<input type="number" min="0" step="0.5" value="'+(i.apr||0)+'" onchange="updObl('+i.id+',\'apr\',this.value)"></label><label>Pagado antes de usar la app<input type="number" min="0" value="'+(i.paid0||0)+'" onchange="updObl('+i.id+',\'paid0\',this.value)"></label>'+(i.apr>0?'<label>Intereses desde<input type="date" value="'+(i.start||today())+'" onchange="updObl('+i.id+',\'start\',this.value)"></label>':'')+'</div>':'')+
   '<small style="display:block;margin-top:6px"><b>'+rd(quota(i))+' por día de trabajo</b>'+(d?' · pagado '+Math.round(d.p/Math.max(1,d.p+d.bal)*100)+'% ('+rd(d.p)+')'+(d.int>0.5?' · intereses '+rd(d.int):''):'')+'. '+(i.sv?'Ahorro: se aparta cada día como una obligación más.':isD?'Deuda: termina cuando pagas el total. La tasa hace crecer el saldo cada mes.':'Recurrente: se cobra cada período y nunca termina (alquiler, luz, internet…). Pon una deuda total si es algo que se acaba de pagar.')+'</small>'+
   '<div class="row obb"><button onclick="oblMove('+i.id+',-1)" aria-label="Pagar antes"'+(n<=1?' disabled':'')+'>↑ Pagar antes</button><button onclick="oblMove('+i.id+',1)" aria-label="Pagar después"'+(n>=S.items.length?' disabled':'')+'>↓ Pagar después</button>'+
-  (isD?'<button onclick="oblRecurring(this,'+i.id+')">No termina</button>':'')+'<button class="x" onclick="tap2(this,\'¿Quitar?\',function(){S.items=S.items.filter(function(x){return x.id!='+i.id+'});OBLX=null;save();all()})">Quitar</button></div></div>'}
+  (isD?'<button onclick="oblRecurring(this,'+i.id+')">No termina</button>':'')+''+(i.freq!='d'&&i.due?'<button onclick="oblReset('+i.id+')" title="El próximo pago se cuenta desde hoy">↻ Reiniciar conteo</button>':'')+'<button class="x" onclick="oblDel('+i.id+')">Quitar</button></div>'+(i.rst&&i.freq!='d'?'<small style="display:block;margin-top:6px">Conteo reiniciado el '+fdate(i.rst)+'.</small>':'')+'</div>'}
+// Quitar no pregunta: se hace al instante y queda 3 s un botón para deshacerlo.
+function oblDel(id){var it=S.items.filter(function(x){return x.id==id})[0];if(!it)return;var snap=JSON.stringify(S);S.items=S.items.filter(function(x){return x.id!=id});OBLX=null;save();all();undoBar('Quitaste «'+it.name+'»',snap)}
+// Reiniciar conteo: lo vencido hasta hoy deja de contar y el próximo pago es la siguiente fecha de vencimiento.
+function oblReset(id){var it=S.items.filter(function(x){return x.id==id})[0];if(!it)return;var snap=JSON.stringify(S);it.rst=today();save();all();var o=oblStatus(it);undoBar('Próximo pago: '+(o.dd?fdate(o.dd.date):'sin fecha'),snap)}
+var UNDOS=null,UNDOT=0;
+function undoBar(msg,snap){var b=$('undob');if(!b){b=document.createElement('div');b.id='undob';b.setAttribute('role','status');document.body.appendChild(b)}
+ clearTimeout(UNDOT);UNDOS=snap;b.innerHTML='<span>'+esc(msg)+'</span><button onclick="undoDo()">Deshacer cambio</button>';b.className='on';UNDOT=setTimeout(undoHide,3000)}
+function undoHide(){var b=$('undob');if(b)b.className='';UNDOS=null}
+function undoDo(){if(!UNDOS)return;S=JSON.parse(UNDOS);undoHide();save();all()}
 // Cambia el orden de pago: intercambia con la vecina y renumera 1, 2, 3… (el orden de las demás no cambia).
 function oblMove(id,dir){var L=sorted(),k=L.findIndex(function(i){return i.id==id}),j=k+dir;if(k<0||j<0||j>=L.length)return;var t=L[k];L[k]=L[j];L[j]=t;L.forEach(function(i,n){i.prio=n+1});save();all()}
 function esc2(){var A=[0,2000,3000,4000,5000],F=sim().st,D=A.map(function(a){return allocDay(a,F)});
@@ -1481,14 +1497,13 @@ function renderSubnav(){var t=TAB,el=$('subnav'),g=navOf(t),L=[],sg=$('subseg');
  if(t=='mas'){el.innerHTML='';el.hidden=true;return}el.hidden=false;
  if(t=='ia'){var cur=subOf('ia'),gi=0,lb={};SUBS.ia.forEach(function(x){lb[x[0]]=x[1]});IAG.forEach(function(q,i){if(q[1].indexOf(cur)>=0)gi=i});
   el.innerHTML=IAG.map(function(q,i){var on=i==gi;return '<button class="'+(on?'on':'')+'" aria-pressed="'+on+'" onclick="setTab(\'ia\',\''+(on?cur:q[1][0])+'\')">'+q[0]+'</button>'}).join('');
-  if(cur=='cop')sg.innerHTML=COPMS.map(function(o){var on=o[0]==COPM;return '<button class="'+(on?'on':'')+'" aria-pressed="'+on+'" onclick="copMode(\''+o[0]+'\')">'+o[1]+'</button>'}).join('');
-  else if(IAG[gi][1].length>1)sg.innerHTML=IAG[gi][1].map(function(k){var on=k==cur;return '<button class="'+(on?'on':'')+'" aria-pressed="'+on+'" onclick="setTab(\'ia\',\''+k+'\')">'+lb[k]+'</button>'}).join('');var ao=el.querySelector('.on');if(ao)el.scrollLeft=Math.max(0,ao.offsetLeft-(el.clientWidth-ao.offsetWidth)/2);return}
+  if(cur!='cop'&&IAG[gi][1].length>1)sg.innerHTML=IAG[gi][1].map(function(k){var on=k==cur;return '<button class="'+(on?'on':'')+'" aria-pressed="'+on+'" onclick="setTab(\'ia\',\''+k+'\')">'+lb[k]+'</button>'}).join('');var ao=el.querySelector('.on');if(ao)el.scrollLeft=Math.max(0,ao.offsetLeft-(el.clientWidth-ao.offsetWidth)/2);return}
  (g[0]=='din'?['cta','hog']:[t]).forEach(function(tt){SUBS[tt].forEach(function(x){L.push([tt,x[0],x[1]])})});
  var back=t=='ana'?'<button class="back" onclick="setTab(\'mas\')" aria-label="Volver al menú Más">‹ Más</button>':'';
  el.innerHTML=back+L.map(function(x){var on=x[0]==t&&x[1]==subOf(t),n=x[0]=='deu'&&x[1]=='est'?vencN():0;
   return '<button class="'+(on?'on':'')+'" aria-pressed="'+on+'" data-t="'+x[0]+'" data-s="'+x[1]+'" onclick="setTab(this.dataset.t,this.dataset.s)">'+x[2]+(n?'<i class="dot2" aria-label="'+n+' vencidas">'+n+'</i>':'')+'</button>'}).join('');
  var a=el.querySelector('.on');if(a)el.scrollLeft=Math.max(0,a.offsetLeft-(el.clientWidth-a.offsetWidth)/2)}
-function setTab(t,s){if(!SUBS[t])t='inicio';if(t=='ia'&&(s=='wi'||s=='af'||s=='st')){COPM=s;s='cop'}TAB=t;if(s)SUB[t]=s;var sb=subOf(t);try{localStorage.setItem('fin-tab',t);localStorage.setItem('fin-subs',JSON.stringify(SUB));if(t=='cta'||t=='hog')localStorage.setItem('fin-din',t)}catch(e){}
+function setTab(t,s){if(!SUBS[t])t='inicio';if(t=='ia'&&(s=='wi'||s=='af'||s=='st'))s='cop';TAB=t;if(s)SUB[t]=s;var sb=subOf(t);try{localStorage.setItem('fin-tab',t);localStorage.setItem('fin-subs',JSON.stringify(SUB));if(t=='cta'||t=='hog')localStorage.setItem('fin-din',t)}catch(e){}
  document.querySelectorAll('[data-tab]').forEach(function(e){e.hidden=!(e.dataset.tab==t&&e.dataset.sub==sb)});
  var g=navOf(t)[0];
  $('nav').innerHTML='<div class="brand"><i>MF</i><b>Mis Finanzas</b><small>Panel personal</small></div><div class="in">'+NAVT.map(function(x){var on=x[0]==g,n=x[0]=='deu'?vencN():0;return '<button class="'+(on?'on':'')+'"'+(on?' aria-current="page"':'')+' data-t="'+x[0]+'" onclick="navGo(this.dataset.t)"><b aria-hidden="true">'+x[1]+'</b>'+x[2]+(n?'<span class="sr"> ('+n+' vencidas)</span>':'')+'</button>'}).join('')+'</div>';
@@ -1846,31 +1861,44 @@ async function fiAsk(q,opt){opt=opt||{};q=String(q||'').trim();if(!q||FI.busy)re
  try{if(!aiReady())throw{code:'noai'};var ctx={base:fiCtxBase()};ag.forEach(function(k){ctx[FIA[k].n]=FIA[k].f()});if(opt.extra)ctx.extra=opt.extra;
   var hist=FI.chat.slice(-7,-1).map(function(m){return(m.r=='u'?'Usuario: ':'Copilot: ')+String(m.t).slice(0,350)}).join('\n'),r=await fiAIAns((hist?'Conversaci\u00f3n previa:\n'+hist+'\n':'')+'Responde a la PREGUNTA del usuario: '+q,ctx,'copiloto');
   ans={r:'a',t:r.t,recs:r.recs,falt:r.falt,ag:ag,src:'ia'}}
- catch(e){var loc=fiLocal(q);ans={r:'a',t:loc||(e.code=='noai'?'Esa pregunta necesita la IA. Configura tu clave en Ajustes IA, o prueba con las preguntas sugeridas, que funcionan sin conexi\u00f3n.':'No pude responder esa pregunta sin la IA.'),ag:ag,src:'local',err:e.code=='noai'?null:(e.message||'Error de IA')}}
+ catch(e){var loc=fiLocal(q);ans={r:'a',t:loc||(e.code=='noai'?'Esa pregunta necesita la IA. Configura tu clave en Ajustes IA. Sin IA funcionan los registros («gasté 450 en GLP»), «¿me alcanza para…?» y «¿qué pasa si…?».':'No pude responder esa pregunta sin la IA.'),ag:ag,src:'local',err:e.code=='noai'?null:(e.message||'Error de IA')}}
  FI.busy=0;FI.chat.push(ans);FI.chat=FI.chat.slice(-30);fiR_cop()}
 function fiSend(){var i=$('ficq');if(!i)return;var q=i.value;i.value='';fiAsk(q)}
 function fiSetMode(m){if(!FIMODE[m])return;AIS.mode=m;aiSave();renderFI()}
 function fiModeSeg(){return Object.keys(FIMODE).map(function(k){return '<button class="'+(AIS.mode==k?'on':'')+'" data-m="'+k+'" onclick="fiSetMode(this.dataset.m)" title="'+esc(FIMODE[k].p)+'">'+FIMODE[k].n+'</button>'}).join('')}
 
 /* ---------- pantallas de Inteligencia financiera ---------- */
-// El Copiloto reúne cuatro modos; solo se ve la tarjeta del modo elegido.
-var COPM='chat',COPMS=[['chat','Preguntar'],['af','¿Me alcanza?'],['wi','What If'],['st','Registrar con IA']];
-function copShow(){var m={chat:'fi_cop',af:'fi_af',wi:'fi_wi',st:'fi_st'};Object.keys(m).forEach(function(k){var e=$(m[k]);if(e)e.style.display=k==COPM?'':'none'})}
-function copMode(k){COPM=k;renderFI();renderSubnav();window.scrollTo(0,0)}
-function renderFI(){var s=subOf('ia');if(s=='cop'){try{({chat:fiR_cop,af:fiR_af,wi:fiR_wi,st:fiR_st}[COPM]||fiR_cop)()}catch(e){}copShow();return}var f={zona:zR_full,cop:fiR_cop,diag:fiR_diag,wi:fiR_wi,af:fiR_af,st:fiR_st,fc:fiR_fc,au:fiR_au,ub:fiR_ub,ob:fiR_ob,ad:fiR_ad,me:fiR_me,cfg:fiR_cfg}[s];
+// El Copiloto es un solo chat: según lo que escribas, registra (gasto, pago…), analiza una compra, simula un escenario o responde.
+function copShow(){['fi_af','fi_wi','fi_st'].forEach(function(k){var e=$(k);if(e){e.style.display='none';e.innerHTML=''}});var c=$('fi_cop');if(c)c.style.display=''}
+function copIntent(q){var z=nz(q),L=isQ(q)?null:localParse(q);
+ if(!isQ(q)&&(L&&L.acts.length||/^(hoy |ayer |esta manana |anoche )?(gaste|pague|recibi|compre|deposite|retire|pase|transferi|cobre|eche|meti|saque|trabaje|hice)\b/.test(z)))return 'st';
+ if(/(me alcanza|alcanza para|puedo (comprar|permitir|pagar)|permitirme|deberia comprar)/.test(z)&&amtsOf(z.replace(/(\d)[.,](\d{3})(?!\d)/g,'$1$2')).length)return 'af';
+ if(/(que pasa si|y si |si dejo|si pago|si compro|si reduzco|si aumento|si sube|cuanto tard|cuanto necesito producir|liquidar mis deudas|salir de (mis )?deudas)/.test(z)&&fiParseWI(q))return 'wi';
+ return 'chat'}
+function copSend(){var i=$('staiin');if(!i)return;var q=i.value.trim();if(!q||FI.busy)return;var k=copIntent(q);
+ if(k=='chat'){i.value='';fiAsk(q);return}
+ FI.chat.push({r:'u',t:q.slice(0,600)});
+ if(k=='st'){fiR_cop();AIP='st';runAI();$('staiin').value='';return}
+ i.value='';
+ if(k=='af'){var a=amtsOf(nz(q).replace(/(\d)[.,](\d{3})(?!\d)/g,'$1$2'))[0].v;FI.af=fiAfford(a,15);FI.chat.push({r:'a',h:fiAFHtml(FI.af),t:'Análisis de compra de '+rd(a)+': '+FIV[FI.af.v][0],src:'app'})}
+ else{FI.wi=fiWhatIf(fiParseWI(q));FI.chat.push({r:'a',h:fiWIHtml(FI.wi,1),t:'Simulación: '+FI.wi.lab.join(' + '),src:'app'})}
+ FI.chat=FI.chat.slice(-30);fiR_cop()}
+function renderFI(){var s=subOf('ia');if(s=='cop'){try{fiR_cop()}catch(e){}copShow();return}var f={zona:zR_full,cop:fiR_cop,diag:fiR_diag,wi:fiR_wi,af:fiR_af,st:fiR_st,fc:fiR_fc,au:fiR_au,ub:fiR_ub,ob:fiR_ob,ad:fiR_ad,me:fiR_me,cfg:fiR_cfg}[s];
  if(f)try{f()}catch(e){var el=$('fi_'+s);if(el)el.innerHTML=fiH('Inteligencia financiera')+'<div class="fi-err">No se pudo mostrar esta sección: '+esc(e&&e.message||e)+'</div>'}}
 // 1. Financial Copilot
-function fiMsgHtml(m){if(m.r=='u')return '<div class="msg u">'+esc(m.t)+'</div>';
+function fiMsgHtml(m){if(m.r=='u')return '<div class="msg u">'+esc(m.t)+'</div>';if(m.h)return '<div class="msg a" style="max-width:100%">'+m.h+'<div class="meta"><span class="tag">Calculado por la app</span></div></div>';
  return '<div class="msg a">'+fiFmt(m.t,m.src=='ia')+fiRecsHtml(m.recs,m.falt)+
   '<div class="meta">'+(m.src=='ia'?'<span class="tag">✦ IA</span>':'<span class="tag w">Sin IA</span>')+'<span>'+(m.ag||[]).map(function(k){return FIA[k]?FIA[k].n:k}).join(' · ')+'</span>'+(m.err?'<span>· '+esc(m.err)+'</span>':'')+'</div></div>'}
-function fiR_cop(){var el=$('fi_cop');if(!el)return;var Q=['¿Cómo están mis finanzas actualmente?','¿Cuánto dinero tengo realmente disponible?','¿Cuáles son mis obligaciones más próximas?','¿Cuánto he gastado este mes?','¿Cuánto he ganado neto?','¿Estoy gastando demasiado?','¿Qué debería priorizar hoy?','¿Cómo puedo mejorar mi situación financiera?','¿Cuánto puedo ahorrar este mes?'];
- var h=fiH('Financial Copilot','Pregunta lo que quieras sobre tu dinero. Usa solo tus datos reales y te dice cuando falta información.')+
-  '<div class="row" style="align-items:center;margin-bottom:10px"><div class="seg" style="flex:3">'+fiModeSeg()+'</div><div style="flex:none;min-width:0">'+fiStatus()+'</div></div>'+
-  '<div class="chat" id="fichat">'+(FI.chat.length?FI.chat.map(fiMsgHtml).join(''):'<div class="msg a">Hola. Soy tu copiloto financiero: analizo tu liquidez, deudas, jornadas de Uber, gastos, metas y posibles errores. ¿Qué quieres saber?</div>')+(FI.busy?'<div class="msg a" style="min-width:240px">'+fiLoading('Pensando')+'</div>':'')+'</div>'+
-  '<div style="margin-top:4px">'+Q.map(function(q){return '<button class="chip" onclick="fiAsk(this.textContent)"'+(FI.busy?' disabled':'')+'>'+q+'</button>'}).join('')+'</div>'+
-  '<div class="row" style="margin-top:10px"><textarea id="ficq" rows="2" placeholder="Escribe tu pregunta…" style="flex:4" onkeydown="if(event.key==\'Enter\'&&!event.shiftKey){event.preventDefault();fiSend()}"></textarea><button class="pri" style="flex:1" onclick="fiSend()"'+(FI.busy?' disabled':'')+'>Enviar</button></div>'+
-  '<div class="row" style="margin-top:8px;align-items:center"><small style="flex:3">El copiloto no modifica tus datos. Para registrar gastos o pagos usa <a href="#" onclick="setSub(\'st\');return false">Registro IA</a>.</small>'+(FI.chat.length?'<button style="flex:none;min-width:0" onclick="FI.chat=[];fiR_cop()">Nueva conversación</button>':'')+'</div>';
- el.innerHTML=h;var c=$('fichat');if(c)c.scrollTop=c.scrollHeight}
+function fiR_cop(){var el=$('fi_cop');if(!el)return;var keep=$('staiout')?$('staiout').innerHTML:'',kv=$('staiin')?$('staiin').value:'';
+ var h='<div class="row" style="align-items:center;justify-content:space-between;margin-bottom:8px"><h2 style="margin:0;flex:none">Copiloto</h2><div style="flex:none;min-width:0">'+fiStatus()+'</div></div>'+
+  '<div class="chat" id="fichat">'+(FI.chat.length?FI.chat.map(fiMsgHtml).join(''):'<div class="msg a">Pregúntame lo que quieras de tu dinero. También puedes contarme un gasto o pago para registrarlo («gasté 450 en GLP»), preguntar «¿me alcanza para 12,000?» o «¿qué pasa si no trabajo 5 días?».</div>')+(FI.busy?'<div class="msg a" style="min-width:240px">'+fiLoading('Pensando')+'</div>':'')+'</div>'+
+  '<div id="staiout">'+keep+'</div>'+
+  '<div class="row" style="margin-top:10px;flex-wrap:nowrap;gap:6px;align-items:flex-end"><textarea id="staiin" rows="1" placeholder="Escribe, dicta o sube un recibo…" style="flex:1;min-width:0" onkeydown="if(event.key==\'Enter\'&&!event.shiftKey){event.preventDefault();copSend()}"></textarea>'+
+  '<button class="mic" id="stmicb" onclick="AIP=\'st\';micToggle()" aria-label="Dictar por voz"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>'+
+  '<label class="fbtn mic" aria-label="Foto de recibo" title="Foto de recibo" style="padding:0">📷<input type="file" accept="image/*" capture="environment" hidden onchange="fiReceipt(this)"></label>'+
+  '<button class="pri mic" onclick="copSend()" aria-label="Enviar"'+(FI.busy?' disabled':'')+'>➤</button></div>'+
+  (FI.chat.length?'<div style="text-align:right;margin-top:6px"><button style="width:auto;min-width:0;padding:4px 10px;font-size:12.5px" onclick="FI.chat=[];$(\'staiout\').innerHTML=\'\';fiR_cop()">Nueva conversación</button></div>':'');
+ el.innerHTML=h;$('staiin').value=kv;var c=$('fichat');if(c)c.scrollTop=c.scrollHeight}
 // 2. Diagnóstico financiero
 function fiGauge(score){var col=score==null?'var(--mu)':score>=75?'var(--ac)':score>=55?'var(--gold)':score>=35?'var(--wr)':'var(--rd)';
  return '<svg viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="Puntuación '+(score==null?'sin datos':score)+' de 100"><circle cx="60" cy="60" r="50" fill="none" stroke="var(--bd)" stroke-width="10"/><circle cx="60" cy="60" r="50" fill="none" stroke="'+col+'" stroke-width="10" stroke-linecap="round" stroke-dasharray="'+((score||0)*3.1416).toFixed(1)+' 314.2" transform="rotate(-90 60 60)" style="transition:stroke-dasharray .8s"/><text x="60" y="64" text-anchor="middle" font-size="32" font-weight="600" fill="var(--tx)" font-family="Fraunces,Georgia,serif">'+(score==null?'—':score)+'</text><text x="60" y="82" text-anchor="middle" font-size="10" fill="var(--mu)">de 100</text></svg>'}
@@ -1885,10 +1913,8 @@ function fiR_diag(){var el=$('fi_diag');if(!el)return;var g=fiDiag(),L=g.L,h=fiH
  el.innerHTML=h}
 function fiDiagAI(){var g=fiDiag();fiAIInto('fidx','Haz un diagnóstico financiero claro: situación actual, fortalezas, riesgos y qué hacer esta semana. Explica la puntuación.',{puntuacion:g.score,etiqueta:g.lab,componentes:g.c.map(function(c){return{n:c.n,valor:c.v==null?null:Math.round(c.v*100),detalle:c.d}}),fortalezas:g.pos,riesgos:g.neg,Liquidez:FIA.liq.f(),Deudas:FIA.deu.f(),Analista:FIA.ana.f()},'diagnostico')}
 // 3. Simulador What If
-function fiR_wi(){var el=$('fi_wi');if(!el)return;var Q=['¿Qué pasa si dejo de trabajar 7 días?','¿Qué pasa si pago RD$5,000 adicionales a la tarjeta?','¿Qué pasa si reduzco mis gastos personales un 20%?','¿Puedo comprar algo de RD$12,000?','¿Cuánto necesito producir para cubrir mis obligaciones?','¿Qué pasa si aumento mis ingresos un 15%?','¿Cuánto tardaría en liquidar mis deudas?'],
-  D=debts(totals(S.logs)),p=FI.wi&&FI.wi.p||{};
+function fiR_wi(){var el=$('fi_wi');if(!el)return;var D=debts(totals(S.logs)),p=FI.wi&&FI.wi.p||{};
  var h=fiH('Simulador What If','Plantea un escenario y compáralo con tu situación actual. Los cálculos los hace la app; <b>nada se guarda como transacción real</b>.')+
-  '<div>'+Q.map(function(q){return '<button class="chip" onclick="fiWIText(this.textContent)">'+q+'</button>'}).join('')+'</div>'+
   '<div class="row" style="margin-top:10px"><input id="fiwq" placeholder="Ej.: ¿qué pasa si no trabajo 5 días y compro algo de 8,000?" style="flex:4" onkeydown="if(event.key==\'Enter\')fiWIText()"><button class="pri" style="flex:1" onclick="fiWIText()">Simular</button></div>'+
   '<details style="margin-top:10px"><summary>Ajustar el escenario a mano</summary><div class="row" style="margin-top:8px"><label>Días sin trabajar<input type="number" id="fw_off" min="0" max="60" value="'+(p.off||'')+'"></label><label>Compra hoy (RD$)<input type="number" id="fw_buy" min="0" value="'+(p.buy||'')+'"></label><label>Pago extra hoy (RD$)<input type="number" id="fw_pay" min="0" value="'+(p.pay?p.pay.amt:'')+'"></label><label>A la deuda<select id="fw_po">'+D.map(function(d){return '<option value="'+d.it.id+'"'+(p.pay&&p.pay.oid==d.it.id?' selected':'')+'>'+esc(d.it.name)+'</option>'}).join('')+'</select></label></div>'+
   '<div class="row" style="margin-top:8px"><label>Reducir gastos personales (%)<input type="number" id="fw_cut" min="0" max="100" value="'+(p.cut||'')+'"></label><label>Aumentar ingresos (%)<input type="number" id="fw_inc" min="0" max="100" value="'+(p.inc||'')+'"></label><label>Subida del combustible (%)<input type="number" id="fw_fuel" min="0" max="100" value="'+(p.fuel||'')+'"></label><button onclick="fiWIForm()">Simular</button></div></details>';
@@ -1903,30 +1929,32 @@ async function fiWIText(q){var i=$('fiwq');q=String(q||(i&&i.value)||'').trim();
     if(j.pay&&ok(j.pay.monto,1e7)){var oid=findBy(S.items.filter(function(x){return !x.sv}),j.pay.obligacion);if(oid)p.pay={oid:oid,amt:ok(j.pay.monto,1e7)}}if(j.need===true)p.need=1;if(j.debt===true)p.debt=1;if(!Object.keys(p).length)p=null}}
   catch(e){FI.wi={err:e.message,q:q};fiR_wi();return}}
  FI.wi=p?fiWhatIf(p):{err:'No entendí el escenario. Usa los ejemplos o ajusta los valores a mano.'};FI.wi.q=q;fiR_wi()}
-function fiWIHtml(r){if(r.err)return '<div class="warn">'+esc(r.err)+'</div>';var h='<div class="verd w" style="border-left-color:var(--gold)"><span class="tag e">Simulación</span> <b>'+esc(r.lab.join(' + '))+'</b><br><small>No se guarda nada. Parte de tus saldos reales de hoy y de tu ritmo de los últimos 56 días (confianza '+r.b.conf+').</small></div>';
- if(r.rows.length){h+='<div class="scroll"><table class="cmp" style="margin-top:12px"><tr><th></th><th>Situación actual</th><th>Escenario</th><th>Diferencia</th></tr>'+r.rows.map(function(x){var d=x[2]-x[1];return '<tr><td>'+x[0]+'</td><td>'+rd(x[1])+'</td><td>'+rd(x[2])+'</td><td style="color:'+(d<-0.5?'var(--rd)':d>0.5?'var(--ac)':'inherit')+'">'+fiSg(d)+'</td></tr>'}).join('')+
+function fiWIHtml(r,inChat){if(r.err)return '<div class="warn">'+esc(r.err)+'</div>';var h='<div class="verd w" style="border-left-color:var(--gold)"><span class="tag e">Simulación</span> <b>'+esc(r.lab.join(' + '))+'</b><br><small>No se guarda nada. Parte de tus saldos reales de hoy y de tu ritmo de los últimos 56 días (confianza '+r.b.conf+').</small></div>';
+ if(r.rows.length&&inChat)h+='<div style="margin-top:8px">'+r.rows.map(function(x){var d=x[2]-x[1];return '<div class="leg"><span>'+x[0]+'</span><span>'+rd(x[2])+(Math.abs(d)>0.5?' <small style="color:'+(d<0?'var(--rd)':'var(--ac)')+'">'+fiSg(d)+'</small>':'')+'</span></div>'}).join('')+r.days.map(function(x){return '<div class="leg"><span>'+x[0]+'</span><span>'+(x[2]?fdate(x[2]):'no ocurre')+'</span></div>'}).join('')+'</div>';
+ else if(r.rows.length){h+='<div class="scroll"><table class="cmp" style="margin-top:12px"><tr><th></th><th>Situación actual</th><th>Escenario</th><th>Diferencia</th></tr>'+r.rows.map(function(x){var d=x[2]-x[1];return '<tr><td>'+x[0]+'</td><td>'+rd(x[1])+'</td><td>'+rd(x[2])+'</td><td style="color:'+(d<-0.5?'var(--rd)':d>0.5?'var(--ac)':'inherit')+'">'+fiSg(d)+'</td></tr>'}).join('')+
    r.days.map(function(x){return '<tr><td>'+x[0]+'</td><td>'+(x[1]?fdate(x[1]):'no ocurre')+'</td><td>'+(x[2]?fdate(x[2]):'no ocurre')+'</td><td></td></tr>'}).join('')+'</table></div>'}
- if(r.extra.length)h+='<div class="scroll"><table class="cmp" style="margin-top:8px"><tr><th>Deuda</th><th>Actual</th><th>Con el pago</th></tr>'+r.extra.map(function(x){var f=function(v){return typeof v=='number'?(/Meses/.test(x[0])?v+' meses':rd(v)):v==null?'—':v};return '<tr><td>'+esc(x[0])+'</td><td>'+f(x[1])+'</td><td>'+f(x[2])+'</td></tr>'}).join('')+'</table></div>';
+ if(r.extra.length&&!inChat)h+='<div class="scroll"><table class="cmp" style="margin-top:8px"><tr><th>Deuda</th><th>Actual</th><th>Con el pago</th></tr>'+r.extra.map(function(x){var f=function(v){return typeof v=='number'?(/Meses/.test(x[0])?v+' meses':rd(v)):v==null?'—':v};return '<tr><td>'+esc(x[0])+'</td><td>'+f(x[1])+'</td><td>'+f(x[2])+'</td></tr>'}).join('')+'</table></div>';
  if(r.need){var U=r.need;h+='<b style="display:block;margin-top:12px">Producción necesaria para cubrir tus obligaciones</b>'+'<div class="kpis" style="margin-top:8px">'+fiK(rd(U.need),'Cuota neta por jornada')+fiK(rd(U.beTodo),'Bruto necesario por jornada')+fiK(U.needH!=null?rd(U.needH):'—','Bruto necesario por hora')+fiK(rd(U.need*S.dpw),'Neto mínimo por semana')+'</div><small>Bruto necesario = cuota del día ('+rd(U.need)+') + tus gastos operativos promedio por jornada ('+rd(U.avgExp)+')'+(U.avgH?' en una jornada de '+U.avgH.toFixed(1)+' h':'')+'.</small>'}
  if(r.debt){var D=r.debt;h+='<b style="display:block;margin-top:12px">Tiempo para liquidar tus deudas</b>'+(D.list.length?'<div class="scroll"><table class="cmp" style="margin-top:6px"><tr><th>Estrategia</th><th>Meses</th><th>Intereses</th></tr>'+[['Solo cuotas',D.base],['Avalancha (tasa más alta primero) + abono extra',D.av],['Bola de nieve (saldo menor primero) + abono extra',D.sn]].map(function(x){return '<tr><td>'+x[0]+'</td><td>'+(x[1]?x[1].m:'no se liquida')+'</td><td>'+(x[1]?rd(x[1].int):'—')+'</td></tr>'}).join('')+'</table></div><small>Abono extra estimado: '+rd(D.extra)+' al mes (tu porcentaje de abono extra sobre el excedente promedio). Total adeudado: '+rd(D.total)+'.</small>':'<p><small>No tienes deudas con saldo.</small></p>')}
  if(r.risk.length)h+='<b style="display:block;margin-top:12px">Riesgos</b>'+r.risk.map(function(x){return '<div class="fi-l"><span>⚠️</span><span>'+esc(x)+'</span></div>'}).join('');
  if(r.rec.length)h+='<b style="display:block;margin-top:12px">Recomendaciones</b>'+r.rec.map(function(x){return '<div class="fi-l"><span>➤</span><span>'+esc(x)+'</span></div>'}).join('');
- return h+'<div class="row" style="margin-top:12px"><button onclick="fiWIAI()">Explicar consecuencias con IA</button></div><div id="fiwix"></div>'}
+ return inChat?h:h+'<div class="row" style="margin-top:12px"><button onclick="fiWIAI()">Explicar consecuencias con IA</button></div><div id="fiwix"></div>'}
 function fiWIAI(){var r=FI.wi;if(!r||r.err)return;fiAIInto('fiwix','Explica las consecuencias de este escenario HIPOTÉTICO comparado con la situación actual (riesgos y recomendaciones). Deja claro que es una simulación y que las cifras son estimaciones.',{escenario:r.lab,comparacion:r.rows.map(function(x){return{dato:x[0],actual:x[1],escenario:x[2]}}),fechas:(r.days||[]).map(function(x){return{dato:x[0],actual:x[1],escenario:x[2]}}),deuda:r.extra,riesgos:r.risk,recomendaciones_calculadas:r.rec,produccion:r.need?{cuota:r.need.need,bruto_jornada:r.need.beTodo,bruto_hora:r.need.needH}:null,plan_deudas:r.debt?FIA.deu.f():null},'whatif')}
 // 12. ¿Puedo permitírmelo?
 var FIV={viable:['Compra financieramente viable',''],precaucion:['Viable con precauciones','w'],desaconsejada:['Compra desaconsejada','r'],compromete:['Compromete tus obligaciones','r'],sin_datos:['Faltan los saldos de tus cuentas','w']};
 function fiR_af(){var el=$('fi_af');if(!el)return;var a=FI.af;
  var h=fiH('¿Puedo permitírmelo?','Analiza una compra con tu dinero realmente disponible (no con el saldo en cuenta), tus obligaciones próximas, reservas y metas.')+
   '<div class="row"><label>Precio (RD$)<input type="number" id="faf_p" min="0" value="'+(a?a.price:'')+'" placeholder="12000"></label><label>Qué es (opcional)<input id="faf_n" value="'+esc(a&&a.n||'')+'" placeholder="Ej.: celular"></label><label>Mirar los próximos<select id="faf_d">'+[7,15,30].map(function(d){return '<option value="'+d+'"'+((a?a.days:15)==d?' selected':'')+'>'+d+' días</option>'}).join('')+'</select></label><button class="pri" onclick="fiAF()">Analizar</button></div>';
- if(a){var v=FIV[a.v],L=a.L;h+='<div class="verd '+v[1]+'"><span class="big">'+v[0]+'</span>'+(a.n?'<small>'+esc(a.n)+' · </small>':'')+'<small>'+rd(a.price)+'</small></div>';
+ if(a)h+=fiAFHtml(a)+'<div class="row" style="margin-top:12px"><button onclick="fiAFAI()">Opinión de la IA</button></div><div id="fiafx"></div>';
+ el.innerHTML=h}
+function fiAFHtml(a){var v=FIV[a.v],L=a.L,h='<div class="verd '+v[1]+'"><span class="big">'+v[0]+'</span>'+(a.n?'<small>'+esc(a.n)+' · </small>':'')+'<small>'+rd(a.price)+'</small></div>';
   var R=[];R.push('En cuentas tienes '+rd(L.tot)+', pero '+rd(L.res)+' está reservado (fondo '+rd(L.fondo)+', ahorro '+rd(L.ahorro)+', súper '+rd(L.super)+', apartado para obligaciones '+rd(L.oblig)+').');
   R.push('Dinero realmente disponible: '+rd(L.libre)+'.');R.push('En los próximos '+a.days+' días vencen '+rd(a.up)+(a.up>0?' (ya apartaste '+rd(Math.min(L.oblig,a.up))+'; faltan '+rd(a.need)+')':'')+'.');
   R.push('Después de comprar y cubrir lo que falta te quedarían '+rd(a.after)+' libres.');
   R.push('Con una semana floja, tu saldo mínimo en '+a.days+' días sería '+rd(a.minL)+(a.defL?' y te quedarías sin dinero el '+fdate(a.defL):'')+' (estimación, confianza '+a.conf+').');
   if(a.delay!=null)R.push('Equivale a unos '+a.delay+' días de tu ritmo de ahorro actual.');
   if(a.v=='sin_datos')R.unshift('Registra el saldo de tus cuentas en Cuentas: sin eso no puedo saber cuánto dinero tienes de verdad.');
-  h+=R.map(function(x){return '<div class="fi-l"><span>•</span><span>'+x+'</span></div>'}).join('')+'<div class="row" style="margin-top:12px"><button onclick="fiAFAI()">Opinión de la IA</button></div><div id="fiafx"></div>'}
- el.innerHTML=h}
+  h+=R.map(function(x){return '<div class="fi-l"><span>•</span><span>'+x+'</span></div>'}).join('')+'';return h}
 function fiAF(){var p=+$('faf_p').value;if(!(p>0)){FI.af=null;fiR_af();return}FI.af=fiAfford(p,+$('faf_d').value||15);FI.af.n=$('faf_n').value.trim().slice(0,60);fiR_af()}
 function fiAFAI(){var a=FI.af;if(!a)return;fiAIInto('fiafx','El usuario quiere comprar '+(a.n?'"'+a.n+'"':'algo')+' por RD$'+a.price+'. La app ya calculó el diagnóstico "'+FIV[a.v][0]+'". Explícalo con las cifras, sin cambiar el veredicto, y sugiere alternativas (esperar, ahorrar, pagar en partes).',{veredicto:FIV[a.v][0],precio:a.price,en_cuentas:a.L.tot,reservado:a.L.res,disponible_real:a.L.libre,obligaciones_proximas:a.up,dias:a.days,libre_tras_compra:a.after,saldo_minimo_semana_mala:a.minL,dias_de_ahorro_equivalentes:a.delay,Objetivos:FIA.obj.f()},'compra')}
 // 6. Smart Transaction (reutiliza interpret/showActs/confirmActs con el prefijo 'st')
@@ -1934,7 +1962,6 @@ function fiR_st(){var el=$('fi_st');if(!el)return;var keep=$('staiout')?$('staio
  el.innerHTML=fiH('Registro inteligente','Escribe o dicta lo que pasó, o toma una foto del recibo. Todo aparece primero como <b>borrador</b>: nada se guarda hasta que confirmes.')+
   '<div class="row"><textarea id="staiin" rows="2" placeholder="Ej.: Hoy gasté RD$450 en GLP y RD$200 en comida" style="flex:3"></textarea><button class="mic" id="stmicb" onclick="AIP=\'st\';micToggle()" aria-label="Dictar por voz"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button></div>'+
   '<div class="row" style="margin-top:8px"><button class="pri" onclick="AIP=\'st\';runAI()">Crear borrador</button><label class="fbtn">📷 Foto de recibo<input type="file" accept="image/*" capture="environment" hidden onchange="fiReceipt(this)"></label></div>'+
-  '<div style="margin-top:6px">'+['Hoy gasté RD$450 en GLP y RD$200 en comida','Recibí RD$3,500 adicionales','Pagué RD$1,500 de mi tarjeta','Compré RD$2,000 de supermercado'].map(function(q){return '<button class="chip" onclick="AIP=\'st\';$(\'staiin\').value=this.textContent;runAI()">'+q+'</button>'}).join('')+'</div>'+
   '<div id="staiout">'+keep+'</div>'+
   '<details style="margin-top:12px"><summary>Qué entiende</summary><ul><li><b>Gastos</b>: GLP/combustible, comida, gastos hormiga y otros (con el comercio si lo dices).</li><li><b>Ingresos</b>: bruto de Uber y extras (“recibí 3,500 adicionales”, mezclas, canciones).</li><li><b>Pagos</b> de tus obligaciones y deudas, <b>compras de supermercado</b>, horas trabajadas, transferencias, depósitos y retiros.</li><li><b>Fechas</b>: “hoy”, “ayer”; con IA también fechas concretas.</li><li><b>Recibos</b>: monto, fecha, comercio y categoría (necesita OpenRouter con Gemini).</li></ul><small>Las frases sencillas se entienden en el teléfono sin internet; las complejas usan la IA.</small></details>';
  $('staiin').value=kv}
