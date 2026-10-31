@@ -395,7 +395,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px color-mix(in srgb,v
 <div class="grid">
   <div class="card">
     <h2>Registrar el día: bruto y gastos</h2>
-    <div id="autov"></div>
+    <div id="autov"></div><div id="gpsv"></div>
     <div class="row">
       <label>Fecha<input type="date" id="fecha"></label>
       <label>Bruto del día (RD$)<input type="number" id="monto" min="0" step="50" placeholder="4000" oninput="prev()"></label>
@@ -412,17 +412,6 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px color-mix(in srgb,v
       <label>Km con pasajero (opcional)<input type="number" id="kmp" min="0" placeholder="0"></label>
       <label>Viajes realizados (opcional)<input type="number" id="vj" min="0" step="1" placeholder="0"></label>
     </div></div></details>
-    <details class="fold" data-f="reg-gps"><summary><span class="ft"><b>Recorrido GPS</b><small>Distancia, tiempo en movimiento y detenido, paradas y mapa</small></span></summary><div class="fb">
-      <label class="fbtn" style="display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--bd);border-radius:12px;padding:10px 14px;cursor:pointer;color:var(--tx);font-size:15px">Cargar recorrido (archivo GPX)<input type="file" accept=".gpx,application/gpx+xml,application/xml,text/xml" onchange="gpsLoad(this)" style="display:none"></label>
-      <div id="gpsv"></div>
-      <details style="margin-top:8px"><summary>Cómo grabar el recorrido mientras usas Uber</summary><ol style="padding-left:18px;margin:8px 0;font-size:14px">
-        <li>Instala una app de registro GPS que exporte archivos GPX, por ejemplo <b>Open GPX Tracker</b> (gratis y de código abierto, en el App Store).</li>
-        <li>En el iPhone: Ajustes → Privacidad y seguridad → Localización → esa app → <b>Siempre</b>. Así sigue grabando con Uber abierto. Pruébalo una vez: graba unos minutos con Uber en pantalla y revisa que el recorrido salga completo.</li>
-        <li>Al tocar «Empezar jornada», inicia también la grabación en esa app.</li>
-        <li>Al terminar, detén la grabación, exporta o comparte el archivo GPX y guárdalo en <b>Archivos</b>.</li>
-        <li>Aquí toca «Cargar recorrido» y elígelo. Completa la fecha, los km, las horas, la zona y el turno que estén vacíos.</li>
-      </ol><small>Mis Finanzas no puede usar el GPS en segundo plano: iOS no lo permite a las apps web. El recorrido se analiza en tu teléfono y no se envía a ningún lado.</small></details>
-    </div></details>
     <details class="fold" data-f="reg-ext"><summary><span class="ft"><b>Ingresos extras o día sin Uber</b><small>Canción, mezcla, trabajo de habilidad…</small></span></summary><div class="fb">
 <div class="row"><input id="xc" placeholder="Concepto (ej. mezcla)" oninput="prev()"><input type="number" id="xv" min="0" placeholder="Monto RD$" oninput="prev()"><button onclick="addPend()">+ Agregar</button></div><div id="pend"></div>
 <label style="display:block;margin-top:6px"><input type="checkbox" id="off" onchange="prev()" style="width:auto"> Día sin Uber (solo ingreso extra, no exige la cuota del día)</label>
@@ -1123,7 +1112,7 @@ function editLog(i){var x=S.logs[i];if(!x)return;LEX={i:i,x:JSON.parse(JSON.stri
   '<div class="row" style="margin-top:8px">'+n('h','Horas',+x.h||0,0.5)+n('km','Km recorridos',+x.km||0)+n('kmp','Km con pasajero',+x.kmp||0)+n('v','Viajes',+x.v||0)+'<label>Zona<select id="le_z"><option value="">Sin indicar</option>'+['sde','dn','sdn','stgo','otra'].map(function(k){return '<option value="'+k+'"'+(x.z==k?' selected':'')+'>'+ZONAS[k].n+'</option>'}).join('')+'</select></label></div>'+
   '<div style="margin-top:8px"><b>Ingresos extras</b><div id="le_x"></div><div class="row"><input id="le_xc" placeholder="Concepto"><input type="number" id="le_xv" min="0" placeholder="Monto"><button onclick="lexAdd()">+ Agregar</button></div></div>'+
   '<div class="row" style="margin-top:8px"><input id="le_n" placeholder="Nota" value="'+esc(x.n||'')+'" style="flex:3"><label style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="le_off"'+(x.off?' checked':'')+'> Sin Uber</label></div>'+
-  (x.gps?foldHtml('le-gps','Recorrido GPS',x.gps.km+' km · '+gHM(x.gps.mov)+' en movimiento · '+gHM(x.gps.stop)+' detenido',gSum(x.gps)+'<button class="x" style="width:auto;padding:6px 10px;margin-top:8px" onclick="tap2(this,\'¿Quitar?\',function(){delete S.logs['+i+'].gps;save();editLog('+i+')})">Quitar recorrido</button>'):'<label class="fbtn" style="display:inline-flex;align-items:center;margin-top:8px;border:1px solid var(--bd);border-radius:12px;padding:10px 14px;cursor:pointer;color:var(--tx);font-size:15px">📍 Cargar recorrido GPX<input type="file" accept=".gpx,application/gpx+xml,application/xml,text/xml" onchange="gpsLoadLog(this,'+i+')" style="display:none"></label>')+
+  (x.gps?foldHtml('le-gps','Recorrido GPS',x.gps.km+' km · '+gHM(x.gps.mov)+' en movimiento · '+gHM(x.gps.stop)+' detenido',gSum(x.gps)+'<button class="x" style="width:auto;padding:6px 10px;margin-top:8px" onclick="tap2(this,\'¿Quitar?\',function(){delete S.logs['+i+'].gps;save();editLog('+i+')})">Quitar recorrido</button>'):'')+
   '<div class="row" style="margin-top:10px"><button class="pri" onclick="saveLogEdit()">Guardar cambios</button><button onclick="$(\'hedit\').innerHTML=\'\';LEX=null">Cancelar</button><button class="x" style="width:auto;padding:6px 12px" onclick="delLog('+i+',this)">Borrar este día</button></div><div id="lem"></div></div>';lexDraw();$('hedit').scrollIntoView({block:'nearest'})}
 function lexDraw(){$('le_x').innerHTML=LEX.x.map(function(p,k){return '<div class="leg"><span>'+esc(p.c)+'</span><span>'+rd(p.v)+' <button class="x" onclick="LEX.x.splice('+k+',1);lexDraw()">✕</button></span></div>'}).join('')}
 function lexAdd(){var v=+$('le_xv').value;if(!(v>0))return;LEX.x.push({c:$('le_xc').value.trim()||'Extra',v:v});$('le_xc').value='';$('le_xv').value='';lexDraw()}
@@ -2397,7 +2386,7 @@ function renderAndEst(){var el=$('and_est');if(!el)return;if(!AND){andNoApp(el,'
 function andStartShift(){if(S.shift)return;var z=zGet(),P=fiProfile();S.shift={start:Date.now(),d:today(),z:z&&z.rec&&z.rec.k&&z.d==today()?z.rec.k:'',km0:0,plan:Math.round(P.h||9),and:AND?1:0};if(AND){try{AND.startTrip()}catch(e){}}save();all();renderAndAll()}
 function andEndShift(){if(!S.shift)return;if(S.shift.end){jFill();return}renderJor();jEnd()}
 function andGps(){if(!AND)return;var st=andJ('tripStatus')||{},J=S.shift&&!S.shift.end?S.shift:null;
- if(st.on){if(J)AND.pauseTrip();else{try{var g=gAnalyze(gpxParse(AND.stopTrip()));AND.clearTrip();setTab('reg','dia');var gf=document.querySelector('[data-f="reg-gps"]');if(gf)gf.open=true;gpsApply(g,'Recorrido GPS')}catch(e){alert('No se pudo usar el recorrido: '+(e.message||e))}}}
+ if(st.on){if(J)AND.pauseTrip();else{try{var g=gAnalyze(gpxParse(AND.stopTrip()));AND.clearTrip();setTab('reg','dia');gpsApply(g,'Recorrido GPS')}catch(e){alert('No se pudo usar el recorrido: '+(e.message||e))}}}
  else{if(J){J.and=1;save();AND.resumeTrip()}else AND.startTrip()}
  setTimeout(renderAndAll,700)}
 var ANDF='hoy';
@@ -2468,7 +2457,7 @@ function amapDays(){return S.logs.filter(function(x){return x.gps&&x.gps.pts&&x.
 function renderAndMap(){var el=$('and_map');if(!el)return;clearInterval(AMAP.tm);if(TAB!='and'||subOf('and')!='amap'){if(AMAP.map){AMAP.map.remove();AMAP.map=null}AMAP.key='';return}
  var st=AND?andJ('tripStatus')||{}:{},live=AND&&(st.on||st.n>1),D=amapDays(),opts=[];
  if(live)opts.push(['live','En vivo · jornada de hoy'+(st.on?'':' (en pausa)')]);D.forEach(function(x,i){opts.push(['d'+S.logs.indexOf(x),fdate(x.d)+' · '+x.gps.km+' km'])});
- if(!opts.length){el.innerHTML='<h2>Mapa del recorrido</h2><p class="sub">Todavía no hay recorridos. '+(AND?'Enciende el GPS en Viajes → Estado o empieza una jornada.':'Carga un recorrido GPX en Registrar → Recorrido GPS, o usa la app Android.')+'</p>';return}
+ if(!opts.length){el.innerHTML='<h2>Mapa del recorrido</h2><p class="sub">Todavía no hay recorridos. '+(AND?'Enciende el GPS en Viajes → Estado o empieza una jornada.':'Los recorridos se graban con la app Android.')+'</p>';return}
  if(!opts.some(function(o){return o[0]==AMAP.sel}))AMAP.sel=opts[0][0];
  var g=AMAP.sel=='live'?amapLive():(S.logs[+AMAP.sel.slice(1)]||{}).gps;
  // Solo se vuelve a dibujar si cambió el día elegido o la cantidad de puntos: así el mapa no salta mientras lo miras.
@@ -2488,8 +2477,7 @@ function renderAndMap(){var el=$('and_map');if(!el)return;clearInterval(AMAP.tm)
  amapTick()}
 function amapTick(){clearInterval(AMAP.tm);if(AMAP.sel=='live')AMAP.tm=setInterval(function(){if(TAB=='and'&&subOf('and')=='amap')renderAndMap();else clearInterval(AMAP.tm)},20000)}
 // ===== Recorrido GPS =====
-// iOS no deja que una app web use el GPS en segundo plano, así que el recorrido se graba con una app de registro GPS
-// (p. ej., Open GPX Tracker) y aquí se carga el archivo GPX. Se calcula distancia, tiempo en movimiento y detenido,
+// El recorrido lo graba la app Android durante la jornada y llega aquí en formato GPX. Se calcula distancia, tiempo en movimiento y detenido,
 // paradas largas, tramos sin señal y tiempo por zona. En el registro del día queda un resumen y el trazado simplificado
 // (máx. 300 puntos) para el mapa; el trazado de más de 90 días se borra y el resumen se conserva.
 var PGPS=null,GMOV=1.4,GSTOP=300,GGAP=300;
@@ -2545,10 +2533,6 @@ function gSum(g,noMap){var tot=(g.mov+g.stop)||1,K=function(b,s){return '<div cl
  var zk=Object.keys(g.zt||{});if(zk.length)h+=foldHtml('gps-zt','Tiempo por zona',zk.map(function(k){return(ZONAS[k]?ZONAS[k].c:'Otra')+' '+gHM(g.zt[k])}).join(' · '),zk.map(function(k){var m=g.zt[k];return '<div class="dl"><i class="dot" style="background:var(--ac)"></i><span>'+(ZONAS[k]?ZONAS[k].n:'Fuera de las zonas')+'</span><span>'+gHM(m)+' <small>'+Math.round(m/tot*100)+'%</small></span><span class="tk"><i style="width:'+Math.round(m/tot*100)+'%;background:var(--ac)"></i></span></div>'}).join('')+'<small>Aproximado: cada punto se asigna a la zona cuyo centro está más cerca.</small>');
  if(g.stops&&g.stops.length)h+=foldHtml('gps-st','Paradas largas',g.stops.length+' paradas · '+gHM(ls)+' en total',g.stops.slice(0,10).map(function(p){var z=gZone(p);return '<div class="leg"><span>'+gHr(p.t)+(ZONAS[z]?' · '+ZONAS[z].c:'')+'</span><span>'+gHM(p.m)+'</span></div>'}).join('')+'<small>Una parada es un tramo de 5 minutos o más casi sin moverte (esperando viaje, comiendo, echando GLP…).</small>');
  return h}
-function gRead(f){return new Promise(function(ok,ko){var r=new FileReader();r.onload=function(){try{ok(gAnalyze(gpxParse(r.result)))}catch(e){ko(e)}};r.onerror=function(){ko(new Error('No se pudo leer el archivo.'))};r.readAsText(f)})}
-// Registrar: carga el recorrido y completa fecha, km, horas, zona y turno (solo los campos vacíos).
-function gpsLoad(inp){var f=inp.files&&inp.files[0],o=$('gpsv');inp.value='';if(!f)return;o.innerHTML=fiLoading('Analizando el recorrido');
- gRead(f).then(function(g){gpsApply(g)},function(e){PGPS=null;o.innerHTML='<div class="warn">'+esc(e.message||e)+'</div>'})}
 function gpsApply(g,src){var o=$('gpsv');PGPS=g;var h0=new Date(g.t0),h1=new Date(g.t1),fill=[];
   if($('fecha').value!=g.d){$('fecha').value=g.d;fill.push('fecha')}
   if(!$('km').value&&g.km>0){$('km').value=g.km;fill.push('km')}
@@ -2557,12 +2541,8 @@ function gpsApply(g,src){var o=$('gpsv');PGPS=g;var h0=new Date(g.t0),h1=new Dat
   if(g.z&&ZONAS[g.z]&&$('zon').value!=g.z){$('zon').value=g.z;fill.push('zona ('+ZONAS[g.z].c+')')}
   if(!$('tur').value){$('tur').value=turnoOf(h0.getHours()+h0.getMinutes()/60,h1.getHours()+h1.getMinutes()/60);fill.push('turno')}
   var mf=document.querySelector('[data-f="reg-mas"]');if(mf&&fill.indexOf('km')>=0)mf.open=true;
-  o.innerHTML='<div class="warn ok">'+(src||'Recorrido')+' del '+fdate(g.d)+' listo. '+(fill.length?'Completé: '+fill.join(', ')+'. ':'')+'Se guardará con el día al tocar «Guardar día».<button class="x" style="float:right;color:inherit" aria-label="Quitar el recorrido" onclick="PGPS=null;$(\'gpsv\').innerHTML=\'\'">✕</button></div>'+gSum(g)}
+  if(o)o.innerHTML='<div class="warn ok">📍 '+(src||'Recorrido GPS')+': <b>'+g.km+' km</b> · '+gHM(g.mov)+' en movimiento · '+gHM(g.stop)+' detenido'+(fill.length?'. Completé: '+fill.join(', '):'')+'. Se guarda con el día.<button class="x" style="float:right;color:inherit" aria-label="Quitar el recorrido" onclick="PGPS=null;$(\'gpsv\').innerHTML=\'\'">✕</button></div>'}
 
-// Historial: cargar o ver el recorrido de un día ya registrado.
-function gpsLoadLog(inp,i){var f=inp.files&&inp.files[0],x=S.logs[i];inp.value='';if(!f||!x)return;$('lem').innerHTML=fiLoading('Analizando el recorrido');
- gRead(f).then(function(g){if(g.d!=x.d){$('lem').innerHTML='<div class="warn">Ese recorrido es del '+fdate(g.d)+' y este registro es del '+fdate(x.d)+'.</div>';return}
-  x.gps=g;if(!x.km&&g.km>0)x.km=g.km;if(!x.z&&g.z&&ZONAS[g.z])x.z=g.z;save();editLog(i);$('lem').innerHTML='<div class="warn ok">Recorrido guardado en este día.</div>'},function(e){$('lem').innerHTML='<div class="warn">'+esc(e.message||e)+'</div>'})}
 function gpsPrune(){var lim=fiAdd(today(),-90);S.logs.forEach(function(x){if(x.gps&&x.gps.pts&&x.d<lim)delete x.gps.pts})}
 // Mejor turno en una zona según tu historial (necesita al menos 2 jornadas por turno con horas registradas).
 function zTurno(k){var m={},t0=new Date(today()+'T00:00');S.logs.forEach(function(x){if(x.z!=k||!x.t||x.t=='x'||x.off||x.g==null||!(+x.h>0))return;var o=m[x.t]=m[x.t]||{n:0,h:0,c:0},wt=Math.pow(0.5,Math.max(0,(t0-new Date(x.d+'T00:00'))/864e5)/42);o.n+=Math.max(0,x.g-exOf(x))*wt;o.h+=x.h*wt;o.c++});
@@ -2665,7 +2645,7 @@ function renderJor(){var el=$('jor');if(!el)return;clearInterval(JT);var J=S.shi
  el.innerHTML='<div class="row" style="align-items:center"><div style="flex:3;min-width:200px"><span class="fi-ey">Jornada en curso'+(J.z&&ZONAS[J.z]?' · '+ZONAS[J.z].n:'')+'</span><h2 style="margin:0"><span id="jtime">'+hmin(Date.now()-J.start)+'</span> trabajando</h2></div><span class="tag">'+TURN[turnoOf(new Date(J.start).getHours(),new Date().getHours())]+'</span></div>'+
   (falta<=0.5?'<div class="warn ok" style="margin-top:10px">¡Cuota de hoy cubierta! Lo que ganes ahora va a tus metas.</div>':'<div class="verd" style="margin-top:10px"><span class="big">'+rd(ph)+' netos por hora</span><small>es lo que necesitas en las '+left.toFixed(1)+' h que te quedan para cubrir los '+rd(falta)+' que faltan hoy (unos '+rd(bph)+' brutos por hora contando gastos).</small></div>')+
   '<div class="row" style="margin-top:10px"><label>Bruto hasta ahora<input type="number" id="jg" min="0" value="'+(J.g||'')+'" onchange="jUpd()"></label><label>Gastos hasta ahora<input type="number" id="jx" min="0" value="'+(J.ex||'')+'" onchange="jUpd()"></label><label>Odómetro al llegar<input type="number" id="jk1" min="0" placeholder="'+(J.km0?'Más de '+J.km0:'Opcional')+'"></label></div>'+
-  (AND?andJorLine(J):'<div class="fi-l"><span>📍</span><span>¿Grabando el recorrido en tu app de GPS? Al terminar, cárgalo en Registrar → Recorrido GPS para ver km, paradas y tiempo detenido.</span></div>')+
+  (AND?andJorLine(J):'')+
   '<div class="row" style="margin-top:8px"><button class="pri" onclick="jEnd()">Terminar jornada</button><button class="x" style="flex:none" onclick="jCancel(this)">Cancelar</button></div><div id="jm"></div>';
  JT=setInterval(function(){var s=$('jtime');if(s)s.textContent=hmin(Date.now()-S.shift.start);else clearInterval(JT)},30000)}
 function jStart(){var k0=+$('jk0').value||0;S.shift={start:Date.now(),d:today(),z:$('jz').value,km0:k0,plan:Math.min(18,Math.max(1,+$('jpl').value||9))};if(k0>0)vehSetOdo(k0);if(AND){S.shift.and=1;try{AND.startTrip()}catch(e){}}save();all()}
@@ -2678,7 +2658,7 @@ function jEnd(){var J=S.shift;if(!J)return;var k1=+$('jk1').value||0;if(k1&&J.km
 function jFill(){var J=S.shift;if(!J||!J.end)return;setTab('reg','dia');var h0=new Date(J.start),h1=new Date(J.end);
  $('fecha').value=J.d;$('horas').value=Math.round((J.end-J.start)/36e5*4)/4;if(J.km1&&J.km0)$('km').value=J.km1-J.km0;if(J.z)$('zon').value=J.z;$('tur').value=turnoOf(h0.getHours()+h0.getMinutes()/60,h1.getHours()+h1.getMinutes()/60);if(J.g)$('monto').value=J.g;if(J.ex)$('ex_otros').value=J.ex;var mf=document.querySelector('[data-f="reg-mas"]');if(mf)mf.open=true;
  if(J.v&&!$('vj').value)$('vj').value=J.v;var av=$('autov');if(av)av.innerHTML=J.gc?'<div class="warn ok">🚗 El asistente captó <b>'+J.v+' viajes</b> por <b>'+rd(J.gc)+'</b>'+(J.gAuto?' y los puse como bruto. Revísalo con lo que dice Uber antes de guardar.':' (tú anotaste '+rd(J.g)+' como bruto).')+'</div>':'';
- if(J.gps){var gf=document.querySelector('[data-f="reg-gps"]');if(gf)gf.open=true;gpsApply(J.gps,'Recorrido GPS de la jornada')}else if(J.gpsErr&&$('gpsv'))$('gpsv').innerHTML='<div class="warn">No pude leer el GPS de la jornada: '+esc(J.gpsErr)+'</div>';prev();$('monto').focus()}
+ if(J.gps){gpsApply(J.gps,'Recorrido GPS de la jornada')}else if(J.gpsErr&&$('gpsv'))$('gpsv').innerHTML='<div class="warn">No pude leer el GPS de la jornada: '+esc(J.gpsErr)+'</div>';prev();$('monto').focus()}
 function jCancel(b){tap2(b,'¿Seguro?',function(){if(AND&&S.shift&&S.shift.and){try{AND.stopTrip();AND.clearTrip()}catch(e){}}S.shift=null;save();all()})}
 
 /* ---------- 2. Mantenimiento del vehículo ---------- */
