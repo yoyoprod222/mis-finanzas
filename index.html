@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Mis Finanzas</title>
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#eef1f3" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#15191d" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f2f5f3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0d1411" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -197,17 +197,17 @@ label.fbtn:hover{border-color:var(--ac);background:var(--ac2)}
 /* =====================================================================================
    TEMA "TABLERO DE RUTA" (capa final: manda sobre todo lo anterior).
    Pensado para mirar el teléfono en el carro y a pleno sol: asfalto, amarillo de señal vial y números grandes.
-   --sig = amarillo de señal (marca, botón principal, pestaña activa y el letrero de "Hoy").
+   --sig = verde esmeralda profundo (marca, botón principal, pestaña activa y el letrero de "Hoy"). --mint = acento claro sobre fondos oscuros.
    --ac  = verde "ganancia" (lo bueno/positivo; el código lo usa así). --rd = deuda/peligro. --wr = aviso.
    ===================================================================================== */
 :root{--fd:'Barlow Condensed','Arial Narrow',system-ui,sans-serif;--fb:'Barlow',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
- --bg:#eef1f3;--card:#fff;--tx:#111518;--mu:#4f5a63;--bd:#d5dbe0;--ac:#137a43;--ac2:#e3f1e8;--onac:#fff;--sig:#f2c230;--onsig:#15191d;
- --wr:#7a5600;--wb:#fdf3d2;--rd:#b42318;--gold:#7a5600;--ink:#1c2126;--navbg:#1c2126;--navtx:#f2c230;
- --g:#1c2126;--sh:0 1px 2px rgba(17,21,24,.06);color-scheme:light}
-@media(prefers-color-scheme:dark){:root:not([data-theme='light']){--bg:#15191d;--card:#1e2328;--tx:#f2f4f5;--mu:#a3adb5;--bd:#2e353c;--ac:#3ecf7f;--ac2:#1b2e24;--onac:#08210f;
- --wr:#f5c84c;--wb:#2c2612;--rd:#ff7b72;--gold:#f2c230;--ink:#0f1215;--navbg:#f2c230;--navtx:#15191d;--g:#f2c230;--sh:none;color-scheme:dark}}
-:root[data-theme='dark']{--bg:#15191d;--card:#1e2328;--tx:#f2f4f5;--mu:#a3adb5;--bd:#2e353c;--ac:#3ecf7f;--ac2:#1b2e24;--onac:#08210f;
- --wr:#f5c84c;--wb:#2c2612;--rd:#ff7b72;--gold:#f2c230;--ink:#0f1215;--navbg:#f2c230;--navtx:#15191d;--g:#f2c230;--sh:none;color-scheme:dark}
+ --bg:#f2f5f3;--card:#fff;--tx:#0f1a15;--mu:#4d5d55;--bd:#d6dfda;--ac:#137a43;--ac2:#e2f0e8;--onac:#fff;--sig:#1e5a45;--onsig:#fff;--mint:#a8e6c8;
+ --wr:#8a5a00;--wb:#fbf1dc;--rd:#b42318;--gold:#8a6a1f;--ink:#123829;--navbg:#1e5a45;--navtx:#fff;
+ --g:#123829;--sh:0 1px 2px rgba(15,26,21,.06);color-scheme:light}
+@media(prefers-color-scheme:dark){:root:not([data-theme='light']){--bg:#0d1411;--card:#151e1a;--tx:#ecf2ee;--mu:#9db0a6;--bd:#25332c;--ac:#4cc98a;--ac2:#16291f;--onac:#062014;--sig:#21604a;--onsig:#fff;--mint:#7fd8ad;
+ --wr:#e9b949;--wb:#2a2312;--rd:#ff7b72;--gold:#c9a95e;--ink:#0a1d16;--navbg:#21604a;--navtx:#fff;--g:#21604a;--sh:none;color-scheme:dark}}
+:root[data-theme='dark']{--bg:#0d1411;--card:#151e1a;--tx:#ecf2ee;--mu:#9db0a6;--bd:#25332c;--ac:#4cc98a;--ac2:#16291f;--onac:#062014;--sig:#21604a;--onsig:#fff;--mint:#7fd8ad;
+ --wr:#e9b949;--wb:#2a2312;--rd:#ff7b72;--gold:#c9a95e;--ink:#0a1d16;--navbg:#21604a;--navtx:#fff;--g:#21604a;--sh:none;color-scheme:dark}
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{font-family:var(--fb);font-size:16px;line-height:1.5;letter-spacing:0;background:var(--bg);-webkit-tap-highlight-color:transparent}
 button,a,summary,label,input,select,textarea{touch-action:manipulation}
@@ -273,9 +273,9 @@ details summary{color:var(--tx);text-decoration:underline;text-underline-offset:
 .sr{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 @media(prefers-reduced-motion:reduce){#sheet .box{animation:none}}
 /* Gráficos. --c1..--c4: grupos del reparto (paleta validada para daltonismo; en claro van siempre con su nombre al lado). */
-:root{--c1:#2a78d6;--c2:#eb6834;--c3:#1baf7a;--c4:#eda100}
-@media(prefers-color-scheme:dark){:root:not([data-theme='light']){--c1:#3987e5;--c2:#d95926;--c3:#199e70;--c4:#c98500}}
-:root[data-theme='dark']{--c1:#3987e5;--c2:#d95926;--c3:#199e70;--c4:#c98500}
+:root{--c1:#2a78d6;--c2:#eb6834;--c3:#1baf7a;--c4:#6250d6}
+@media(prefers-color-scheme:dark){:root:not([data-theme='light']){--c1:#3987e5;--c2:#d95926;--c3:#199e70;--c4:#9085e9}}
+:root[data-theme='dark']{--c1:#3987e5;--c2:#d95926;--c3:#199e70;--c4:#9085e9}
 .dn{display:grid;grid-template-columns:200px 1fr;gap:20px;align-items:center;text-align:left}
 .dn svg{display:block;width:200px;height:200px}
 @media(max-width:620px){.dn{grid-template-columns:1fr;gap:12px}.dn svg{margin:0 auto}}
@@ -308,7 +308,7 @@ details.fold>summary .ft{flex:1;min-width:0}.ft b{display:block;font-size:15.5px
 details.fold>.fb{padding:2px 14px 14px}
 details.fold>.fb>.grid{display:block}details.fold>.fb>.grid>*{margin-top:12px}
 details.fold.cta{border:0;margin:0;background:transparent}
-details.fold.cta>summary{background:var(--ink);color:#fff;border-radius:14px}details.fold.cta>summary small{color:#c9d1d7}details.fold.cta>summary::after{border-color:var(--sig)}
+details.fold.cta>summary{background:var(--ink);color:#fff;border-radius:14px}details.fold.cta>summary small{color:#c9d1d7}details.fold.cta>summary::after{border-color:var(--mint)}
 details.fold.cta[open]>summary{border-radius:14px 14px 0 0}details.fold.cta>.fb{border:1px solid var(--bd);border-top:0;border-radius:0 0 14px 14px;padding-top:12px}
 .kmore:not(.open)>:nth-child(n+5){display:none}
 .kpis{grid-template-columns:repeat(auto-fit,minmax(min(100%,132px),1fr))}
@@ -324,6 +324,17 @@ details.fold.cta[open]>summary{border-radius:14px 14px 0 0}details.fold.cta>.fb{
 #subseg{display:flex;gap:6px;flex-wrap:wrap;margin:-4px 0 12px}#subseg:empty{display:none}
 #subseg button{min-height:38px;padding:6px 14px;font-size:14px;border-radius:99px;background:transparent;border:1px solid var(--bd);color:var(--tx);font-weight:500}
 #subseg button.on{background:var(--card);border-color:var(--tx);font-weight:700}
+/* Tema verde: el letrero de Hoy y los botones van en verde profundo con texto blanco. */
+.kpi:first-child b{color:var(--mint)}
+.hero #th{background:rgba(255,255,255,.14)}.hero #th:hover{background:rgba(255,255,255,.24)}
+.hero.compact #th{background:transparent}
+#hday .hz{background:rgba(255,255,255,.16);color:#fff}
+::selection{background:var(--mint);color:#0f1a15}
+input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px color-mix(in srgb,var(--ac) 30%,transparent)}
+:focus-visible{outline-color:var(--sig)}
+@media(prefers-color-scheme:dark){:root:not([data-theme='light']) :focus-visible{outline-color:var(--mint)}}
+:root[data-theme='dark'] :focus-visible{outline-color:var(--mint)}
+.pri:hover{filter:brightness(1.12)}
 </style>
 </head>
 <body>
