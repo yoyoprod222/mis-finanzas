@@ -340,6 +340,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px color-mix(in srgb,v
 .asw.on{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 10%,var(--card))}.asw b{display:block;font-family:var(--fd);font-size:22px;line-height:1.2}.asw small{display:block}
 .asw.on b{color:var(--ac)}.asw button{flex:none;min-width:104px}
 .dzr{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd)}.dzr small{display:block}.dzr select{width:auto;padding:6px 8px}
+@media(max-width:979px){#nav button{font-size:11px;padding:8px 0;min-width:0}#nav .in{gap:2px}}
 </style>
 </head>
 <body>
@@ -365,6 +366,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px color-mix(in srgb,v
 <div class="grid">
   <div class="card">
     <h2>Registrar el día: bruto y gastos</h2>
+    <div id="autov"></div>
     <div class="row">
       <label>Fecha<input type="date" id="fecha"></label>
       <label>Bruto del día (RD$)<input type="number" id="monto" min="0" step="50" placeholder="4000" oninput="prev()"></label>
@@ -971,7 +973,7 @@ function rPend(){$("pend").innerHTML=PEND.map(function(p,i){return '<div class="
 function pendAll(){var a=PEND.slice(),v=+$("xv").value;if(v>0)a.push({c:$("xc").value||"Extra",v:v});return a}
 function addLog(){var gs=$("monto").value,xs=pendAll(),g=+gs||0;if(gs===""&&!xs.length)return;var e={};EX.forEach(function(k){e[k[0]]=+$("ex_"+k[0]).value||0});
  var lg={d:$("fecha").value||today(),g:g,e:e,x:xs,h:+$("horas").value||0,off:$("off").checked,n:$("nota").value},km=+$("km").value||0,kmp=+$("kmp").value||0;if($("zon").value)lg.z=$("zon").value;if($("tur").value)lg.t=$("tur").value;if(km>0)lg.km=km;if(kmp>0)lg.kmp=Math.min(kmp,km||kmp);var vj=Math.round(+$("vj").value||0);if(vj>0&&vj<200)lg.v=vj;
- if(PGPS&&PGPS.d==lg.d)lg.gps=PGPS;PGPS=null;var gv=$('gpsv');if(gv)gv.innerHTML='';S.logs.push(lg);S.logs.sort(function(a,b){return a.d<b.d?-1:1});
+ if(PGPS&&PGPS.d==lg.d)lg.gps=PGPS;PGPS=null;var gv=$('gpsv');if(gv)gv.innerHTML='';var av0=$('autov');if(av0)av0.innerHTML='';S.logs.push(lg);S.logs.sort(function(a,b){return a.d<b.d?-1:1});
  // Vehículo: suma los km al odómetro (salvo que la jornada ya lo fijó con el odómetro real) y cierra la jornada pendiente de ese día.
  var fromShift=S.shift&&S.shift.end&&S.shift.d==lg.d;if(!lg.gps&&fromShift&&S.shift.gps)lg.gps=S.shift.gps;if(km>0&&S.veh&&S.veh.odo&&!(fromShift&&S.shift.km1))S.veh.odo+=km;if(fromShift)S.shift=null;
  $("monto").value="";$("nota").value="";$("xc").value="";$("xv").value="";$("off").checked=false;PEND=[];$("horas").value="";$("km").value="";$("kmp").value="";$("vj").value="";$("zon").value="";$("tur").value="";EX.forEach(function(k){$("ex_"+k[0]).value=""});save();all()}
@@ -1347,7 +1349,7 @@ function weeksOf(ym){var s={};S.logs.forEach(function(x){var k=wkMon(x.d);if(k.s
 function wkLabel(k){var n=Math.ceil(+k.slice(8)/7),e=new Date(k+'T00:00'),m=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];e.setDate(e.getDate()+6);return 'Semana '+n+' ('+(+k.slice(8))+' '+m[+k.slice(5,7)-1]+' al '+e.getDate()+' '+m[e.getMonth()]+')'}
 function fillWeeks(){var w=weeksOf($('pdm').value),sel=$('pdw');sel.innerHTML=w.length?w.map(function(k){return '<option value="'+k+'">'+wkLabel(k)+'</option>'}).join(''):'<option value="">Sin semanas registradas</option>';sel.selectedIndex=Math.max(0,w.length-1)}
 function renderPdf(){var ms=weekMonths();$('pdfc').innerHTML='<h2>Reporte semanal en PDF</h2><p class="sub">Elige el mes y la semana (de lunes a domingo; la semana 1 es la que empieza en el primer lunes del mes). El informe incluye resumen, reparto del dinero, gastos e ingresos extras, análisis día por día, estado de deudas y ahorro, y retroalimentación para la semana siguiente.</p><div class="row"><label>Mes<select id="pdm" onchange="fillWeeks()">'+ms.map(function(m){return '<option value="'+m+'">'+mname(m)+'</option>'}).join('')+'</select></label><label>Semana<select id="pdw"></select></label><button class="pri" onclick="makePdf()">Descargar reporte PDF</button></div><div id="pdmsg"></div>';fillWeeks()}
-function all(){ens();ens2();$("dpw").value=S.dpw;$("cush").value=cush();kpis();renderWk();tb();renderGoals();renderSup();split();esc2();hist();draw();prev();rPend();renderCal();renderSim();renderCob();renderRend();renderMes();renderPdf();renderResp();renderAcc();renderMov();renderOst();renderPay();renderOdet();renderPred();renderSubnav();fiSummary();p2All();heroUpd();try{andSync();renderAnd()}catch(e){}if(TAB=='ia'&&['cop','st','wi','af'].indexOf(subOf('ia'))<0)renderFI()}
+function all(){ens();ens2();try{andShiftSync()}catch(e){}$("dpw").value=S.dpw;$("cush").value=cush();kpis();renderWk();tb();renderGoals();renderSup();split();esc2();hist();draw();prev();rPend();renderCal();renderSim();renderCob();renderRend();renderMes();renderPdf();renderResp();renderAcc();renderMov();renderOst();renderPay();renderOdet();renderPred();renderSubnav();fiSummary();p2All();heroUpd();try{andSync();renderAnd()}catch(e){}if(TAB=='ia'&&['cop','st','wi','af'].indexOf(subOf('ia'))<0)renderFI()}
 var TABS=[["inicio",'<svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-5h4v5"/></svg>',"Inicio"],["ia",'<svg viewBox="0 0 24 24"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M18.5 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>',"IA"],["reg",'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>',"Registrar"],["cta",'<svg viewBox="0 0 24 24"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3"/><path d="M4 7.5V17a2 2 0 0 0 2 2h13a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1H6.5A2.5 2.5 0 0 1 4 7.5Z"/><circle cx="16.5" cy="13.5" r="1.1"/></svg>',"Cuentas"],["deu",'<svg viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h4"/></svg>',"Deudas"],["hog",'<svg viewBox="0 0 24 24"><path d="M5 9h14l-1.4 9.2a2 2 0 0 1-2 1.8H8.4a2 2 0 0 1-2-1.8L5 9Z"/><path d="M9 9l3-5 3 5"/></svg>',"Hogar"],["ana",'<svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M21 20H3"/></svg>',"Análisis"]];
 var SUBS={inicio:[['res','Resumen'],['hoy','Hoy y semana'],['pred','Predicci\u00f3n']],ia:[['zona','Zona del día'],['cop','Copiloto'],['diag','Diagn\u00f3stico'],['wi','What If'],['af','\u00bfMe alcanza?'],['st','Registro IA'],['fc','Pron\u00f3stico'],['au','Autopsia'],['ub','Uber'],['ob','Objetivos'],['ad','Auditor'],['me','Memoria'],['cfg','Ajustes IA']],reg:[['dia','Registrar'],['dist','Distribuci\u00f3n'],['hist','Historial'],['imp','Importar Uber'],['veh','Veh\u00edculo']],cta:[['cue','Cuentas'],['mov','Movimientos'],['cierre','Cierre semanal']],deu:[['est','Estado'],['pag','Pagos'],['obl','Obligaciones'],['meta','Metas'],['sim','Simulador']],hog:[['sup','S\u00faper'],['pres','Presupuesto'],['cob','Por cobrar'],['rep','Reparto']],ana:[['tend','Tendencias'],['pdf','Reporte PDF'],['resp','Respaldo'],['mas','App y avisos']],mas:[['menu','Todo']]},SUB={},TAB='inicio';
 TABS.push(['mas','','M\u00e1s']);TABS.push(['and','','Asistente']);SUBS.and=[['aest','Estado'],['aof','Ofertas'],['azon','Zonas de cuidado'],['acfg','Ajustes']];
@@ -1406,8 +1408,8 @@ var IAG=[['Zona del día',['zona']],['Preguntar',['cop','wi','af','st']],['Anál
 function subOf(t){var s=SUB[t];return SUBS[t].some(function(x){return x[0]==s})?s:SUBS[t][0][0]}
 // Barra de abajo con 5 pestañas. Las secciones internas (TABS/SUBS) no cambian: "Dinero" agrupa Cuentas y Hogar,
 // y "Más" abre un menú con IA y Análisis. Así todos los setTab('ia',…) y enlaces existentes siguen funcionando.
-var NAVT=[['inicio',TABS[0][1],'Hoy',['inicio']],['reg',TABS[2][1],'Registrar',['reg']],['din',TABS[3][1],'Dinero',['cta','hog']],['deu',TABS[4][1],'Deudas',['deu']],
- ['mas','<svg viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18.5" cy="12" r="1.6"/></svg>','Más',['mas','ia','ana','and']]];
+var NAVT=[['inicio',TABS[0][1],'Hoy',['inicio']],['reg',TABS[2][1],'Registrar',['reg']],['and','<svg viewBox="0 0 24 24"><path d="M5 16.5V12l1.8-4.6A2 2 0 0 1 8.7 6h6.6a2 2 0 0 1 1.9 1.4L19 12v4.5"/><path d="M3.5 12h17v4.5h-17z"/><circle cx="7.5" cy="16.5" r="1.6"/><circle cx="16.5" cy="16.5" r="1.6"/></svg>','Viajes',['and']],['din',TABS[3][1],'Dinero',['cta','hog']],['deu',TABS[4][1],'Deudas',['deu']],
+ ['mas','<svg viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18.5" cy="12" r="1.6"/></svg>','Más',['mas','ia','ana']]];
 function navOf(t){return NAVT.filter(function(x){return x[3].indexOf(t)>=0})[0]||NAVT[0]}
 function navGo(k){if(k=='din')setTab(TAB=='cta'||TAB=='hog'?TAB:(localStorage.getItem('fin-din')||'cta'));else setTab(k)}
 function vencN(){var n=0;try{sorted().forEach(function(i){if(!i.sv&&i.freq!='d'&&oblStatus(i).st=='Vencida')n++})}catch(e){}return n}
@@ -1417,7 +1419,7 @@ function renderSubnav(){var t=TAB,el=$('subnav'),g=navOf(t),L=[],sg=$('subseg');
   el.innerHTML='<button class="back" onclick="setTab(\'mas\')" aria-label="Volver al menú Más">‹ Más</button>'+IAG.map(function(q,i){var on=i==gi;return '<button class="'+(on?'on':'')+'" aria-pressed="'+on+'" onclick="setTab(\'ia\',\''+(on?cur:q[1][0])+'\')">'+q[0]+'</button>'}).join('');
   if(IAG[gi][1].length>1)sg.innerHTML=IAG[gi][1].map(function(k){var on=k==cur;return '<button class="'+(on?'on':'')+'" aria-pressed="'+on+'" onclick="setTab(\'ia\',\''+k+'\')">'+lb[k]+'</button>'}).join('');var ao=el.querySelector('.on');if(ao)el.scrollLeft=Math.max(0,ao.offsetLeft-(el.clientWidth-ao.offsetWidth)/2);return}
  (g[0]=='din'?['cta','hog']:[t]).forEach(function(tt){SUBS[tt].forEach(function(x){L.push([tt,x[0],x[1]])})});
- var back=t=='ia'||t=='ana'||t=='and'?'<button class="back" onclick="setTab(\'mas\')" aria-label="Volver al menú Más">‹ Más</button>':'';
+ var back=t=='ia'||t=='ana'?'<button class="back" onclick="setTab(\'mas\')" aria-label="Volver al menú Más">‹ Más</button>':'';
  el.innerHTML=back+L.map(function(x){var on=x[0]==t&&x[1]==subOf(t),n=x[0]=='deu'&&x[1]=='est'?vencN():0;
   return '<button class="'+(on?'on':'')+'" aria-pressed="'+on+'" data-t="'+x[0]+'" data-s="'+x[1]+'" onclick="setTab(this.dataset.t,this.dataset.s)">'+x[2]+(n?'<i class="dot2" aria-label="'+n+' vencidas">'+n+'</i>':'')+'</button>'}).join('');
  var a=el.querySelector('.on');if(a)el.scrollLeft=Math.max(0,a.offsetLeft-(el.clientWidth-a.offsetWidth)/2)}
@@ -1430,7 +1432,7 @@ function setSub(s){SUB[TAB]=s;setTab(TAB)}
 // Menú "Más": todas las secciones de IA y Análisis en una cuadrícula, con una línea que dice para qué sirve cada una.
 var MASD={aest:'Encender o apagar el lector y el GPS',aof:'Ofertas que evaluó el lector',azon:'Sectores donde ir con cuidado',acfg:'Tus límites y el diagnóstico',zona:'Dónde y si conviene trabajar hoy',cop:'Pregúntale a la IA sobre tu dinero',diag:'Tu salud financiera de 0 a 100',wi:'Qué pasa si cambias algo',af:'Antes de comprar algo',st:'Registrar con texto o voz',fc:'Cómo vas a cerrar el mes',au:'Qué pasó en un mes',ub:'Rendimiento por hora y km',ob:'Tus metas y su avance',ad:'Revisa errores y duplicados',me:'Lo que la IA recuerda de ti',cfg:'Clave y límites de la IA',tend:'Cómo te ha ido por semana y mes',pdf:'Reporte semanal para guardar',resp:'Copia de seguridad e importar',mas:'Instalar la app y avisos'};
 function renderMas(){var el=$('masm');if(!el)return;var b=function(t,x){return '<button data-t="'+t+'" data-s="'+x[0]+'" onclick="setTab(this.dataset.t,this.dataset.s)"><span>'+x[1]+'</span><small>'+(MASD[x[0]]||'')+'</small></button>'};
- el.innerHTML='<h2>Más</h2><p class="mhead">Asistente de viajes'+(AND?'':' (app Android)')+'</p><div class="mgrid">'+SUBS.and.map(function(x){return b('and',x)}).join('')+'</div><p class="mhead">Inteligencia (IA)</p><div class="mgrid">'+SUBS.ia.map(function(x){return b('ia',x)}).join('')+'</div><p class="mhead">Análisis y respaldo</p><div class="mgrid">'+SUBS.ana.map(function(x){return b('ana',x)}).join('')+'</div>'}
+ el.innerHTML='<h2>Más</h2><p class="mhead">Inteligencia (IA)</p><div class="mgrid">'+SUBS.ia.map(function(x){return b('ia',x)}).join('')+'</div><p class="mhead">Análisis y respaldo</p><div class="mgrid">'+SUBS.ana.map(function(x){return b('ana',x)}).join('')+'</div>'}
 // Letrero de "Hoy": cuánto falta para cubrir el día y la zona recomendada. Lo más importante, arriba y grande.
 function heroUpd(){var el=$('hday');if(!el)return;if(TAB!='inicio'){el.innerHTML='';return}
  try{var n=jNeed(),f=Math.max(0,n.need-n.hoy),z=zGet(),zl='';
@@ -2273,7 +2275,7 @@ function zIdxAdj(z,k){var H=z.H,h=H.Z[k]||{},A=H.A||{},o=z.Z[k],s=0,why=[];
 // Dentro de la app Android (window.MFAndroid) la página puede: grabar el GPS en segundo plano durante la jornada,
 // usar el lector de ofertas de Uber (accesibilidad) y guardar archivos en Descargas. En el navegador nada de esto existe
 // y la página funciona igual que siempre.
-var AND=window.MFAndroid||null,ANDCFG={on:true,lvl:'n',mk:'',mh:''},ANDLAST='';
+var AND=window.MFAndroid||null,ANDCFG={on:true,lvl:'n',mk:'',mh:'',cap:true,shift:'ask',kw_on:'',kw_off:'',kw_acc:'',kw_end:''},ANDLAST='';
 try{var ac0=JSON.parse(localStorage.getItem('fin-and')||'{}');for(var ak0 in ac0)if(ak0 in ANDCFG)ANDCFG[ak0]=ac0[ak0]}catch(e){}
 function andJ(f){try{return JSON.parse(AND[f]()||'null')}catch(e){return null}}
 // Límites del lector. Una oferta no incluye la espera ni los km vacíos que vienen después, así que para mantener
@@ -2283,9 +2285,10 @@ function andNums(){var H=zHist(),A=H.A||{},cpk=(A.fpk||ZCFG.glpkm)+zMpk(),f={s:0
   kG=A.npk?A.npk*1.15*f:15,kM=A.npk?A.npk*0.9*f:10,hG=A.nph?A.nph*1.3*f:350,hM=A.nph?A.nph*f:250;
  if(+ANDCFG.mk>0){kM=+ANDCFG.mk;kG=Math.max(kG,kM*1.25)}if(+ANDCFG.mh>0){hM=+ANDCFG.mh;hG=Math.max(hG,hM*1.3)}
  return{cpk:+cpk.toFixed(2),kmGood:Math.round(kG),kmMin:Math.round(kM),hrGood:Math.round(hG),hrMin:Math.round(hM),on:!!ANDCFG.on,base:!!(A.npk&&A.nph)}}
-var ANDZL='';function andSync(){if(!AND)return;try{var o=andNums(),j=JSON.stringify(o);if(j!=ANDLAST){ANDLAST=j;AND.setNumbers(j)}
+var ANDZL='',ANDAL='';function andSync(){if(!AND)return;try{var o=andNums(),j=JSON.stringify(o);if(j!=ANDLAST){ANDLAST=j;AND.setNumbers(j)}
+ var au=JSON.stringify({shiftMode:ANDCFG.shift,capture:!!ANDCFG.cap,kw_on:ANDCFG.kw_on,kw_off:ANDCFG.kw_off,kw_acc:ANDCFG.kw_acc,kw_end:ANDCFG.kw_end});if(au!=ANDAL&&AND.setAuto){ANDAL=au;AND.setAuto(au)}
  var z=JSON.stringify({night:S.dzn||[19,6],list:(S.dz||[]).map(function(x){return{n:x.n,lv:x.lv,nota:x.nota||''}})});if(z!=ANDZL&&AND.setZones){ANDZL=z;AND.setZones(z)}}catch(e){}}
-function andSave(){try{localStorage.setItem('fin-and',JSON.stringify(ANDCFG))}catch(e){}ANDLAST='';andSync();renderAnd()}
+function andSave(){try{localStorage.setItem('fin-and',JSON.stringify(ANDCFG))}catch(e){}ANDLAST='';ANDAL='';andSync();renderAnd()}
 function andOffers(day){var L=AND?andJ('offers')||[]:[];return day?L.filter(function(o){return ds(new Date(o.t))==day}):L}
 var ANDV=['❌ No conviene','⚠️ Justo','✅ Conviene'];
 function andOfferRows(L){return L.slice().reverse().slice(0,30).map(function(o){return '<div class="leg"><span>'+new Date(o.t).toLocaleTimeString('es-DO',{hour:'numeric',minute:'2-digit'})+' · '+rd(o.fare)+' · '+(o.pkm+o.tkm).toFixed(1)+' km · '+Math.round(o.pmin+o.tmin)+' min</span><span>'+ANDV[o.v]+'<br><small>'+rd(o.npk)+'/km · '+rd(o.nph)+'/h</small></span></div>'}).join('')}
@@ -2302,7 +2305,10 @@ function renderAndEst(){var el=$('and_est');if(!el)return;if(!AND){andNoApp(el,'
   I.acc?'ANDCFG.on=!ANDCFG.on;andSave()':'AND.openAccessibility()',I.acc?(lec?'Apagar':'Encender'):'Dar permiso');
  h+=andSw(!!st.on,'GPS del recorrido',st.on?'Grabando · '+(st.km||0)+' km':(J&&st.n?'En pausa · '+(st.km||0)+' km':'Apagado'),st.on?(J?'Es parte de la jornada en curso. Al pausarlo no se pierde lo grabado.':'Al apagarlo te llevo a Registrar con el recorrido.'):(J?'La jornada sigue; reanúdalo cuando quieras.':'Graba distancia, paradas y tiempo detenido aunque estés en Uber.'),
   'andGps()',st.on?(J?'Pausar':'Apagar'):(J&&st.n?'Reanudar':'Encender'));
- h+='<div class="trio" style="margin-top:12px">'+[['Ofertas hoy',T.length],['Convenían',ok],['Con zona de cuidado',rk]].map(function(x){return '<button class="t3" onclick="setTab(\'and\',\'aof\')"><span>'+x[0]+'</span><b>'+x[1]+'</b><small>Ver ›</small></button>'}).join('')+'</div>';
+ h+=andSw(!!ANDCFG.cap,'Captar viajes',ANDCFG.cap?'Encendido':'Apagado',ANDCFG.cap?'Anota cada viaje que aceptas y terminas, con lo que cobraste. Al terminar la jornada lo pongo como bruto.':'No anotará tus viajes.','ANDCFG.cap=!ANDCFG.cap;andSave()',ANDCFG.cap?'Apagar':'Encender');
+ h+='<div class="asw'+(ANDCFG.shift!='off'?' on':'')+'"><div><span class="fi-ey">Jornada automática</span><b>'+{ask:'Preguntarme',auto:'Automática',off:'Apagada'}[ANDCFG.shift]+'</b><small>'+{ask:'Al conectarte a Uber te pregunto si empiezo la jornada; al desconectarte, si la termino.',auto:'Empiezo y termino la jornada solo, al conectarte y desconectarte de Uber.',off:'Empiezas y terminas la jornada tú.'}[ANDCFG.shift]+'</small></div><select aria-label="Jornada automática" onchange="ANDCFG.shift=this.value;andSave()" style="width:auto">'+[['ask','Preguntarme'],['auto','Automática'],['off','Apagada']].map(function(o){return '<option value="'+o[0]+'"'+(ANDCFG.shift==o[0]?' selected':'')+'>'+o[1]+'</option>'}).join('')+'</select></div>';
+ var V=andTrips(new Date(today()+'T00:00').getTime());
+ h+='<div class="trio" style="margin-top:12px">'+[['Ofertas hoy',T.length],['Viajes captados',V.length],['Con zona de cuidado',rk]].map(function(x){return '<button class="t3" onclick="setTab(\'and\',\'aof\')"><span>'+x[0]+'</span><b>'+x[1]+'</b><small>Ver ›</small></button>'}).join('')+'</div>';
  var z1=(S.dz||[]).filter(function(x){return x.lv!='x'})[0];
  h+='<div class="row" style="margin-top:12px"><button onclick="if(!AND.testBubble())alert(\'Primero da el permiso de accesibilidad.\')">Probar el aviso</button>'+(z1&&AND.testBubbleZone?'<button onclick="AND.testBubbleZone(\''+esc(z1.n).replace(/'/g,'')+'\')">Probar con zona de cuidado</button>':'')+(I.batt?'':'<button onclick="AND.openBattery()">Que Android no lo cierre</button>')+'</div>';
  el.innerHTML=h}
@@ -2315,8 +2321,9 @@ function renderAndOf(){var el=$('and_of');if(!el)return;if(!AND){andNoApp(el,'Of
  var all=andOffers(),lim=ANDF=='hoy'?today():ANDF=='7'?fiAdd(today(),-6):'',L=all.filter(function(o){return !lim||ds(new Date(o.t))>=lim}),ok=L.filter(function(o){return o.v==2}),rk=L.filter(function(o){return o.risk}),
   av=function(A,k){return A.length?A.reduce(function(a,o){return a+o[k]},0)/A.length:0},K=function(b,t){return '<div class="kpi"><b>'+b+'</b><span>'+t+'</span></div>'};
  var h='<h2>Ofertas evaluadas</h2><div class="seg">'+[['hoy','Hoy'],['7','7 días'],['all','Todas']].map(function(x){return '<button class="'+(ANDF==x[0]?'on':'')+'" onclick="ANDF=\''+x[0]+'\';renderAndOf()">'+x[1]+'</button>'}).join('')+'</div>';
- h+='<div class="kpis" style="margin-top:12px">'+K(L.length,'Ofertas')+K(L.length?Math.round(ok.length/L.length*100)+'%':'—','Convenían')+K(ok.length?rd(av(ok,'npk'))+'/km':'—','Promedio de las que convenían')+K(rk.length,'Con zona de cuidado')+'</div>';
- h+=L.length?'<div style="margin-top:10px">'+L.slice().reverse().slice(0,80).map(function(o){return '<div class="leg"><span>'+new Date(o.t).toLocaleString('es-DO',{weekday:'short',hour:'numeric',minute:'2-digit'})+' · '+rd(o.fare)+' · '+(o.pkm+o.tkm).toFixed(1)+' km · '+Math.round(o.pmin+o.tmin)+' min'+(o.risk?'<br><span class="tag w">⚠ '+esc(o.risk)+'</span>':'')+'</span><span>'+ANDV[o.v]+'<br><small>'+rd(o.npk)+'/km · '+rd(o.nph)+'/h</small></span></div>'}).join('')+'</div>':'<p><small>No hay ofertas en este período.</small></p>';
+ var ac=L.filter(function(o){return o.acc}),aok=ac.filter(function(o){return o.v==2}),VV=andTrips().filter(function(t){return !lim||ds(new Date(t.t1))>=lim});
+ h+='<div class="kpis" style="margin-top:12px">'+K(L.length,'Ofertas')+K(L.length?Math.round(ok.length/L.length*100)+'%':'—','Convenían')+K(ac.length+(ac.length?' ('+Math.round(aok.length/ac.length*100)+'% buenas)':''),'Aceptaste')+K(VV.length?rd(VV.reduce(function(a,t){return a+t.fare},0)):'—','Cobrado en '+VV.length+' viajes captados')+K(ok.length?rd(av(ok,'npk'))+'/km':'—','Promedio de las que convenían')+K(rk.length,'Con zona de cuidado')+'</div>';
+ h+=L.length?'<div style="margin-top:10px">'+L.slice().reverse().slice(0,80).map(function(o){return '<div class="leg"><span>'+new Date(o.t).toLocaleString('es-DO',{weekday:'short',hour:'numeric',minute:'2-digit'})+' · '+rd(o.fare)+' · '+(o.pkm+o.tkm).toFixed(1)+' km · '+Math.round(o.pmin+o.tmin)+' min'+(o.acc?' · <b>aceptada</b>':'')+(o.risk?'<br><span class="tag w">⚠ '+esc(o.risk)+'</span>':'')+'</span><span>'+ANDV[o.v]+'<br><small>'+rd(o.npk)+'/km · '+rd(o.nph)+'/h</small></span></div>'}).join('')+'</div>':'<p><small>No hay ofertas en este período.</small></p>';
  if(all.length)h+='<button class="x" style="width:auto;padding:6px 12px;margin-top:10px" onclick="tap2(this,\'¿Borrar todas?\',function(){AND.clearOffers();renderAndAll()})">Borrar historial de ofertas</button>';
  el.innerHTML=h}
 function renderAndZn(){var el=$('and_zn');if(!el)return;var Z=S.dz||[],n=Z.filter(function(x){return x.lv!='x'}).length,nt=S.dzn||[19,6],lvs=[['p','Precaución'],['e','Evitar'],['x','No avisar']];
@@ -2333,6 +2340,7 @@ function renderAndCf(){var el=$('and_cf');if(!el)return;var N=andNums(),I=AND?an
  h+='<div class="leg"><span>Costo del carro por km (GLP + mantenimiento)</span><span>RD$'+N.cpk.toFixed(1)+'</span></div><div class="leg"><span>✅ Conviene si deja al menos</span><span>'+rd(N.kmGood)+'/km y '+rd(N.hrGood)+'/h</span></div><div class="leg"><span>❌ No conviene si deja menos de</span><span>'+rd(N.kmMin)+'/km o '+rd(N.hrMin)+'/h</span></div>'+
   '<div class="row" style="margin-top:10px"><label>Exigencia<select onchange="ANDCFG.lvl=this.value;andSave()">'+[['s','Suave'],['n','Normal'],['e','Exigente']].map(function(o){return '<option value="'+o[0]+'"'+(ANDCFG.lvl==o[0]?' selected':'')+'>'+o[1]+'</option>'}).join('')+'</select></label><label>Mínimo propio por km (RD$)<input type="number" min="0" value="'+esc(ANDCFG.mk)+'" placeholder="Automático" onchange="ANDCFG.mk=this.value;andSave()"></label><label>Mínimo propio por hora (RD$)<input type="number" min="0" value="'+esc(ANDCFG.mh)+'" placeholder="Automático" onchange="ANDCFG.mh=this.value;andSave()"></label></div>'+
   '<small>'+(N.base?'Calculados con tu neto real por km y por hora. Una oferta no incluye la espera ni los km vacíos que vienen después, por eso tiene que rendir más que tu promedio.':'Todavía no hay suficientes jornadas con km y horas: se usan valores de partida.')+' Se actualizan solos con cada jornada.</small>';
+ h+=foldHtml('and-kw','Palabras que busca el lector','Para cuando Uber cambie sus textos','<p class="sub" style="margin:0 0 8px">Déjalas vacías para usar las de fábrica. Si el diagnóstico muestra que Uber usa otras palabras, ponlas aquí separadas por <b>|</b> (sin tildes, en minúscula).</p>'+[['kw_on','Conectado','conectado|buscando viajes'],['kw_off','Desconectado','desconectado|conectarse'],['kw_acc','Viaje aceptado','recoger a|llegando|iniciar viaje'],['kw_end','Viaje terminado','viaje completado|ganaste|califica']].map(function(k){return '<label style="margin-top:8px">'+k[1]+'<input value="'+esc(ANDCFG[k[0]])+'" placeholder="De fábrica: '+k[2]+'…" onchange="ANDCFG.'+k[0]+'=this.value.trim();andSave()"></label>'}).join(''));
  if(AND){var D=I.diag?andJ('diag')||[]:[];
   h+=foldHtml('and-dg','Diagnóstico del lector',I.diag?'Activado · '+D.length+' lecturas guardadas':'Si no reconoce tus ofertas, actívalo',
   '<p class="sub" style="margin:0 0 8px">Guarda el texto que el lector ve en Uber Driver (las últimas 15 lecturas, solo en tu teléfono). Recibe 2 o 3 ofertas, toca «Copiar» y envíamelo para ajustar el lector a tu pantalla. Apágalo al terminar: puede incluir el nombre del pasajero.</p>'+
@@ -2340,12 +2348,22 @@ function renderAndCf(){var el=$('and_cf');if(!el)return;var N=andNums(),I=AND?an
   D.slice().reverse().map(function(x){return '<div class="arow"><small>'+new Date(x.t).toLocaleTimeString('es-DO')+' · '+(x.ok?'✅ oferta reconocida':'sin oferta')+'</small><div style="font-size:12px;word-break:break-word;margin-top:4px">'+esc(x.x)+'</div></div>'}).join(''));
   h+='<p style="margin-top:10px"><small>App Android versión '+esc(I.v||'')+'.</small></p>'}
  el.innerHTML=h}
-function andJorLine(J){var st=andJ('tripStatus')||{},I=andJ('info')||{},T=andOffers(today()).filter(function(o){return o.t>=J.start}),ok=T.filter(function(o){return o.v==2}).length;
- return '<div class="fi-l"><span>📍</span><span>'+(st.on?'GPS grabando · <b>'+(st.km||0)+' km</b> · '+(st.n||0)+' puntos':'El GPS no está grabando. <a href="#" onclick="AND.startTrip();S.shift.and=1;save();return false">Reanudar GPS</a>')+'</span></div>'+
+function andJorLine(J){var st=andJ('tripStatus')||{},I=andJ('info')||{},T=andOffers(today()).filter(function(o){return o.t>=J.start}),ok=T.filter(function(o){return o.v==2}).length,V=andTrips(J.start);
+ return (V.length?'<div class="fi-l"><span>🚗</span><span><b>'+V.length+(V.length==1?' viaje':' viajes')+'</b> captados · <b>'+rd(V.reduce(function(a,t){return a+t.fare},0))+'</b> de bruto</span></div>':'')+(J.auto?'<div class="fi-l"><span>⚡</span><span>Jornada iniciada al conectarte a Uber.</span></div>':'')+'<div class="fi-l"><span>📍</span><span>'+(st.on?'GPS grabando · <b>'+(st.km||0)+' km</b> · '+(st.n||0)+' puntos':'El GPS no está grabando. <a href="#" onclick="AND.startTrip();S.shift.and=1;save();return false">Reanudar GPS</a>')+'</span></div>'+
   '<div class="fi-l"><span>'+(I.acc?'🚗':'⚠️')+'</span><span>'+(I.acc?'Lector de ofertas activo'+(T.length?' · '+T.length+' ofertas, '+ok+' convenían':''):'Lector de ofertas apagado. <a href="#" onclick="AND.openAccessibility();return false">Activarlo</a>')+' · <a href="#" onclick="setTab(\'and\',\'aest\');return false">Asistente</a></span></div>'}
 function andCopyDiag(b){var D=andJ('diag')||[],t=D.map(function(x){return new Date(x.t).toISOString()+(x.ok?' [OK] ':' ')+x.x}).join('\n\n'),a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');b.textContent='Copiado'}catch(e){}a.remove()}
+// Viajes que el lector captó de Uber (aceptados y terminados, con lo que cobraste).
+function andTrips(since){var L=AND&&AND.trips?andJ('trips')||[]:[];return since?L.filter(function(t){return t.t1>=since}):L}
+// Cierra la jornada con lo de Android: GPS (ya grabado) y, si no anotaste el bruto, la suma de los viajes captados.
+function jCloseAnd(J){if(!AND||!J.and)return;try{var gx=AND.stopTrip();J.gps=gAnalyze(gpxParse(gx));AND.clearTrip()}catch(e){J.gpsErr=String(e.message||e)}
+ var T=andTrips(J.start).filter(function(t){return !J.end||t.t1<=J.end+60000});if(T.length){J.v=T.length;J.gc=Math.round(T.reduce(function(a,t){return a+t.fare},0));if(!J.g){J.g=J.gc;J.gAuto=1}}}
+// Pedidos que dejó Android desde la notificación (te conectaste o desconectaste de Uber).
+function andShiftSync(){if(!AND)return;var I=andJ('info')||{},ch=0;
+ if(I.shiftReq&&!S.shift){var z=zGet();S.shift={start:I.shiftReq,d:ds(new Date(I.shiftReq)),z:z&&z.rec&&z.rec.k&&z.d==today()?z.rec.k:'',km0:0,plan:Math.round(fiProfile().h||9),and:1,auto:1};ch=1}
+ if(I.endReq&&S.shift&&!S.shift.end&&I.endReq>S.shift.start){S.shift.end=I.endReq;jCloseAnd(S.shift);ch=1}
+ if(I.shiftReq||I.endReq){try{AND.ackShift()}catch(e){}}if(ch)save()}
 // Avisos que manda Android: GPS sin permiso, volver a la app.
-function mfAndroidEvent(k,v){if(k=='trip'&&v=='denied'){alert('Sin permiso de ubicación no puedo grabar el recorrido. Puedes darlo en Ajustes → Apps → Mis Finanzas → Permisos.')}try{renderJor();renderAnd()}catch(e){}}
+function mfAndroidEvent(k,v){if(k=='resume'){try{andShiftSync()}catch(e){}}if(k=='trip'&&v=='denied'){alert('Sin permiso de ubicación no puedo grabar el recorrido. Puedes darlo en Ajustes → Apps → Mis Finanzas → Permisos.')}try{renderJor();renderAnd()}catch(e){}}
 // Zonas de cuidado: sectores que nombraste; si una oferta los menciona, el aviso lo dice.
 // «Evitar» = no conviene siempre; «Precaución» = de noche baja un nivel y de día solo avisa.
 var DZG={dn:'Distrito Nacional',sde:'Santo Domingo Este',sdo:'Santo Domingo Oeste',sdn:'Santo Domingo Norte',otra:'Otra zona'};
@@ -2540,10 +2558,11 @@ function jUpd(){if(!S.shift)return;S.shift.g=Math.max(0,+$('jg').value||0);S.shi
 function jEnd(){var J=S.shift;if(!J)return;var k1=+$('jk1').value||0;if(k1&&J.km0&&k1<J.km0){$('jm').innerHTML='<div class="warn">El odómetro al llegar debe ser mayor que al salir ('+J.km0+').</div>';return}
  J.g=Math.max(0,+$('jg').value||J.g||0);J.ex=Math.max(0,+$('jx').value||J.ex||0);J.end=Date.now();if(k1){J.km1=k1;vehSetOdo(k1)}
  // App Android: detiene el GPS y analiza el recorrido con el mismo motor que los archivos GPX.
- if(AND&&J.and){try{var gx=AND.stopTrip();J.gps=gAnalyze(gpxParse(gx));AND.clearTrip()}catch(e){J.gpsErr=String(e.message||e)}}save();jFill()}
+ jCloseAnd(J);save();jFill()}
 // Pasa la jornada al formulario de Registrar (fecha, horas, km, zona, turno y bruto si lo anotaste).
 function jFill(){var J=S.shift;if(!J||!J.end)return;setTab('reg','dia');var h0=new Date(J.start),h1=new Date(J.end);
  $('fecha').value=J.d;$('horas').value=Math.round((J.end-J.start)/36e5*4)/4;if(J.km1&&J.km0)$('km').value=J.km1-J.km0;if(J.z)$('zon').value=J.z;$('tur').value=turnoOf(h0.getHours()+h0.getMinutes()/60,h1.getHours()+h1.getMinutes()/60);if(J.g)$('monto').value=J.g;if(J.ex)$('ex_otros').value=J.ex;var mf=document.querySelector('[data-f="reg-mas"]');if(mf)mf.open=true;
+ if(J.v&&!$('vj').value)$('vj').value=J.v;var av=$('autov');if(av)av.innerHTML=J.gc?'<div class="warn ok">🚗 El asistente captó <b>'+J.v+' viajes</b> por <b>'+rd(J.gc)+'</b>'+(J.gAuto?' y los puse como bruto. Revísalo con lo que dice Uber antes de guardar.':' (tú anotaste '+rd(J.g)+' como bruto).')+'</div>':'';
  if(J.gps){var gf=document.querySelector('[data-f="reg-gps"]');if(gf)gf.open=true;gpsApply(J.gps,'Recorrido GPS de la jornada')}else if(J.gpsErr&&$('gpsv'))$('gpsv').innerHTML='<div class="warn">No pude leer el GPS de la jornada: '+esc(J.gpsErr)+'</div>';prev();$('monto').focus()}
 function jCancel(b){tap2(b,'¿Seguro?',function(){if(AND&&S.shift&&S.shift.and){try{AND.stopTrip();AND.clearTrip()}catch(e){}}S.shift=null;save();all()})}
 
