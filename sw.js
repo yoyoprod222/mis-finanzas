@@ -1,6 +1,6 @@
 // Service worker de Mis Finanzas: funciona sin conexión y avisa de vencimientos.
 // Sube VERSION cada vez que cambies el HTML para que los teléfonos tomen la versión nueva.
-var VERSION = 'mf-v12';
+var VERSION = 'mf-v13';
 var APP = 'index.html';
 var CORE = ['./', './' + APP, './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './icons/apple-touch-icon.png', './icons/icon.svg'];
 var CDN = ['https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js', 'https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js'];
@@ -27,7 +27,7 @@ self.addEventListener('fetch', function (e) {
   if (r.method != 'GET') return;
   var u = new URL(r.url);
   // La IA y los datos en vivo (clima, feriados, tránsito) nunca se guardan: siempre deben ser actuales.
-  if (/openrouter\.ai|anthropic|claude\.ai|open-meteo\.com|date\.nager\.at|tomtom\.com/.test(u.host)) return;
+  if (/openrouter\.ai|anthropic|claude\.ai|open-meteo\.com|date\.nager\.at|tomtom\.com|mapbox\.com/.test(u.host)) return;
   // La página: primero red (para recibir cambios), si no hay conexión, la copia guardada.
   if (r.mode == 'navigate') {
     e.respondWith(fetch(r).then(function (res) {
