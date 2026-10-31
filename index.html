@@ -335,6 +335,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px color-mix(in srgb,v
 @media(prefers-color-scheme:dark){:root:not([data-theme='light']) :focus-visible{outline-color:var(--mint)}}
 :root[data-theme='dark'] :focus-visible{outline-color:var(--mint)}
 .pri:hover{filter:brightness(1.12)}
+.zi{display:grid;grid-template-columns:1fr auto;column-gap:10px;row-gap:3px;padding:8px 0;border-bottom:1px solid var(--bd);font-size:14px}.zi .zp{font-weight:700;font-variant-numeric:tabular-nums}.zi .tk{height:4px;grid-column:1/3}.zi small{grid-column:1/3}
 </style>
 </head>
 <body>
@@ -374,7 +375,19 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px color-mix(in srgb,v
       <label>Turno<select id="tur"><option value="">Sin indicar</option><option value="m">Mañana (antes de 12 p. m.)</option><option value="t">Tarde (12–6 p. m.)</option><option value="n">Noche (después de 6 p. m.)</option><option value="x">Mixto / todo el día</option></select></label>
       <label>Km recorridos (opcional)<input type="number" id="km" min="0" placeholder="0"></label>
       <label>Km con pasajero (opcional)<input type="number" id="kmp" min="0" placeholder="0"></label>
+      <label>Viajes realizados (opcional)<input type="number" id="vj" min="0" step="1" placeholder="0"></label>
     </div></div></details>
+    <details class="fold" data-f="reg-gps"><summary><span class="ft"><b>Recorrido GPS</b><small>Distancia, tiempo en movimiento y detenido, paradas y mapa</small></span></summary><div class="fb">
+      <label class="fbtn" style="display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--bd);border-radius:12px;padding:10px 14px;cursor:pointer;color:var(--tx);font-size:15px">Cargar recorrido (archivo GPX)<input type="file" accept=".gpx,application/gpx+xml,application/xml,text/xml" onchange="gpsLoad(this)" style="display:none"></label>
+      <div id="gpsv"></div>
+      <details style="margin-top:8px"><summary>Cómo grabar el recorrido mientras usas Uber</summary><ol style="padding-left:18px;margin:8px 0;font-size:14px">
+        <li>Instala una app de registro GPS que exporte archivos GPX, por ejemplo <b>Open GPX Tracker</b> (gratis y de código abierto, en el App Store).</li>
+        <li>En el iPhone: Ajustes → Privacidad y seguridad → Localización → esa app → <b>Siempre</b>. Así sigue grabando con Uber abierto. Pruébalo una vez: graba unos minutos con Uber en pantalla y revisa que el recorrido salga completo.</li>
+        <li>Al tocar «Empezar jornada», inicia también la grabación en esa app.</li>
+        <li>Al terminar, detén la grabación, exporta o comparte el archivo GPX y guárdalo en <b>Archivos</b>.</li>
+        <li>Aquí toca «Cargar recorrido» y elígelo. Completa la fecha, los km, las horas, la zona y el turno que estén vacíos.</li>
+      </ol><small>Mis Finanzas no puede usar el GPS en segundo plano: iOS no lo permite a las apps web. El recorrido se analiza en tu teléfono y no se envía a ningún lado.</small></details>
+    </div></details>
     <details class="fold" data-f="reg-ext"><summary><span class="ft"><b>Ingresos extras o día sin Uber</b><small>Canción, mezcla, trabajo de habilidad…</small></span></summary><div class="fb">
 <div class="row"><input id="xc" placeholder="Concepto (ej. mezcla)" oninput="prev()"><input type="number" id="xv" min="0" placeholder="Monto RD$" oninput="prev()"><button onclick="addPend()">+ Agregar</button></div><div id="pend"></div>
 <label style="display:block;margin-top:6px"><input type="checkbox" id="off" onchange="prev()" style="width:auto"> Día sin Uber (solo ingreso extra, no exige la cuota del día)</label>
@@ -882,6 +895,20 @@ function runTests(){var T=[],saved=S,near=function(a,b){return Math.abs(a-b)<0.0
  t('Presupuesto: suma gastos del mes por categoría e incluye las compras de súper',function(){var m=today().slice(0,7),s=mk(A(),[],X());s.bud=budDef();s.bud.cats[0].lim=1000;s.bud.g=[{id:1,d:m+'-01',c:2,v:300},{id:2,d:'2000-01-01',c:2,v:999}];s.sp=[{d:m+'-02',v:1200}];return run(s,function(){var M=budMonth();return M[0].v==1200&&M[0].p>1&&M[1].v==300})});
  t('Cierre semanal: ajusta solo las cuentas con diferencia y conserva el total real',function(){var s=mk(A(),[],X({acc:[{id:1,type:'cash',name:'E',bal0:1000},{id:2,type:'bank',name:'B',bal0:5000}],nacc:3}));return run(s,function(){var r=cierreCore({1:800,2:5000});return r.n==1&&near(r.dif,-200)&&near(accBal(1),800)&&near(accBal(2),5000)})});
  t('Zona: sin datos del clima igual da una recomendación (fallback)',function(){var r=ZT(null);return !!r&&!!r.lab&&r.via>=0});
+ t('Zona: el historial da más peso a lo reciente y mide los km sin pasajero',function(){var d0=fiAdd(today(),-1),d1=fiAdd(today(),-200),L=[{d:d1,g:1000,e:{},z:'dn',km:100,kmp:50},{d:d0,g:5000,e:{},z:'dn',km:100,kmp:80}];
+  return run(mk(A(),L,X()),function(){var H=zHist(),o=H.Z.dn;return o.c==2&&o.nd>4500&&o.vac>0.2&&o.vac<0.5})});
+ t('Zona: se corrige con lo que de verdad ganaste (mediana, con límites)',function(){var L=[],zp={};for(var i=1;i<=5;i++){var d=fiAdd(today(),-i);L.push({d:d,g:3000,e:{},z:'sde'});zp[d]={r:'sde',e:{sde:2000}}}
+  return run(mk(A(),L,X({zp:zp})),function(){var c=zCal('sde'),q=zAcc();return c&&c.n==5&&near(c.f,1.3)&&zCal('dn')==null&&q.n==5&&q.ok==0})});
+ t('Zona: calcula los 15 índices y marca los que no tienen datos',function(){var r=null;run(mk(A(),[],X()),function(){var z={hoy:today(),d:today(),src:{},hol:null,T:null,W:null,H:zHist()};zScore(z);r=z.Z.dn.I});
+  return r&&r.length==15&&r.every(function(x){return x.n&&x.v&&x.src})&&r[4].p==null&&r[0].p!=null});
+ t('GPS: separa movimiento, paradas y tramos sin señal, y descarta saltos imposibles',function(){var t0=Date.UTC(2026,0,5,13),la=18.47,lo=-69.93,P=[],t=t0,
+   pt=function(){P.push('<trkpt lat="'+la.toFixed(6)+'" lon="'+lo.toFixed(6)+'"><time>'+new Date(t).toISOString()+'</time></trkpt>')};pt();
+  for(var i=0;i<60;i++){lo+=0.001;t+=10000;pt()}            // 10 min manejando (~6,3 km)
+  for(i=0;i<20;i++){t+=30000;pt()}                           // 10 min parado
+  P.push('<trkpt lat="19.5" lon="-70.7"><time>'+new Date(t+5000).toISOString()+'</time></trkpt>'); // salto imposible
+  t+=900000;lo+=0.03;pt();                                   // 15 min sin señal
+  var g=gAnalyze(gpxParse('<gpx><trk><trkseg>'+P.join('')+'</trkseg></trk></gpx>'));
+  return g.mov==10&&g.stop==10&&g.gap==15&&g.stops.length==1&&g.stops[0].m==10&&g.km>9&&g.km<10.5});
  return T}
 function renderVT(){var T=runTests(),ok=T.filter(function(q){return q[1]}).length;$('vt').innerHTML='<h2>Verificaci\u00f3n del motor financiero</h2><p class="sub">Estas pruebas se ejecutan al abrir la p\u00e1gina y comprueban que el reparto, las prioridades, el fondo y los pendientes calculen bien.</p><div class="warn" style="'+(ok==T.length?'background:var(--ac2);color:var(--ac)':'')+'">'+ok+' de '+T.length+' pruebas correctas.</div>'+T.map(function(q){return '<div class="leg"><span>'+q[0]+'</span><span>'+(q[1]?'Correcta':'FALLA')+'</span></div>'}).join('')}
 function save(){snapCfg();_sm=null;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}idbQueue();pwaSync()}
@@ -933,11 +960,11 @@ function rmPend(i){PEND.splice(i,1);rPend();prev()}
 function rPend(){$("pend").innerHTML=PEND.map(function(p,i){return '<div class="leg"><span>'+esc(p.c)+'</span><span>'+rd(p.v)+' <button class="x" onclick="rmPend('+i+')">✕</button></span></div>'}).join("")}
 function pendAll(){var a=PEND.slice(),v=+$("xv").value;if(v>0)a.push({c:$("xc").value||"Extra",v:v});return a}
 function addLog(){var gs=$("monto").value,xs=pendAll(),g=+gs||0;if(gs===""&&!xs.length)return;var e={};EX.forEach(function(k){e[k[0]]=+$("ex_"+k[0]).value||0});
- var lg={d:$("fecha").value||today(),g:g,e:e,x:xs,h:+$("horas").value||0,off:$("off").checked,n:$("nota").value},km=+$("km").value||0,kmp=+$("kmp").value||0;if($("zon").value)lg.z=$("zon").value;if($("tur").value)lg.t=$("tur").value;if(km>0)lg.km=km;if(kmp>0)lg.kmp=Math.min(kmp,km||kmp);
- S.logs.push(lg);S.logs.sort(function(a,b){return a.d<b.d?-1:1});
+ var lg={d:$("fecha").value||today(),g:g,e:e,x:xs,h:+$("horas").value||0,off:$("off").checked,n:$("nota").value},km=+$("km").value||0,kmp=+$("kmp").value||0;if($("zon").value)lg.z=$("zon").value;if($("tur").value)lg.t=$("tur").value;if(km>0)lg.km=km;if(kmp>0)lg.kmp=Math.min(kmp,km||kmp);var vj=Math.round(+$("vj").value||0);if(vj>0&&vj<200)lg.v=vj;
+ if(PGPS&&PGPS.d==lg.d)lg.gps=PGPS;PGPS=null;var gv=$('gpsv');if(gv)gv.innerHTML='';S.logs.push(lg);S.logs.sort(function(a,b){return a.d<b.d?-1:1});
  // Vehículo: suma los km al odómetro (salvo que la jornada ya lo fijó con el odómetro real) y cierra la jornada pendiente de ese día.
  var fromShift=S.shift&&S.shift.end&&S.shift.d==lg.d;if(km>0&&S.veh&&S.veh.odo&&!(fromShift&&S.shift.km1))S.veh.odo+=km;if(fromShift)S.shift=null;
- $("monto").value="";$("nota").value="";$("xc").value="";$("xv").value="";$("off").checked=false;PEND=[];$("horas").value="";$("km").value="";$("kmp").value="";$("zon").value="";$("tur").value="";EX.forEach(function(k){$("ex_"+k[0]).value=""});save();all()}
+ $("monto").value="";$("nota").value="";$("xc").value="";$("xv").value="";$("off").checked=false;PEND=[];$("horas").value="";$("km").value="";$("kmp").value="";$("vj").value="";$("zon").value="";$("tur").value="";EX.forEach(function(k){$("ex_"+k[0]).value=""});save();all()}
 function allocDay(a,st,noq){
  var s={reserve:st.reserve,arr:{}},k,rem=a,paid={},draw=0,items=sorted();
  for(k in st.arr)s.arr[k]=st.arr[k];s.pd={};for(k in (st.pd||{}))s.pd[k]=st.pd[k];function Q(it){return it.total>0?Math.min(quota(it),Math.max(0,it.total-(s.pd[it.id]||0))):quota(it)}
@@ -1021,15 +1048,16 @@ function draw(){var f=filt(),T=totals(f),r=rowsOf(0).map(function(c){c.v=T[c.key
 var LEX=null;
 function editLog(i){var x=S.logs[i];if(!x)return;LEX={i:i,x:JSON.parse(JSON.stringify(x.x||[]))};var e=x.e||{},n=function(id,lab,v,st){return '<label>'+lab+'<input type="number" id="le_'+id+'" min="0" step="'+(st||1)+'" value="'+(v||v===0?v:'')+'"></label>'};
  $('hedit').innerHTML='<div class="arow" style="margin:0 0 12px"><b>Editar registro del '+x.d+'</b><div class="row" style="margin-top:8px"><label>Fecha<input type="date" id="le_d" value="'+x.d+'"></label>'+n('g','Bruto',grossOf(x))+EX.map(function(k){return n(k[0],k[1],+e[k[0]]||0)}).join('')+'</div>'+
-  '<div class="row" style="margin-top:8px">'+n('h','Horas',+x.h||0,0.5)+n('km','Km recorridos',+x.km||0)+n('kmp','Km con pasajero',+x.kmp||0)+'<label>Zona<select id="le_z"><option value="">Sin indicar</option>'+['sde','dn','sdn','stgo','otra'].map(function(k){return '<option value="'+k+'"'+(x.z==k?' selected':'')+'>'+ZONAS[k].n+'</option>'}).join('')+'</select></label></div>'+
+  '<div class="row" style="margin-top:8px">'+n('h','Horas',+x.h||0,0.5)+n('km','Km recorridos',+x.km||0)+n('kmp','Km con pasajero',+x.kmp||0)+n('v','Viajes',+x.v||0)+'<label>Zona<select id="le_z"><option value="">Sin indicar</option>'+['sde','dn','sdn','stgo','otra'].map(function(k){return '<option value="'+k+'"'+(x.z==k?' selected':'')+'>'+ZONAS[k].n+'</option>'}).join('')+'</select></label></div>'+
   '<div style="margin-top:8px"><b>Ingresos extras</b><div id="le_x"></div><div class="row"><input id="le_xc" placeholder="Concepto"><input type="number" id="le_xv" min="0" placeholder="Monto"><button onclick="lexAdd()">+ Agregar</button></div></div>'+
   '<div class="row" style="margin-top:8px"><input id="le_n" placeholder="Nota" value="'+esc(x.n||'')+'" style="flex:3"><label style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="le_off"'+(x.off?' checked':'')+'> Sin Uber</label></div>'+
+  (x.gps?foldHtml('le-gps','Recorrido GPS',x.gps.km+' km · '+gHM(x.gps.mov)+' en movimiento · '+gHM(x.gps.stop)+' detenido',gSum(x.gps)+'<button class="x" style="width:auto;padding:6px 10px;margin-top:8px" onclick="tap2(this,\'¿Quitar?\',function(){delete S.logs['+i+'].gps;save();editLog('+i+')})">Quitar recorrido</button>'):'<label class="fbtn" style="display:inline-flex;align-items:center;margin-top:8px;border:1px solid var(--bd);border-radius:12px;padding:10px 14px;cursor:pointer;color:var(--tx);font-size:15px">📍 Cargar recorrido GPX<input type="file" accept=".gpx,application/gpx+xml,application/xml,text/xml" onchange="gpsLoadLog(this,'+i+')" style="display:none"></label>')+
   '<div class="row" style="margin-top:10px"><button class="pri" onclick="saveLogEdit()">Guardar cambios</button><button onclick="$(\'hedit\').innerHTML=\'\';LEX=null">Cancelar</button></div><div id="lem"></div></div>';lexDraw();$('hedit').scrollIntoView({block:'nearest'})}
 function lexDraw(){$('le_x').innerHTML=LEX.x.map(function(p,k){return '<div class="leg"><span>'+esc(p.c)+'</span><span>'+rd(p.v)+' <button class="x" onclick="LEX.x.splice('+k+',1);lexDraw()">✕</button></span></div>'}).join('')}
 function lexAdd(){var v=+$('le_xv').value;if(!(v>0))return;LEX.x.push({c:$('le_xc').value.trim()||'Extra',v:v});$('le_xc').value='';$('le_xv').value='';lexDraw()}
 function saveLogEdit(){if(!LEX)return;var x=S.logs[LEX.i],d=validDate($('le_d').value),num=function(id,mx){var v=+$('le_'+id).value;return isFinite(v)&&v>0?Math.min(v,mx||1e7):0};
  if(!x||!d){$('lem').innerHTML='<div class="warn">Revisa la fecha.</div>';return}var e={};EX.forEach(function(k){e[k[0]]=num(k[0])});
- x.d=d;x.g=num('g');delete x.a;x.e=e;x.x=LEX.x;x.h=num('h',24);var km=num('km',2000),kmp=num('kmp',2000);if(km)x.km=km;else delete x.km;if(kmp)x.kmp=Math.min(kmp,km||kmp);else delete x.kmp;
+ x.d=d;x.g=num('g');delete x.a;x.e=e;x.x=LEX.x;x.h=num('h',24);var km=num('km',2000),kmp=num('kmp',2000);if(km)x.km=km;else delete x.km;if(kmp)x.kmp=Math.min(kmp,km||kmp);else delete x.kmp;var vj=Math.round(num('v',199));if(vj)x.v=vj;else delete x.v;
  if($('le_z').value)x.z=$('le_z').value;else delete x.z;x.n=$('le_n').value;x.off=$('le_off').checked;
  S.logs.sort(function(a,b){return a.d<b.d?-1:a.d>b.d?1:0});LEX=null;$('hedit').innerHTML='';save();all()}
 // Une en uno varios registros de la misma fecha (suma montos, horas y km; junta extras y notas). El total del día no cambia.
@@ -1041,7 +1069,7 @@ function hist(){var h="<tr><th>Fecha</th><th>Bruto</th><th>Gastos</th><th>Extras
  // Recorre de atrás hacia adelante por índice (antes buscaba cada fila con indexOf) y muestra solo las más recientes.
  var lim=Math.min(S.logs.length,HLIM);for(var i=S.logs.length-1;i>=S.logs.length-lim;i--)(function(x,i){var xn=(x.x||[]).map(function(p){return p.c}).join(", ");
  if(cnt[x.d]>1&&!shown[x.d]){shown[x.d]=1;h+='<tr><td colspan="7"><small>'+cnt[x.d]+' registros el '+x.d+'.</small> <button style="padding:4px 10px;font-size:12px" onclick="mergeDay(\''+x.d+'\',this)">Unir en uno</button></td></tr>'}
- h+="<tr><td>"+x.d+'</td><td><input type="number" value="'+grossOf(x)+'" onchange="updLog('+i+',this.value)"></td><td>'+rd(exOf(x))+'</td><td>'+rd(extrasOf(x))+'</td><td><b>'+rd(realOf(x))+'</b></td><td>'+esc((x.off?"Sin Uber. ":"")+(x.z&&ZONAS[x.z]?ZONAS[x.z].c+". ":"")+(x.n||"")+(xn?" ["+xn+"]":""))+'</td><td style="white-space:nowrap"><button class="x" style="color:var(--ac)" aria-label="Editar" onclick="editLog('+i+')">✎</button><button class="x" onclick="delLog('+i+',this)">✕</button></td></tr>'})(S.logs[i],i);
+ h+="<tr><td>"+x.d+'</td><td><input type="number" value="'+grossOf(x)+'" onchange="updLog('+i+',this.value)"></td><td>'+rd(exOf(x))+'</td><td>'+rd(extrasOf(x))+'</td><td><b>'+rd(realOf(x))+'</b></td><td>'+(x.gps?'<span title="Con recorrido GPS" aria-label="Con recorrido GPS">📍</span> ':'')+esc((x.off?"Sin Uber. ":"")+(x.z&&ZONAS[x.z]?ZONAS[x.z].c+". ":"")+(x.n||"")+(xn?" ["+xn+"]":""))+'</td><td style="white-space:nowrap"><button class="x" style="color:var(--ac)" aria-label="Editar" onclick="editLog('+i+')">✎</button><button class="x" onclick="delLog('+i+',this)">✕</button></td></tr>'})(S.logs[i],i);
  if(S.logs.length>lim)h+='<tr><td colspan="7"><small>Mostrando los '+lim+' registros más recientes de '+S.logs.length+'.</small> <button style="padding:4px 10px;font-size:13px" onclick="HLIM+=40;hist()">Ver 40 más</button></td></tr>';
  if(!S.logs.length)h+='<tr><td colspan="7"><small>Sin registros todavía.</small></td></tr>';$("hist").innerHTML=h}
 var HLIM=20;
@@ -1094,7 +1122,7 @@ function renderSup(){var T=totals(S.logs),asg=T.ssuper||0,sp=0,est=0;S.sp.forEac
  if(S.list.length)h+='<p style="margin:8px 0 0">Tu lista cuesta aprox. <b>'+rd(est)+'</b>. '+(av>=est?'Con lo disponible ya te alcanza.':'Te faltan '+rd(est-Math.max(0,av))+' para cubrirla completa.')+'</p>';
  $("sup").innerHTML=h}
 function ens3(){if(!S.pay)S.pay=[];if(!S.npay)S.npay=S.pay.reduce(function(m,p){return Math.max(m,p.id)},0)+1;S.items.forEach(function(i){if(i.apr==null)i.apr=/tarjeta|cr[e\u00e9]dito/i.test(i.name)&&i.total>0?60:0;if(i.apr>0&&!i.start)i.start=today()});if(!S.acc){S.acc=[{id:1,type:'cash',name:'Efectivo',entity:'',num:'',bal0:0}];S.nacc=2}if(!S.mov)S.mov=[];if(!S.nmov)S.nmov=1;if(!S.nacc)S.nacc=S.acc.reduce(function(m,a){return Math.max(m,a.id)},0)+1}
-function ens2(){ens3();if(!S.lim)S.lim={comida:400,hormiga:200};if(!S.cal)S.cal=[];if(!S.cob)S.cob=[];if(S.apr==null)S.apr=60;if(S.cut==null)S.cut=0}
+function ens2(){ens3();if(!S.lim)S.lim={comida:400,hormiga:200};if(!S.cal)S.cal=[];if(!S.cob)S.cob=[];if(S.apr==null)S.apr=60;if(S.cut==null)S.cut=0;if(!S.zp||typeof S.zp!='object')S.zp={};gpsPrune()}
 function svPaid(T){var t=0;S.items.forEach(function(i){if(i.sv)t+=T["i"+i.id]||0});return t}
 function itOf(k){var f=function(a){return a.filter(function(i){return 'i'+i.id==k})[0]},r=f(S.items),c=S.cfg||[];if(r)return r;for(var j=c.length-1;j>=0;j--){r=f(c[j].c.i);if(r)return r}}
 function oldRows(T){var cur={};rowsOf(0).forEach(function(c){cur[c.key]=1});return Object.keys(T).filter(function(k){return k[0]=='i'&&!cur[k]&&T[k]>0.005}).map(function(k,i){var it=itOf(k);return{key:k,name:(it?it.name:'Obligaci\u00f3n anterior')+' (anterior)',v:T[k]}}).map(grpCol)}
@@ -1164,7 +1192,8 @@ function rgb(h){return [1,3,5].map(function(i){return parseInt(h.slice(i,i+2),16
 function wkMon(d){var t=new Date(d+'T00:00');t.setDate(t.getDate()-(t.getDay()+6)%7);return ds(t)}
 function buildMonth(ym){var R=sim().res,D={},P={n:0,d:0},pt=new Date(ym+'T00:00'),pv;pt.setDate(pt.getDate()-7);pv=ds(pt);
  R.forEach(function(r){var x=r.log,k=wkMon(x.d),n=realOf(x);if(k==pv&&!x.off){P.n+=n;P.d++}if(k!=ym)return;
- var o=D[x.d]=D[x.d]||{d:x.d,g:0,e:0,x:0,n:0,h:0,off:1,ob:0,deu:0,ah:0,fo:0,su:0,pe:0,dr:0,ex:{glp:0,comida:0,hormiga:0,otros:0},xs:[]};
+ var o=D[x.d]=D[x.d]||{d:x.d,g:0,e:0,x:0,n:0,h:0,off:1,ob:0,deu:0,ah:0,fo:0,su:0,pe:0,dr:0,ex:{glp:0,comida:0,hormiga:0,otros:0},xs:[],km:0,kk:0,kp:0,v:0,vh:0,z:'',gps:[]};
+ if(x.km>0){o.km+=+x.km;if(x.kmp>0){o.kk+=+x.km;o.kp+=Math.min(+x.kmp,+x.km)}}if(x.v>0){o.v+=+x.v;o.vh+=+x.h||0}if(x.z&&!o.z)o.z=x.z;if(x.gps)o.gps.push(x.gps);
  o.g+=grossOf(x);o.e+=exOf(x);o.x+=extrasOf(x);o.n+=n;o.h+=+x.h||0;if(!x.off)o.off=0;o.dr+=r.draw;
  EX.forEach(function(c){o.ex[c[0]]+=+(x.e||{})[c[0]]||0});(x.x||[]).forEach(function(p){o.xs.push(p)});
  r.cats.forEach(function(c){var it=itOf(c.key);if(c.key=='res')o.fo+=c.v;else if(c.key=='ssuper')o.su+=c.v;else if(c.key=='sahorro'||(it&&it.sv))o.ah+=c.v;else if(c.key=='sextra'||(it&&it.total>0))o.deu+=c.v;else if(it)o.ob+=c.v;else o.pe+=c.v})});
@@ -1181,6 +1210,12 @@ function ra(a,b){var c={};for(var i=a;i<=b;i++)c[i]={halign:'right'};return c}
 function pdfBars(doc,it,x,y,w,h,line){var mx=Math.max(line||0,1),bw,ly;it.forEach(function(b){mx=Math.max(mx,b.v)});bw=w/it.length;doc.setDrawColor(210,210,205);doc.line(x,y+h,x+w,y+h);
  it.forEach(function(b,i){var bh=Math.max(0,b.v)/mx*h;doc.setFillColor.apply(doc,b.v>=(line||0)?[12,90,71]:[184,137,59]);doc.roundedRect(x+i*bw+bw*.14,y+h-Math.max(bh,.3),bw*.72,Math.max(bh,.3),.6,.6,'F');doc.setFontSize(6.5);doc.setTextColor(106,119,112);doc.text(b.l,x+i*bw+bw/2,y+h+3.6,{align:'center'})});
  if(line){ly=y+h-line/mx*h;doc.setDrawColor(184,137,59);doc.setLineDash([1.5,1.5],0);doc.line(x,ly,x+w,ly);doc.setLineDash([]);doc.setFontSize(7);doc.setTextColor(148,101,20);doc.text('Cuota diaria '+money(line),x+w,ly-1.2,{align:'right'})}}
+// Mapa del recorrido en el PDF: trazado, inicio, fin y paradas (sin mapa de fondo).
+function pdfMap(doc,g,x,y,w,h){var la=g.pts.map(function(p){return p[0]}),lo=g.pts.map(function(p){return p[1]}),y0=Math.min.apply(null,la),y1=Math.max.apply(null,la),x0=Math.min.apply(null,lo),x1=Math.max.apply(null,lo),
+  c=Math.cos((y0+y1)/2*Math.PI/180),sx=(x1-x0)*c||1e-4,sy=(y1-y0)||1e-4,k=Math.min(w/sx,h/sy),ox=x+(w-sx*k)/2,oy=y+(h-sy*k)/2,X=function(l){return ox+(l-x0)*c*k},Y=function(l){return oy+sy*k-(l-y0)*k};
+ doc.setDrawColor(12,90,71);doc.setLineWidth(0.7);for(var i=1;i<g.pts.length;i++)doc.line(X(g.pts[i-1][1]),Y(g.pts[i-1][0]),X(g.pts[i][1]),Y(g.pts[i][0]));
+ (g.stops||[]).forEach(function(p){doc.setFillColor(184,137,59);doc.circle(X(p.lo),Y(p.la),Math.min(2.6,0.9+p.m/40),'F')});
+ var a=g.pts[0],b=g.pts[g.pts.length-1];doc.setFillColor(255,255,255);doc.setLineWidth(0.6);doc.circle(X(a[1]),Y(a[0]),1.4,'FD');doc.setFillColor(13,42,34);doc.circle(X(b[1]),Y(b[0]),1.3,'F');doc.setLineWidth(0.2)}
 function pdfDoc(ym,B){
  var J=window.jspdf.jsPDF,doc=new J({orientation:'landscape',unit:'mm',format:'a4'}),W=297,H=210,M=14,need=dailyNeed(),F=sim().st,T0=totals(S.logs),INK=[13,42,34],GOLD=[184,137,59],MU=[106,119,112],days=B.days,y,
  sm=function(k){return days.reduce(function(s,d){return s+d[k]},0)},
@@ -1215,6 +1250,15 @@ function pdfDoc(ym,B){
  if(hrs>0)tips.push('Tu neto por hora fue de '+money((net-xt)/hrs)+' sobre '+hrs+' horas registradas.');
  if(arr>0.5)tips.push('Tienes '+money(arr)+' pendientes de días por debajo de la cuota; los días buenos los pagan primero.');
  var cb=S.cob.reduce(function(s,c){return s+c.a},0);if(cb>0)tips.push('Tienes '+money(cb)+' por cobrar de trabajos: cobrarlos es dinero que ya ganaste.');
+ // Productividad de la semana (km, viajes, GPS) para los consejos.
+ var KM=sm('km'),KK=sm('kk'),KP=sm('kp'),VJ=sm('v'),VH=sm('vh'),GP=[];days.forEach(function(d){GP=GP.concat(d.gps)});
+ var GM=GP.reduce(function(a,q){return a+q.mov},0),GS=GP.reduce(function(a,q){return a+q.stop},0),vac=KK>0?1-KP/KK:null;
+ if(vac!=null&&vac>0.4)tips.push('Manejaste '+Math.round(vac*100)+'% de los km sin pasajero. Esperar en puntos de mucha demanda en vez de dar vueltas ahorra GLP.');
+ else if(vac!=null)pos.push('Solo '+Math.round(vac*100)+'% de tus km fueron sin pasajero: buen aprovechamiento del carro.');
+ if(GM+GS>0&&GS/(GM+GS)>0.45)tips.push('Según el GPS pasaste '+Math.round(GS/(GM+GS)*100)+'% del tiempo detenido. Revisa en Registrar las paradas largas y en qué zonas ocurrieron.');
+ if(VH>0)pos.push('Hiciste '+VJ+' viajes: '+(VJ/VH).toFixed(1)+' por hora.');
+ var ZW={};days.forEach(function(d){if(d.off||!d.z)return;var q=ZW[d.z]=ZW[d.z]||{n:0,c:0};q.n+=d.n;q.c++});var zb=Object.keys(ZW).filter(function(k){return ZW[k].c>=1}).sort(function(a,b){return ZW[b].n/ZW[b].c-ZW[a].n/ZW[a].c});
+ if(zb.length>1)pos.push('Tu mejor zona de la semana fue '+(ZONAS[zb[0]]?ZONAS[zb[0]].n:zb[0])+' (promedio '+money(ZW[zb[0]].n/ZW[zb[0]].c)+' netos por día).');
  y=hd('Lo que hiciste bien',84);y=para(pos,y,M,128);var y2=hd2('Oportunidades para mejorar',84);
  function hd2(t,yy){doc.setFont('helvetica','bold');doc.setFontSize(13);doc.setTextColor.apply(doc,INK);doc.text(t,155,yy);doc.setFillColor.apply(doc,GOLD);doc.rect(155,yy+1.8,14,.8,'F');return yy+9}
  para(tips.length?tips:['Sigue registrando cada día: más datos dan mejores recomendaciones.'],y2,155,128);
@@ -1241,6 +1285,35 @@ function pdfDoc(ym,B){
  y=pdfTbl(doc,y,['Fecha','Horas','Bruto','Gastos','Extras','Neto','Vs cuota','Estado','Oblig.','Deudas','Ahorro','Fondo','Súper','Personal','Del fondo'],days.map(function(d){return [fdate(d.d)+(d.off?' (sin Uber)':''),d.h?d.h:'—',nf(d.g),nf(d.e),nf(d.x),nf(d.n),d.off?'—':(d.n>=need?'+':'-')+nf(Math.abs(d.n-need)),d.off?'—':(d.n>=need?'Cubierta':(d.dr>0?'Con fondo':'Pendiente')),nf(d.ob),nf(d.deu),nf(d.ah),nf(d.fo),nf(d.su),nf(d.pe),nf(d.dr)]}),{foot:['Totales',hrs||'—',nf(g),nf(e),nf(xt),nf(net),'','',nf(ob),nf(deu),nf(ah),nf(fo),nf(su),nf(pe),nf(dr)],cs:ra(1,6),fs:7.2,pc:function(d){if(d.section=='body'&&d.column.index==7){d.cell.styles.textColor=d.cell.raw=='Cubierta'?[12,90,71]:[148,101,20];d.cell.styles.fontStyle='bold'}}});
  y=hd('Gastos e ingresos extras por día',y);
  y=pdfTbl(doc,y,['Fecha','GLP / combustible','Comida','Gastos hormiga','Otros','Total gastos','Extras (detalle)'],days.map(function(d){return [fdate(d.d),nf(d.ex.glp),nf(d.ex.comida),nf(d.ex.hormiga),nf(d.ex.otros),nf(d.e),d.xs.length?d.xs.map(function(p){return p.c+' '+nf(p.v)}).join('; '):'—']}),{cs:ra(1,5),fs:7.4});
+ // ===== Productividad y recorridos =====
+ doc.addPage();y=hd('Productividad y recorridos',18);
+ var hm=function(m){m=Math.round(m||0);return m>=60?Math.floor(m/60)+' h '+(m%60)+' min':m+' min'},ZN=function(k){return ZONAS[k]?ZONAS[k].c:(k?'Otra':'—')},
+  PT=[['Km recorridos',KM?nf(KM)+' km':'—'],['Km con pasajero',KK?Math.round(KP/KK*100)+'%':'—'],['Viajes',VJ?nf(VJ)+(VH?' ('+(VJ/VH).toFixed(1)+'/h)':''):'—'],['Neto por km',KM?money((net-xt)/KM):'—'],['Neto por hora',hrs?money((net-xt)/hrs):'—'],['En movimiento / detenido (GPS)',GM+GS?hm(GM)+' / '+hm(GS):'—']];
+ PT.forEach(function(q,i){var w=(W-2*M-20)/6,xx=M+i*(w+4);doc.setFillColor(244,242,236);doc.roundedRect(xx,y,w,20,2.5,2.5,'F');doc.setFontSize(6.6);doc.setFont('helvetica','bold');doc.setTextColor.apply(doc,MU);doc.text(doc.splitTextToSize(q[0].toUpperCase(),w-6),xx+3,y+6);doc.setFontSize(11.5);doc.setTextColor.apply(doc,INK);doc.text(q[1],xx+3,y+16)});y+=28;
+ y=pdfTbl(doc,y,['Fecha','Zona','Horas','Km','% con pasajero','Viajes','Viajes/h','Neto/h','Neto/km','En movimiento','Detenido','Sin señal','Paradas 5+ min'],days.filter(function(d){return !d.off}).map(function(d){var gm=0,gs=0,gg=0,gn=0;d.gps.forEach(function(q){gm+=q.mov;gs+=q.stop;gg+=q.gap;gn+=(q.stops||[]).length});var nu=d.n-d.x;
+  return [fdate(d.d),ZN(d.z),d.h||'—',d.km?nf(d.km):'—',d.kk?Math.round(d.kp/d.kk*100)+'%':'—',d.v||'—',d.v&&d.vh?(d.v/d.vh).toFixed(1):'—',d.h?nf(nu/d.h):'—',d.km?nf(nu/d.km):'—',d.gps.length?hm(gm):'—',d.gps.length?hm(gs):'—',d.gps.length?(gg?hm(gg):'0'):'—',d.gps.length?gn:'—']}),{cs:ra(2,12),fs:7.2});
+ // Resultados por zona en la semana
+ var ZR={};days.forEach(function(d){if(d.off||!d.z)return;var q=ZR[d.z]=ZR[d.z]||{c:0,n:0,h:0,km:0,kk:0,kp:0,v:0,vh:0,gm:0,gs:0};q.c++;q.n+=d.n-d.x;q.h+=d.h;q.km+=d.km;q.kk+=d.kk;q.kp+=d.kp;q.v+=d.v;q.vh+=d.vh;d.gps.forEach(function(g){q.gm+=g.mov;q.gs+=g.stop})});
+ if(Object.keys(ZR).length){if(y>H-50){doc.addPage();y=18}y=hd('Resultados por zona',y+2);y=pdfTbl(doc,y,['Zona','Jornadas','Neto promedio','Neto/h','Neto/km','% km sin pasajero','Viajes/h','% del tiempo detenido (GPS)'],Object.keys(ZR).sort(function(a,b){return ZR[b].n/ZR[b].c-ZR[a].n/ZR[a].c}).map(function(k){var q=ZR[k];
+  return [ZONAS[k]?ZONAS[k].n:'Otra',q.c,money(q.n/q.c),q.h?money(q.n/q.h):'—',q.km?money(q.n/q.km):'—',q.kk?Math.round((1-q.kp/q.kk)*100)+'%':'—',q.vh?(q.v/q.vh).toFixed(1):'—',q.gm+q.gs?Math.round(q.gs/(q.gm+q.gs)*100)+'%':'—']}),{cs:ra(1,7)})}
+ // Mapas de los recorridos GPS (hasta 6 por página)
+ var GD=days.filter(function(d){return d.gps.some(function(g){return g.pts&&g.pts.length>1})});
+ if(GD.length){doc.addPage();y=hd('Recorridos GPS de la semana',18);var cw=(W-2*M-16)/3,ch=62,i0=0;
+  GD.forEach(function(d,i){var g=d.gps.filter(function(q){return q.pts&&q.pts.length>1})[0],col=i0%3,row=Math.floor(i0/3)%2;if(i0&&i0%6==0){doc.addPage();y=hd('Recorridos GPS de la semana (cont.)',18)}
+   var bx=M+col*(cw+8),by=y+row*(ch+22);doc.setDrawColor(220,224,221);doc.roundedRect(bx,by,cw,ch,2,2,'S');pdfMap(doc,g,bx+3,by+3,cw-6,ch-6);
+   doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.setTextColor.apply(doc,INK);doc.text(fdate(d.d)+' · '+ZN(g.z)+' · '+g.km+' km',bx,by+ch+5);
+   doc.setFont('helvetica','normal');doc.setFontSize(7.4);doc.setTextColor.apply(doc,MU);doc.text('En movimiento '+hm(g.mov)+' · detenido '+hm(g.stop)+(g.gap?' · sin señal '+hm(g.gap):'')+' · '+(g.stops||[]).length+' paradas',bx,by+ch+9.5);i0++});
+  doc.setFontSize(7.4);doc.setTextColor.apply(doc,MU);doc.text('Círculo verde: inicio · punto oscuro: fin · círculos dorados: paradas de 5 minutos o más (más grandes = más largas).',M,H-14)}
+ // ===== Agente Zona del día =====
+ var Q=zAcc(),ZP=S.zp||{},wd=days.map(function(d){return d.d}).filter(function(d){return ZP[d]}),zl=zGet();
+ if(Q.n||wd.length||(zl&&zl.Z)){doc.addPage();y=hd('Agente Zona del día',18);
+  y=para([Q.n?'Precisión (últimos 60 días): acertó tu neto con un margen de ±20% en '+Q.ok+' de '+Q.n+' días; error promedio de '+Math.round(Q.err*100)+'%.':'Todavía no hay días para medir la precisión: registra la zona de cada jornada.',
+   Q.rec?'Trabajaste en la zona recomendada '+Q.seg+' de '+Q.rec+' días.':'','El agente compara cada día lo que estimó con lo que ganaste y corrige solo cada zona (hasta 30% arriba o abajo).'].filter(Boolean),y,M,W-2*M);
+  if(wd.length)y=pdfTbl(doc,y+2,['Fecha','Zona recomendada','Zona trabajada','Estimado para esa zona','Neto real','Diferencia'],wd.map(function(d){var p=ZP[d],dd=days.filter(function(q){return q.d==d})[0],k=dd&&dd.z,e=k&&p.c?p.c[k]:null,a=k?zActual(d,k):null;
+   return [fdate(d),p.r?ZN(p.r):'Descansar',k?ZN(k):'—',e!=null?money(e):'—',a!=null?money(a):'—',e!=null&&a!=null?(a>=e?'+':'-')+money(Math.abs(a-e)).replace('RD$ ','RD$ '):'—']}),{cs:ra(3,5)});
+  if(zl&&zl.Z&&zl.Z.dn&&zl.Z.dn.I){if(y>H-80){doc.addPage();y=18}y=hd('Los 15 índices de la última recomendación ('+fdate(zl.d)+')',y+2);
+   y=pdfTbl(doc,y,['Índice'].concat(ZK.map(function(k){return ZONAS[k].c})),zl.Z.dn.I.map(function(x,i){return [x.n].concat(ZK.map(function(k){var q=zl.Z[k].I&&zl.Z[k].I[i];return q&&q.p!=null?String(q.p):'—'}))}),{cs:ra(1,4),fs:7.4});
+   doc.setFontSize(7.4);doc.setTextColor.apply(doc,MU);doc.text('0 a 100 · 50 = como tu promedio · más alto = mejor para trabajar · «—» = falta ese dato. Recomendación de ese día: '+zl.rec.lab+'.',M,y+1);y+=6}}
  doc.addPage();y=hd('Estado acumulado de deudas, ahorro y hogar',18);
  var D=debts(T0);
  if(D.length)y=pdfTbl(doc,y,['Deuda','Total original','Pagado real','Saldo actual','Avance','Intereses acumulados'],D.map(function(d){return [d.it.name,money(d.t),money(d.p),money(d.bal),Math.round(d.p/Math.max(1,d.p+d.bal)*100)+'%',money(d.int)]}),{cs:ra(1,5)});
@@ -1997,7 +2070,7 @@ var ZK=['sde','dn','sdn','stgo'],ZSD=['sde','dn','sdn'];
 // Ajustes del agente ('fin-zcfg'). Viaje a Santiago: ida SD → Santiago (km, horas, peaje); después de la jornada, Santiago → Mao a dormir
 // donde la familia (kmMao); al otro día Mao → SD vacío (kmV, horasV, peajeV). familia=false: regreso Santiago → SD esa misma noche.
 // glpkm = RD$ de GLP por km si aún no registras km. Distancias medidas con OSRM: 151, 54 y 205 km.
-var ZCFG={on:true,auto:true,web:true,mb:'',km:151,peaje:200,horas:2.5,kmMao:54,kmV:205,horasV:3,peajeV:200,glpkm:5,familia:true,rem:true};
+var ZCFG={on:true,auto:true,web:true,mb:'',km:151,peaje:200,horas:2.5,kmMao:54,kmV:205,horasV:3,peajeV:200,glpkm:5,familia:true,rem:true,casa:''};
 try{var zc0=JSON.parse(localStorage.getItem('fin-zcfg')||'{}');for(var zk0 in zc0)if(zk0 in ZCFG)ZCFG[zk0]=zc0[zk0]}catch(e){}
 var ZST={busy:0,msg:''};
 function zSaveCfg(){try{localStorage.setItem('fin-zcfg',JSON.stringify(ZCFG))}catch(e){}}
@@ -2053,8 +2126,32 @@ async function zTTTest(){var m=$('zttm'),key=($('zc_mb')&&$('zc_mb').value||'').
  var auth=R.some(function(o){return o.x.st==401||o.x.st==403}),msg=okN==R.length?'<div class="warn ok">¡Conexión con Mapbox correcta! Toca “Guardar” y luego “Actualizar”.</div>':okN?'<div class="warn ok">Mapbox responde ('+okN+' de '+R.length+' zonas). Guarda y actualiza.</div>':auth?'<div class="warn">Mapbox rechazó el token. En account.mapbox.com → Tokens copia el <b>Default public token</b> completo (empieza con pk.).</div>':'<div class="warn">No se pudo usar Mapbox. Mira el motivo en cada zona.</div>';
  m.innerHTML=msg+rows}
 // Tu historial por zona: neto (bruto − gastos) por jornada y por hora.
-function zHist(){var m={},A={n:0,h:0,c:0,nh:0};S.logs.forEach(function(x){if(!x.z||x.off||x.g==null)return;var o=m[x.z]=m[x.z]||{n:0,h:0,c:0,hn:0},nn=Math.max(0,x.g-exOf(x));o.n+=nn;o.c++;if(+x.h>0){o.h+=+x.h;o.hn+=nn}A.n+=nn;A.c++;if(+x.h>0){A.h+=+x.h;A.nh+=nn}});
- for(var k in m){var o=m[k];o.nd=o.n/o.c;o.nph=o.h>0?o.hn/o.h:null}A.nd=A.c?A.n/A.c:0;A.nph=A.h>0?A.nh/A.h:null;return{Z:m,A:A}}
+// Historial por zona. Las jornadas recientes pesan más (la mitad cada 6 semanas) y se separa por tipo de día
+// (lun–jue, vie–sáb, domingo). Con km registrados: neto por km y % de km sin pasajero. c = jornadas sin ponderar.
+var ZDG={lab:'de lunes a jueves',fs:'los viernes y sábados',dom:'los domingos'};
+function zDayG(d){var w=new Date(d+'T00:00').getDay();return w==0?'dom':w>=5?'fs':'lab'}
+function zHist(){var t0=new Date(today()+'T00:00'),m={},G={},A;
+ function nw(){return{c:0,w:0,n:0,h:0,hn:0,km:0,kn:0,kk:0,kp:0,kc:0,v:0,vh:0,vc:0,gl:0,glk:0,gs:0,gt:0,gc:0,L:[]}}
+ function add(o,x,nn,wt){o.c++;o.w+=wt;o.n+=nn*wt;if(+x.h>0){o.h+=x.h*wt;o.hn+=nn*wt}if(x.km>0){o.km+=x.km*wt;o.kn+=nn*wt;var gl=+(x.e||{}).glp||0;if(gl>0){o.gl+=gl*wt;o.glk+=x.km*wt}if(x.kmp>0){o.kk+=x.km*wt;o.kp+=Math.min(x.kmp,x.km)*wt;o.kc++}}
+  if(x.v>0&&+x.h>0){o.v+=x.v*wt;o.vh+=x.h*wt;o.vc++}if(x.gps&&x.gps.mov+x.gps.stop>30){o.gs+=x.gps.stop*wt;o.gt+=(x.gps.mov+x.gps.stop)*wt;o.gc++}o.L.push(nn)}
+ function fin(o){o.nd=o.w?o.n/o.w:0;o.nph=o.h>0?o.hn/o.h:null;o.npk=o.km>0?o.kn/o.km:null;o.vac=o.kk>0?1-o.kp/o.kk:null;o.vph=o.vh>0?o.v/o.vh:null;o.fpk=o.glk>0?o.gl/o.glk:null;o.kmd=o.w&&o.km?o.km/o.w:null;o.sf=o.gt>0?o.gs/o.gt:null;o.hd=o.w&&o.h?o.h/o.w:null;
+  // Variabilidad: desviación de los últimos 30 netos (riesgo de que el día salga flojo).
+  var L=o.L.slice(-30),mu=L.length?L.reduce(function(a,b){return a+b},0)/L.length:0;o.sd=L.length>=3?Math.sqrt(L.reduce(function(a,b){return a+(b-mu)*(b-mu)},0)/(L.length-1)):null;o.cv=o.sd!=null&&mu>0?o.sd/mu:null;delete o.L;return o}
+ A=nw();S.logs.forEach(function(x){if(!x.z||x.off||x.g==null)return;var nn=Math.max(0,x.g-exOf(x)),age=Math.max(0,(t0-new Date(x.d+'T00:00'))/864e5),wt=Math.pow(0.5,age/42),g=zDayG(x.d);
+  add(m[x.z]=m[x.z]||nw(),x,nn,wt);add(A,x,nn,wt);add(G[x.z+'|'+g]=G[x.z+'|'+g]||nw(),x,nn,wt);add(G['*|'+g]=G['*|'+g]||nw(),x,nn,wt)});
+ for(var k in m)fin(m[k]);for(k in G)fin(G[k]);fin(A);return{Z:m,A:A,G:G}}
+// Lo que de verdad ganaste un día en una zona (neto de las jornadas con esa zona); null si no trabajaste ahí.
+function zActual(d,k){var n=0,ok=0;S.logs.forEach(function(x){if(x.d==d&&x.z==k&&!x.off&&x.g!=null){n+=Math.max(0,x.g-exOf(x));ok=1}});return ok?n:null}
+// Compara lo que el agente estimó (antes de corregir) con lo que ganaste. Mediana de real/estimado en las últimas 20 comparaciones.
+function zCmp(k){var P=S.zp||{},r=[];Object.keys(P).sort().forEach(function(d){var p=P[d];if(d>=today()||!p.e||!(p.e[k]>0))return;var a=zActual(d,k);if(a!=null)r.push(a/p.e[k])});return r.slice(-20)}
+function zCal(k){var r=zCmp(k).slice().sort(function(a,b){return a-b});if(r.length<3)return null;var md=r.length%2?r[(r.length-1)/2]:(r[r.length/2-1]+r[r.length/2])/2;return{f:Math.max(0.7,Math.min(1.3,md)),n:r.length}}
+// Precisión: días en que trabajaste en alguna zona con estimación; acierto = real dentro de ±20% de lo estimado (ya corregido).
+function zAcc(){var P=S.zp||{},n=0,ok=0,err=0,seg=0,rec=0;Object.keys(P).sort().slice(-60).forEach(function(d){var p=P[d];if(d>=today()||!p.e)return;
+  ZK.forEach(function(k){var e=p.c&&p.c[k]!=null?p.c[k]:p.e[k],a=zActual(d,k);if(!(e>0)||a==null)return;n++;var q=Math.abs(a-e)/e;err+=q;if(q<=0.2)ok++;if(p.r){rec++;if(p.r==k)seg++}})});
+ return{n:n,ok:ok,err:n?err/n:0,seg:seg,rec:rec}}
+// Guarda la estimación del día (cruda y corregida) para compararla después con lo que registres. Se conservan 120 días.
+function zLog(z){if(!z||!z.Z)return;var e={},c={};ZK.forEach(function(k){var o=z.Z[k];if(o.e0!=null){e[k]=Math.round(o.e0);c[k]=Math.round((o.ec!=null?o.ec:o.exp)+(k=='stgo'&&z.cost?z.cost.tot:0))}});
+ if(!Object.keys(e).length)return;S.zp=S.zp||{};S.zp[z.d]={r:z.rec&&z.rec.k||'',e:e,c:c};var ks=Object.keys(S.zp).sort();while(ks.length>120)delete S.zp[ks.shift()];save()}
 // Costo completo de ir a trabajar a Santiago: GLP de todos los tramos, peajes y horas de manejo sin producir:
 // - ida: valorada a lo que harías por hora HOY en la mejor zona de SD (sdExp), que está mal; sin ese dato, a tu neto por hora normal;
 // - regreso vacío Mao → SD (al otro día): a tu neto por hora normal, porque ese día podrías trabajar en SD.
@@ -2073,12 +2170,21 @@ function zScore(z){var day=z.d,dt=new Date(day+'T00:00'),dow=dt.getDay(),dd=+day
    if(w.wind>=50){s-=35;why.push('− Viento muy fuerte ('+Math.round(w.wind)+' km/h)')}else if(w.wind>=35){s-=10;why.push('− Viento fuerte ('+Math.round(w.wind)+' km/h)')}}
   if(t){if(t.r<0.5){s-=12;why.push('− Tránsito muy lento ahora ('+Math.round(t.r*100)+'% de la velocidad normal)')}else if(t.r<0.7){s-=5;why.push('− Tránsito lento ('+Math.round(t.r*100)+'%)')}else why.push('+ Tránsito fluido ('+Math.round(t.r*100)+'%)');if(t.cl){s-=10;why.push('− Cierre de vía detectado')}}
   else if(z.TE&&z.TE[k])why.push('• Tránsito estimado '+(z.d==today()?'ahora':'a esta hora')+': '+z.TE[k].tx+' (horario típico, no es en vivo)');
-  if(h&&h.c>=3&&H.A.c>=6){var a=h.nph!=null&&H.A.nph?h.nph/H.A.nph:h.nd/H.A.nd,adj=Math.max(-20,Math.min(20,(a-1)*60));s+=adj;why.push((adj>=0?'+ ':'− ')+'Tu historial aquí: '+(h.nph!=null?rd(h.nph)+'/h':rd(h.nd)+'/jornada')+' vs. '+(h.nph!=null&&H.A.nph?rd(H.A.nph)+'/h':rd(H.A.nd))+' en promedio ('+h.c+' jornadas)')}
+  if(h&&h.c>=3&&H.A.c>=6){var gr=zDayG(day),HG=H.G||{},hg=HG[k+'|'+gr],ag=HG['*|'+gr],uG=hg&&hg.c>=3&&ag&&ag.c>=6,hh=uG?hg:h,aa=uG?ag:H.A,
+    ph=hh.nph!=null&&aa.nph,a=ph?hh.nph/aa.nph:hh.nd/aa.nd,adj=Math.max(-20,Math.min(20,(a-1)*60));s+=adj;
+   why.push((adj>=0?'+ ':'− ')+'Tu historial aquí'+(uG?' '+ZDG[gr]:'')+': '+(ph?rd(hh.nph)+'/h':rd(hh.nd)+'/jornada')+' vs. '+(ph?rd(aa.nph)+'/h':rd(aa.nd))+' en promedio ('+hh.c+' jornadas, las recientes pesan más)');
+   // Km sin pasajero: una zona donde manejas más vacío gasta más GLP por el mismo dinero.
+   if(h.vac!=null&&H.A.vac!=null&&h.kc>=3){var av=Math.max(-8,Math.min(8,-(h.vac-H.A.vac)*40));if(Math.abs(av)>=1){s+=av;why.push((av>0?'+ ':'− ')+'Km sin pasajero aquí: '+Math.round(h.vac*100)+'% vs. '+Math.round(H.A.vac*100)+'% en promedio'+(h.npk!=null?' · '+rd(h.npk)+' netos por km':''))}}}
   if(k=='stgo'){s-=8;why.push('− Viaje largo: '+zStgoRuta())}
   var aj=z.ai&&z.ai.ajustes?+z.ai.ajustes[k]||0:0;if(aj){s+=aj;why.push((aj>0?'+ ':'− ')+'Noticias de hoy (IA)')}
   Z[k]={s:Math.max(0,Math.min(100,Math.round(s))),why:why}});
- var base=P.n>=3?P.med:null;ZK.forEach(function(k){var o=Z[k],h=H.Z[k],f=h&&h.c>=3&&H.A.nd?Math.max(0.7,Math.min(1.3,h.nd/H.A.nd)):1;o.exp=base!=null?base*f*(0.6+0.4*o.s/75):null});
+ // e0 = estimación sin corregir (se guarda para medir aciertos); exp = corregida con lo que de verdad ganaste en esa zona.
+ var base=P.n>=3?P.med:null;ZK.forEach(function(k){var o=Z[k],h=H.Z[k],f=h&&h.c>=3&&H.A.nd?Math.max(0.7,Math.min(1.3,h.nd/H.A.nd)):1,cl=zCal(k);o.e0=base!=null?base*f*(0.6+0.4*o.s/75):null;o.exp=o.e0;
+  if(o.e0!=null&&cl&&Math.abs(cl.f-1)>=0.03){o.exp=o.e0*cl.f;o.why.push((cl.f>1?'+ ':'− ')+'Ajuste por tus resultados: aquí sueles ganar '+Math.round(Math.abs(cl.f-1)*100)+'% '+(cl.f>1?'más':'menos')+' de lo que estimo ('+cl.n+' días comparados)')}});
  var sdB=ZSD.map(function(k){return Z[k].exp}).filter(function(v){return v!=null}),C=zStgoCost(P,sdB.length?Math.max.apply(null,sdB):null);if(Z.stgo.exp!=null)Z.stgo.exp-=C.tot;Z.stgo.why.push('− Viaje completo: GLP '+rd(C.fuel)+' ('+C.km+' km) + peajes '+rd(C.toll)+(C.lost>0?' + '+C.hl+' h manejando ('+rd(C.lost)+' que no produces)':'')+(C.fam?'; el regreso Mao → SD va vacío y se cobra aquí':''));
+ // Índices: se calculan con todo lo anterior; los ajustes nuevos cambian la puntuación y la ganancia proyectada decide el orden.
+ z.Z=Z;z.cost=C;ZK.forEach(function(k){var o=Z[k];o.I=zIdx(z,k,cb);var d=zIdxAdj(z,k);if(d.s){o.s=Math.max(0,Math.min(100,Math.round(o.s+d.s)))}o.why=o.why.concat(d.why);o.ec=o.exp;if(o.pn!=null)o.exp=o.pn});
+ var pa=ZSD.map(function(k){return Z[k].pn}).filter(function(v){return v>0}),pm=pa.length?pa.reduce(function(a,b){return a+b},0)/pa.length:null;ZK.forEach(function(k){var x=Z[k].I[14];if(x&&Z[k].pn!=null&&pm)x.p=zRel(Math.max(0,Z[k].pn),pm)});
  // Decisión. Santiago es el último recurso: solo si TODAS las zonas de Santo Domingo están pésimas (menos de 45), Santiago está bien (60+)
  // y, con historial, lo que queda después de pagar el viaje completo supera lo que harías en SD por un margen claro.
  var by=function(a,b){return Z[b].exp!=null&&Z[a].exp!=null?Z[b].exp-Z[a].exp:Z[b].s-Z[a].s},best=ZSD.slice().sort(by)[0],bs=Z[best].s,rec,
@@ -2093,8 +2199,139 @@ function zScore(z){var day=z.d,dt=new Date(day+'T00:00'),dow=dt.getDay(),dd=+day
  if(rec.tipo=='trabajar'||rec.tipo=='corta'){var alt=ZSD.filter(function(k){return k!=best}).sort(by)[0];rec.alt=alt}
  if(rec.k){var bt=zTurno(rec.k);if(bt)rec.tur=bt}
  z.Z=Z;z.rec=rec;z.cost=C;return z}
+// ===== Índices por zona =====
+// 15 índices de 0 a 100 (50 = como tu promedio; más alto = mejor para trabajar). Cada uno dice de dónde sale:
+// «tu historial», «en vivo», «calendario/noticias», «estimado» o qué dato falta. Los que ya están dentro del neto
+// (combustible, neto por hora) se muestran pero no se vuelven a sumar a la puntuación.
+function zKm(a,b){if(a==b)return 6;var A=ZONAS[a],B=ZONAS[b];if(!A||!B||A.lat==null||B.lat==null)return null;var r=Math.PI/180,dl=(B.lat-A.lat)*r,dn=(B.lon-A.lon)*r,x=Math.sin(dl/2)*Math.sin(dl/2)+Math.cos(A.lat*r)*Math.cos(B.lat*r)*Math.sin(dn/2)*Math.sin(dn/2);return Math.round(6371*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))*1.35)}
+// Mantenimiento por km: suma de (costo ÷ km entre servicios) de las tareas del vehículo que tienen costo y km.
+function zMpk(){var V=S.veh,c=0;(V&&V.tasks||[]).forEach(function(t){if(t.km>0&&+t.cost>0)c+=t.cost/t.km});return c}
+function zRisk(H){var cv=[],lo=[];for(var k in H.Z){var o=H.Z[k];if(o.c>=3&&o.sd!=null){lo.push(Math.max(0,o.nd-o.sd));if(o.cv!=null)cv.push(o.cv)}}var m=function(a){return a.length?a.reduce(function(x,y){return x+y},0)/a.length:null};return{cv:m(cv),lo:m(lo)}}
+function zRel(a,b,inv){if(a==null||!(b>0))return null;var r=inv?b/Math.max(a,0.0001):a/b;return Math.max(0,Math.min(100,Math.round(50*r)))}
+function zIdxHtml(I){var n=I.filter(function(x){return x.p!=null}).length;
+ return '<details class="fold" style="margin-top:10px"><summary><span class="ft"><b>Los 15 índices</b><small>'+n+' de 15 con datos</small></span></summary><div class="fb">'+I.map(function(x){return '<div class="zi"><span>'+esc(x.n)+'</span><span class="zp">'+(x.p!=null?x.p:'—')+'</span>'+(x.p!=null?'<span class="tk"><i style="width:'+x.p+'%;background:'+(x.p>=58?'var(--ac)':x.p>=42?'var(--mu)':'var(--wr)')+'"></i></span>':'')+'<small>'+esc(x.v)+' · '+esc(x.src)+'</small></div>'}).join('')+'<small>50 = como tu promedio. Más alto = mejor para trabajar. «—» = falta ese dato.</small></div></details>'}
+function zIdx(z,k,cb){var H=z.H,h=H.Z[k]||{},A=H.A||{},HG=H.G||{},gr=zDayG(z.d),hg=HG[k+'|'+gr]||{},ag=HG['*|'+gr]||{},w=z.W&&z.W[k],t=z.T&&z.T[k],te=z.TE&&z.TE[k],
+  aj=z.ai&&z.ai.ajustes?+z.ai.ajustes[k]||0:0,o=z.Z[k],fpk=A.fpk||ZCFG.glpkm,mpk=zMpk(),cpk=fpk+mpk,I=[],
+  ok=function(x,n){return x&&x.c>=(n||3)},P=function(n,p,v,src){I.push({n:n,p:p,v:v,src:src})};
+ // 1. Actividad comercial y social
+ P('Actividad comercial y social',Math.max(0,Math.min(100,Math.round(55+cb*2.5+aj*1.2+(z.hol?5:0)))),(cb>0?'Día movido':cb<0?'Día flojo':'Día normal')+(z.hol?' · feriado':'')+(aj?' · noticias '+(aj>0?'a favor':'en contra'):''),'calendario'+(z.ai?' y noticias':''));
+ // 2. Movilidad y conectividad vial
+ var mv=85-(t&&t.cl?30:0)-(w&&w.storm?45:w&&w.heavy?25:0)-(w&&w.wind>=50?30:w&&w.wind>=35?10:0);P('Movilidad y conectividad vial',Math.max(0,mv),t&&t.cl?'Cierre de vía detectado':w&&(w.storm||w.heavy)?'Riesgo de calles inundadas':'Sin cierres conocidos',t?'en vivo':w?'clima':'estimado');
+ // 3. Actividad por día y horario
+ var bt=zTurno(k);P('Actividad por día y horario',ok(hg)&&ok(ag,6)?zRel(hg.nph!=null&&ag.nph?hg.nph:hg.nd,hg.nph!=null&&ag.nph?ag.nph:ag.nd):null,ok(hg)?ZDG[gr]+': '+(hg.nph!=null?rd(hg.nph)+'/h':rd(hg.nd)+'/jornada')+(bt?' · mejor turno: '+TURN[bt.t].toLowerCase():''):'Faltan jornadas en '+ZDG[gr],'tu historial');
+ // 4. Costo de desplazamiento hacia la zona (ida y vuelta sin pasajero)
+ var dk=ZCFG.casa?zKm(ZCFG.casa,k):null,dc=null;if(k=='stgo'&&z.cost){dc=z.cost.tot;P('Costo de desplazamiento',Math.max(0,Math.round(100-dc/40)),rd(dc)+' el viaje completo','tus ajustes')}
+ else if(dk!=null){dc=dk*2*cpk;P('Costo de desplazamiento',Math.max(0,Math.round(100-dc/12)),'≈'+(dk*2)+' km ida y vuelta · '+rd(dc),'estimado')}else P('Costo de desplazamiento',null,'Indica desde dónde sales en Ajustes del agente','falta dato');
+ o.dc=dc;
+ // 5 y 6. Rentabilidad neta por km y por hora
+ P('Rentabilidad neta por km',zRel(h.npk,A.npk),h.npk!=null?rd(h.npk)+'/km vs. '+rd(A.npk||0):'Registra los km de cada jornada','tu historial');
+ P('Rentabilidad neta por hora',zRel(h.nph,A.nph),h.nph!=null?rd(h.nph)+'/h vs. '+rd(A.nph||0):'Registra las horas de cada jornada','tu historial');
+ // 7. Tiempo improductivo (horas sin pasajero, estimadas con los km vacíos)
+ if(h.gc>=3&&h.sf!=null&&A.sf!=null)P('Tiempo improductivo',zRel(1-h.sf,1-A.sf),Math.round(h.sf*100)+'% del tiempo detenido vs. '+Math.round(A.sf*100)+'% en promedio (GPS, '+h.gc+' jornadas)','tus recorridos GPS');else
+ P('Tiempo improductivo',h.vac!=null?Math.round(100-h.vac*100):null,h.vac!=null?Math.round(h.vac*100)+'% de km sin pasajero'+(h.hd?' · ≈'+(h.hd*h.vac).toFixed(1)+' h por jornada':''):'Registra los km con pasajero','tu historial');
+ // 8. Productividad de viajes por hora
+ P('Viajes por hora',ok({c:h.vc})&&A.vph?zRel(h.vph,A.vph):null,h.vph!=null&&h.vc>=3?h.vph.toFixed(1)+' viajes/h vs. '+(A.vph||0).toFixed(1):'Registra los viajes de cada jornada','tu historial');
+ // 9. Costo de combustible por zona (ya restado en tu neto: solo se muestra)
+ P('Costo de combustible',h.fpk!=null&&A.fpk?zRel(h.fpk,A.fpk,true):null,h.fpk!=null?'RD$'+h.fpk.toFixed(1)+'/km vs. RD$'+(A.fpk||0).toFixed(1):'Registra km y GLP','tu historial');
+ // 10. Costo de mantenimiento por km
+ var mj=mpk>0&&h.kmd?mpk*h.kmd:null;P('Mantenimiento por km',mpk>0&&h.kmd&&A.kmd?zRel(h.kmd,A.kmd,true):null,mpk>0?'RD$'+mpk.toFixed(2)+'/km'+(mj!=null?' · '+rd(mj)+' por jornada aquí':''):'Pon el costo de cada servicio en Vehículo',mpk>0?'tu vehículo':'falta dato');
+ o.mj=mj;
+ // 11. Congestión vial
+ P('Congestión vial',t?Math.round(t.r*100):te?{alto:35,medio:60,bajo:85}[te.lv]:null,t?Math.round(t.r*100)+'% de la velocidad normal':te?te.tx:'Sin datos de tránsito',t?'en vivo':'horario típico');
+ // 12. Probabilidad histórica de conseguir un viaje (viajes por hora; sin viajes, km con pasajero)
+ var pv=h.vc>=3&&A.vph?zRel(h.vph,A.vph):h.vac!=null&&A.vac!=null?zRel(1-h.vac,1-A.vac):null;P('Probabilidad de conseguir viaje',pv,pv==null?'Registra viajes o km con pasajero':pv>=58?'Alta':pv>=42?'Media':'Baja','tu historial');
+ // 13. Continuidad de viajes (encadenar viajes sin manejar vacío)
+ P('Continuidad de viajes',h.vac!=null&&A.vac!=null?zRel(1-h.vac,1-A.vac):null,h.vac!=null?Math.round((1-h.vac)*100)+'% de km con pasajero':'Registra los km con pasajero','tu historial');
+ // 14. Rentabilidad ajustada por riesgo (un día flojo típico = promedio − desviación) y riesgo del clima
+ var rr=h.sd!=null?Math.max(0,h.nd-h.sd)*(w&&w.storm?0.6:w&&w.heavy?0.85:1):null,RK=zRisk(H),ra=RK.lo>0?RK.lo:null;
+ P('Rentabilidad ajustada por riesgo',ok(h)&&ra?zRel(rr,ra):null,rr!=null&&ok(h)?'En un día flojo típico: '+rd(rr)+(h.cv!=null?' · variación '+Math.round(h.cv*100)+'%':''):'Faltan jornadas en esta zona','tu historial'+(w?' y clima':''));
+ // 15. Proyección de ganancia neta (estimado del día menos llegar a la zona y mantenimiento)
+ var pn=o.exp!=null?o.exp-(k=='stgo'?0:dc||0)-(mj||0):null;o.pn=pn;P('Ganancia neta proyectada',null,pn!=null?rd(pn)+' hoy (ya restado llegar y mantenimiento)':'Faltan jornadas para proyectar','estimado');
+ return I}
+// Ajustes a la puntuación por los índices que todavía no estaban dentro del cálculo.
+function zIdxAdj(z,k){var H=z.H,h=H.Z[k]||{},A=H.A||{},o=z.Z[k],s=0,why=[];
+ if(h.vc>=3&&A.vph&&h.vph!=null){var a=Math.max(-8,Math.min(8,(h.vph/A.vph-1)*40));if(Math.abs(a)>=1){s+=a;why.push((a>0?'+ ':'− ')+'Viajes por hora aquí: '+h.vph.toFixed(1)+' vs. '+A.vph.toFixed(1)+' en promedio')}}
+ var RK=zRisk(H);if(h.c>=5&&h.cv!=null&&RK.cv!=null&&h.cv>RK.cv+0.05){var b=-Math.min(6,(h.cv-RK.cv)*30);s+=b;why.push('− Aquí tus ganancias varían más ('+Math.round(h.cv*100)+'% vs. '+Math.round(RK.cv*100)+'% en tus zonas): más riesgo de un día flojo')}
+ if(o.dc!=null&&k!='stgo'&&o.dc>=150){var c=-Math.min(8,o.dc/150);s+=c;why.push('− Llegar hasta aquí: '+rd(o.dc)+' ida y vuelta sin pasajero')}
+ return{s:s,why:why}}
+// ===== Recorrido GPS =====
+// iOS no deja que una app web use el GPS en segundo plano, así que el recorrido se graba con una app de registro GPS
+// (p. ej., Open GPX Tracker) y aquí se carga el archivo GPX. Se calcula distancia, tiempo en movimiento y detenido,
+// paradas largas, tramos sin señal y tiempo por zona. En el registro del día queda un resumen y el trazado simplificado
+// (máx. 300 puntos) para el mapa; el trazado de más de 90 días se borra y el resumen se conserva.
+var PGPS=null,GMOV=1.4,GSTOP=300,GGAP=300;
+function gHav(a,b){var r=Math.PI/180,dl=(b.la-a.la)*r,dn=(b.lo-a.lo)*r,x=Math.sin(dl/2)*Math.sin(dl/2)+Math.cos(a.la*r)*Math.cos(b.la*r)*Math.sin(dn/2)*Math.sin(dn/2);return 6371000*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))}
+function gpxParse(txt){var d=new DOMParser().parseFromString(String(txt||''),'application/xml');if(d.getElementsByTagName('parsererror').length)throw new Error('El archivo no es un GPX válido.');
+ var P=[].map.call(d.querySelectorAll('trkpt,rtept'),function(n){var t=n.getElementsByTagName('time')[0];return{la:+n.getAttribute('lat'),lo:+n.getAttribute('lon'),t:t?Date.parse(t.textContent.trim()):NaN}})
+  .filter(function(p){return isFinite(p.la)&&isFinite(p.lo)&&Math.abs(p.la)<=90&&Math.abs(p.lo)<=180&&(p.la||p.lo)});
+ if(P.length<2)throw new Error('El archivo no tiene suficientes puntos del recorrido.');
+ if(P.some(function(p){return !isFinite(p.t)}))throw new Error('El recorrido no trae la hora de cada punto, así que no puedo calcular los tiempos.');
+ return P.sort(function(a,b){return a.t-b.t})}
+// Zona de un punto: la más cercana (aproximado: compara con el centro de cada zona).
+function gZone(p){var best='otra',bd=1e9;ZK.forEach(function(k){var Z=ZONAS[k];if(Z.lat==null)return;var d=gHav(p,{la:Z.lat,lo:Z.lon});if(d<bd){bd=d;best=k}});return bd<=(best=='stgo'?25000:15000)?best:'otra'}
+// Simplifica el trazado (Ramer–Douglas–Peucker en metros) hasta quedar en n puntos o menos.
+function gSimp(P,n){if(P.length<=n)return P.slice();var la0=P[0].la*Math.PI/180,X=function(p){return[p.lo*111320*Math.cos(la0),p.la*110540]},Q=P.map(X);
+ function rdp(eps){var keep=new Uint8Array(P.length),st=[[0,P.length-1]];keep[0]=keep[P.length-1]=1;while(st.length){var s=st.pop(),a=s[0],b=s[1],A=Q[a],B=Q[b],dx=B[0]-A[0],dy=B[1]-A[1],L=Math.hypot(dx,dy)||1,mx=0,mi=-1;
+  for(var i=a+1;i<b;i++){var d=Math.abs(dy*Q[i][0]-dx*Q[i][1]+B[0]*A[1]-B[1]*A[0])/L;if(d>mx){mx=d;mi=i}}if(mx>eps&&mi>0){keep[mi]=1;st.push([a,mi],[mi,b])}}return P.filter(function(p,i){return keep[i]})}
+ var eps=10,R=rdp(eps);while(R.length>n&&eps<5000){eps*=1.6;R=rdp(eps)}return R}
+function gAnalyze(P){var C=[P[0]];
+ // Quita saltos imposibles (más de 160 km/h entre dos puntos): suelen ser errores del GPS.
+ for(var i=1;i<P.length;i++){var q=C[C.length-1],dt=(P[i].t-q.t)/1000;if(dt<=0)continue;if(gHav(q,P[i])/dt>44)continue;C.push(P[i])}
+ if(C.length<2)throw new Error('El recorrido no tiene puntos válidos.');
+ var dist=0,mov=0,stop=0,gap=0,gapKm=0,stops=[],run=null,zt={},vmax=0;
+ function endRun(){if(run&&run.s>=GSTOP)stops.push({la:+run.p.la.toFixed(5),lo:+run.p.lo.toFixed(5),t:run.t,m:Math.round(run.s/60)});run=null}
+ for(i=1;i<C.length;i++){var a=C[i-1],b=C[i],dt=(b.t-a.t)/1000,dm=gHav(a,b),z=gZone(a),st;
+  if(dt>GGAP&&dm>=150){gap+=dt;gapKm+=dm;dist+=dm;endRun();continue}          // sin señal: se movió pero no hay puntos
+  st=dt>GGAP||dm/dt<GMOV;                                                         // muchos registradores no guardan puntos mientras estás quieto
+  zt[z]=(zt[z]||0)+dt;
+  if(st){stop+=dt;if(dm>20&&dt<=GGAP)dist+=dm;if(!run)run={p:a,t:a.t,s:0};run.s+=dt}else{mov+=dt;dist+=dm;vmax=Math.max(vmax,dm/dt);endRun()}}
+ endRun();
+ var zk=Object.keys(zt).sort(function(x,y){return zt[y]-zt[x]}),t0=C[0].t,t1=C[C.length-1].t,m=function(s){return Math.round(s/60)},Zm={};zk.forEach(function(k){Zm[k]=m(zt[k])});
+ return{v:1,d:ds(new Date(t0)),t0:t0,t1:t1,km:Math.round(dist/100)/10,gkm:Math.round(gapKm/100)/10,mov:m(mov),stop:m(stop),gap:m(gap),vavg:mov>0?Math.round(dist/mov*3.6):0,vmax:Math.round(vmax*3.6),
+  stops:stops.sort(function(x,y){return y.m-x.m}).slice(0,20),zt:Zm,z:zk[0]&&zk[0]!='otra'?zk[0]:(zk[1]||''),n:C.length,pts:gSimp(C,300).map(function(p){return[+p.la.toFixed(5),+p.lo.toFixed(5)]})}}
+function gHM(min){min=Math.round(min||0);return min>=60?Math.floor(min/60)+' h '+(min%60?min%60+' min':''):min+' min'}
+function gHr(t){return new Date(t).toLocaleTimeString('es-DO',{hour:'numeric',minute:'2-digit'})}
+// Mapa sin servicios externos (el recorrido no sale del teléfono): trazado, inicio, fin y paradas largas, con los centros de zona de referencia.
+function gMap(g){if(!g||!g.pts||g.pts.length<2)return '<p><small>El trazado ya no se guarda (más de 90 días); el resumen sí.</small></p>';
+ var W=chW(),H=Math.round(W*0.72),pd=18,la=g.pts.map(function(p){return p[0]}),lo=g.pts.map(function(p){return p[1]}),c=Math.cos((Math.min.apply(null,la)+Math.max.apply(null,la))/2*Math.PI/180),
+  x0=Math.min.apply(null,lo),x1=Math.max.apply(null,lo),y0=Math.min.apply(null,la),y1=Math.max.apply(null,la),sx=(x1-x0)*c||1e-4,sy=(y1-y0)||1e-4,k=Math.min((W-2*pd)/sx,(H-2*pd)/sy),
+  ox=(W-sx*k)/2,oy=(H-sy*k)/2,X=function(l){return(ox+(l-x0)*c*k).toFixed(1)},Y=function(l){return(H-oy-(l-y0)*k).toFixed(1)},s='';
+ ZK.forEach(function(z){var Z=ZONAS[z];if(Z.lat==null||Z.lat<y0-0.02||Z.lat>y1+0.02||Z.lon<x0-0.02||Z.lon>x1+0.02)return;s+='<text x="'+X(Z.lon)+'" y="'+Y(Z.lat)+'" font-size="12" font-weight="700" text-anchor="middle" fill="var(--mu)" opacity=".55">'+Z.c+'</text>'});
+ s+='<polyline fill="none" stroke="var(--ac)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" points="'+g.pts.map(function(p){return X(p[1])+','+Y(p[0])}).join(' ')+'"/>';
+ (g.stops||[]).forEach(function(p){var r=Math.min(11,4+p.m/12),tp='Parada de '+gHM(p.m)+' desde las '+gHr(p.t)+(ZONAS[gZone(p)]?' · '+ZONAS[gZone(p)].c:'');
+  s+='<circle class="hit" cx="'+X(p.lo)+'" cy="'+Y(p.la)+'" r="'+(r+8)+'" data-t="'+esc(tp)+'" onclick="chTip(this)"><title>'+esc(tp)+'</title></circle><circle pointer-events="none" cx="'+X(p.lo)+'" cy="'+Y(p.la)+'" r="'+r.toFixed(1)+'" fill="var(--wr)" fill-opacity=".85" stroke="var(--card)" stroke-width="2"/>'});
+ var a=g.pts[0],b=g.pts[g.pts.length-1];s+='<circle cx="'+X(a[1])+'" cy="'+Y(a[0])+'" r="6" fill="var(--card)" stroke="var(--ac)" stroke-width="3"/><circle cx="'+X(b[1])+'" cy="'+Y(b[0])+'" r="6" fill="var(--tx)" stroke="var(--card)" stroke-width="2"/>';
+ // Escala: 1, 2, 5 o 10 km según el tamaño del recorrido.
+ var mPx=k/111320,sk=[1,2,5,10,20,50].filter(function(v){return v*1000*mPx<=W*0.35}).pop()||1,sl=sk*1000*mPx;s+='<line x1="'+pd+'" x2="'+(pd+sl).toFixed(1)+'" y1="'+(H-8)+'" y2="'+(H-8)+'" stroke="var(--mu)" stroke-width="2"/><text x="'+pd+'" y="'+(H-13)+'" font-size="11" fill="var(--mu)">'+sk+' km</text>';
+ return '<div class="chw gmap"><svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Mapa del recorrido: '+g.km+' km con '+(g.stops||[]).length+' paradas largas">'+s+'</svg>'+
+  '<div class="cleg"><span><i style="background:var(--card);border:3px solid var(--ac);border-radius:50%;width:12px;height:12px"></i>Inicio</span><span><i style="background:var(--tx);border-radius:50%;width:12px;height:12px"></i>Fin</span><span><i style="background:var(--wr);border-radius:50%;width:12px;height:12px"></i>Parada de 5 min o más</span></div><div class="ctip" aria-live="polite"></div></div>'}
+function gSum(g,noMap){var tot=(g.mov+g.stop)||1,K=function(b,s){return '<div class="kpi"><b>'+b+'</b><span>'+s+'</span></div>'},ls=(g.stops||[]).reduce(function(a,p){return a+p.m},0);
+ var h='<div class="kpis">'+K(g.km+' km','Distancia recorrida')+K(gHM(g.mov),'En movimiento ('+Math.round(g.mov/tot*100)+'%)')+K(gHM(g.stop),'Detenido ('+Math.round(g.stop/tot*100)+'%)')+K(g.vavg+' km/h','Velocidad promedio en movimiento')+'</div>';
+ h+='<p class="sub" style="margin:10px 0 0">'+gHr(g.t0)+' a '+gHr(g.t1)+' · '+gHM((g.t1-g.t0)/60000)+' en total'+(g.gap?' · <b>'+gHM(g.gap)+' sin señal</b> ('+g.gkm+' km estimados en línea recta)':'')+'</p>';
+ if(!noMap)h+=gMap(g);
+ var zk=Object.keys(g.zt||{});if(zk.length)h+=foldHtml('gps-zt','Tiempo por zona',zk.map(function(k){return(ZONAS[k]?ZONAS[k].c:'Otra')+' '+gHM(g.zt[k])}).join(' · '),zk.map(function(k){var m=g.zt[k];return '<div class="dl"><i class="dot" style="background:var(--ac)"></i><span>'+(ZONAS[k]?ZONAS[k].n:'Fuera de las zonas')+'</span><span>'+gHM(m)+' <small>'+Math.round(m/tot*100)+'%</small></span><span class="tk"><i style="width:'+Math.round(m/tot*100)+'%;background:var(--ac)"></i></span></div>'}).join('')+'<small>Aproximado: cada punto se asigna a la zona cuyo centro está más cerca.</small>');
+ if(g.stops&&g.stops.length)h+=foldHtml('gps-st','Paradas largas',g.stops.length+' paradas · '+gHM(ls)+' en total',g.stops.slice(0,10).map(function(p){var z=gZone(p);return '<div class="leg"><span>'+gHr(p.t)+(ZONAS[z]?' · '+ZONAS[z].c:'')+'</span><span>'+gHM(p.m)+'</span></div>'}).join('')+'<small>Una parada es un tramo de 5 minutos o más casi sin moverte (esperando viaje, comiendo, echando GLP…).</small>');
+ return h}
+function gRead(f){return new Promise(function(ok,ko){var r=new FileReader();r.onload=function(){try{ok(gAnalyze(gpxParse(r.result)))}catch(e){ko(e)}};r.onerror=function(){ko(new Error('No se pudo leer el archivo.'))};r.readAsText(f)})}
+// Registrar: carga el recorrido y completa fecha, km, horas, zona y turno (solo los campos vacíos).
+function gpsLoad(inp){var f=inp.files&&inp.files[0],o=$('gpsv');inp.value='';if(!f)return;o.innerHTML=fiLoading('Analizando el recorrido');
+ gRead(f).then(function(g){PGPS=g;var h0=new Date(g.t0),h1=new Date(g.t1),fill=[];
+  if($('fecha').value!=g.d){$('fecha').value=g.d;fill.push('fecha')}
+  if(!$('km').value&&g.km>0){$('km').value=g.km;fill.push('km')}
+  if(!$('horas').value){$('horas').value=Math.round((g.t1-g.t0)/36e5*4)/4;fill.push('horas')}
+  // La zona del GPS es donde de verdad trabajaste: reemplaza la sugerencia del agente.
+  if(g.z&&ZONAS[g.z]&&$('zon').value!=g.z){$('zon').value=g.z;fill.push('zona ('+ZONAS[g.z].c+')')}
+  if(!$('tur').value){$('tur').value=turnoOf(h0.getHours()+h0.getMinutes()/60,h1.getHours()+h1.getMinutes()/60);fill.push('turno')}
+  var mf=document.querySelector('[data-f="reg-mas"]');if(mf&&fill.indexOf('km')>=0)mf.open=true;
+  o.innerHTML='<div class="warn ok">Recorrido del '+fdate(g.d)+' listo. '+(fill.length?'Completé: '+fill.join(', ')+'. ':'')+'Se guardará con el día al tocar «Guardar día».<button class="x" style="float:right;color:inherit" aria-label="Quitar el recorrido" onclick="PGPS=null;$(\'gpsv\').innerHTML=\'\'">✕</button></div>'+gSum(g)},
+  function(e){PGPS=null;o.innerHTML='<div class="warn">'+esc(e.message||e)+'</div>'})}
+// Historial: cargar o ver el recorrido de un día ya registrado.
+function gpsLoadLog(inp,i){var f=inp.files&&inp.files[0],x=S.logs[i];inp.value='';if(!f||!x)return;$('lem').innerHTML=fiLoading('Analizando el recorrido');
+ gRead(f).then(function(g){if(g.d!=x.d){$('lem').innerHTML='<div class="warn">Ese recorrido es del '+fdate(g.d)+' y este registro es del '+fdate(x.d)+'.</div>';return}
+  x.gps=g;if(!x.km&&g.km>0)x.km=g.km;if(!x.z&&g.z&&ZONAS[g.z])x.z=g.z;save();editLog(i);$('lem').innerHTML='<div class="warn ok">Recorrido guardado en este día.</div>'},function(e){$('lem').innerHTML='<div class="warn">'+esc(e.message||e)+'</div>'})}
+function gpsPrune(){var lim=fiAdd(today(),-90);S.logs.forEach(function(x){if(x.gps&&x.gps.pts&&x.d<lim)delete x.gps.pts})}
 // Mejor turno en una zona según tu historial (necesita al menos 2 jornadas por turno con horas registradas).
-function zTurno(k){var m={};S.logs.forEach(function(x){if(x.z!=k||!x.t||x.t=='x'||x.off||x.g==null||!(+x.h>0))return;var o=m[x.t]=m[x.t]||{n:0,h:0,c:0};o.n+=Math.max(0,x.g-exOf(x));o.h+=+x.h;o.c++});
+function zTurno(k){var m={},t0=new Date(today()+'T00:00');S.logs.forEach(function(x){if(x.z!=k||!x.t||x.t=='x'||x.off||x.g==null||!(+x.h>0))return;var o=m[x.t]=m[x.t]||{n:0,h:0,c:0},wt=Math.pow(0.5,Math.max(0,(t0-new Date(x.d+'T00:00'))/864e5)/42);o.n+=Math.max(0,x.g-exOf(x))*wt;o.h+=x.h*wt;o.c++});
  var L=Object.keys(m).filter(function(t){return m[t].c>=2}).map(function(t){return{t:t,nph:m[t].n/m[t].h,c:m[t].c}}).sort(function(a,b){return b.nph-a.nph});return L.length?{t:L[0].t,nph:L[0].nph,c:L[0].c,n:L.length}:null}
 // Recordatorio de salida: si la app está abierta y los avisos están activados, avisa al empezar el horario recomendado (solo hoy, dentro de 12 h).
 var ZREM=null;
@@ -2120,7 +2357,7 @@ async function zRun(force){if(ZST.busy)return;var old=zGet();if(old&&!force){zRe
  z.src.historial=z.H.A.c?z.H.A.c+' jornadas con zona':'Sin jornadas con zona todavía';
  zScore(z);z.src.noticias=aiReady()&&navigator.onLine?'Consultando…':'No disponible ('+(navigator.onLine?'configura la IA':'sin internet')+')';zPut(z);ZST.msg=aiReady()&&navigator.onLine?'Buscando noticias de hoy con Gemini':'';zRender();
  if(aiReady()&&navigator.onLine){try{z.ai=await zNews(z);zScore(z);z.src.noticias=z.ai.web?'ok · búsqueda web':'IA sin búsqueda web (solo interpreta el clima)'}catch(e){z.src.noticias='No disponible: '+(e.message||'error')}zPut(z)}
- ZST.busy=0;ZST.msg='';zRender();try{fiSummary();regZoneDefault();renderJor()}catch(e){}zRemind()}
+ zLog(z);ZST.busy=0;ZST.msg='';zRender();try{fiSummary();regZoneDefault();renderJor()}catch(e){}zRemind()}
 function zBoot(){if(!ZCFG.on)return zRender();if(ZCFG.auto&&!zGet())zRun();else{zRender();setTimeout(zRemind,3000)}}
 function zRender(){var el=$('zona');if(el)el.innerHTML=zCard(true);heroUpd();if(TAB=='ia'&&subOf('ia')=='zona')zR_full()}
 function zIcon(w){return !w?'❓':w.storm?'⛈️':w.heavy?'🌧️':w.rainH>=2?'🌦️':'☀️'}
@@ -2139,7 +2376,7 @@ function zCard(compact){var z=zGet(),h='<div class="row" style="align-items:cent
  h+='<div class="row" style="margin-top:10px;align-items:center"><small style="flex:3">Actualizado '+new Date(z.ts).toLocaleTimeString('es-DO',{hour:'numeric',minute:'2-digit'})+' · Clima '+(z.src.clima=='ok'?'✔':'✖')+' · Noticias '+(z.src.noticias&&z.src.noticias.indexOf('ok')==0?'✔':'✖')+' · Tránsito '+(z.T?'✔':'≈ estimado')+'</small>'+(compact?'<button style="flex:none;min-width:0" onclick="setTab(\'ia\',\'zona\')">Detalle</button>':'')+'<button style="flex:none;min-width:0" onclick="zRun(1)"'+(ZST.busy?' disabled':'')+'>Actualizar</button></div>';
  return h}
 function zR_full(){var el=$('fi_zona');if(!el)return;var z=zGet(),h=zCard(false);
- if(z){h+='<b style="display:block;margin-top:16px">Comparación de zonas</b>'+ZK.map(function(k){var o=z.Z[k],w=z.W&&z.W[k];return '<details class="arow" style="margin-top:8px"'+(z.rec.k==k?' open':'')+'><summary style="color:var(--tx)">'+zIcon(w)+' <b>'+ZONAS[k].n+'</b> · '+o.s+'/100'+(o.exp!=null?' · neto estimado '+rd(o.exp):'')+'</summary>'+bar(o.s,7)+(w?'<small>Lluvia máx. '+w.prob+'% · '+w.mm.toFixed(1)+' mm en el día · viento '+Math.round(w.wind)+' km/h'+(w.tmax!=null?' · '+Math.round(w.tmax)+'°C':'')+'</small>':'')+o.why.map(function(x){return '<div style="font-size:13px;margin-top:4px">'+esc(x)+'</div>'}).join('')+'</details>'}).join('');
+ if(z){h+='<b style="display:block;margin-top:16px">Comparación de zonas</b>'+ZK.map(function(k){var o=z.Z[k],w=z.W&&z.W[k];return '<details class="arow" style="margin-top:8px"'+(z.rec.k==k?' open':'')+'><summary style="color:var(--tx)">'+zIcon(w)+' <b>'+ZONAS[k].n+'</b> · '+o.s+'/100'+(o.exp!=null?' · neto estimado '+rd(o.exp):'')+'</summary>'+bar(o.s,7)+(w?'<small>Lluvia máx. '+w.prob+'% · '+w.mm.toFixed(1)+' mm en el día · viento '+Math.round(w.wind)+' km/h'+(w.tmax!=null?' · '+Math.round(w.tmax)+'°C':'')+'</small>':'')+o.why.map(function(x){return '<div style="font-size:13px;margin-top:4px">'+esc(x)+'</div>'}).join('')+(o.I?zIdxHtml(o.I):'')+'</details>'}).join('');
   var C=z.cost,st=z.Z.stgo,bk=ZSD.slice().sort(function(a,b){return z.Z[b].s-z.Z[a].s})[0];
   h+='<b style="display:block;margin-top:16px">¿Ir a Santiago?</b><p class="sub" style="margin:4px 0">Ruta: '+esc(zStgoRuta())+'.</p>'+
    '<div class="leg"><span>GLP ('+C.km+' km a RD$'+C.fk.toFixed(1)+'/km)</span><span>'+rd(C.fuel)+'</span></div><div class="leg"><span>Peajes</span><span>'+rd(C.toll)+'</span></div>'+
@@ -2152,15 +2389,17 @@ function zR_full(){var el=$('fi_zona');if(!el)return;var z=zGet(),h=zCard(false)
     st.s<60?'⛔ Santo Domingo está mal, pero Santiago tampoco está bien hoy ('+st.s+'/100).':
     '⛔ Santo Domingo está mal, pero después de pagar el viaje completo Santiago no deja lo suficiente'+(C.mg?' (debe superar a SD por al menos '+rd(C.mg)+')':'')+'.')+'</p>';
   if(z.ai&&z.ai.cites.length)h+='<b style="display:block;margin-top:14px">Fuentes consultadas</b>'+z.ai.cites.map(function(c){return /^https:\/\//.test(c.url)?'<div style="font-size:13px;margin-top:4px"><a href="'+esc(c.url)+'" target="_blank" rel="noopener noreferrer">'+esc(c.t||c.url.replace(/^https:\/\/(www\.)?/,'').slice(0,60))+'</a></div>':''}).join('');
+  var Q=zAcc();h+='<b style="display:block;margin-top:14px">Precisión del agente</b>'+(Q.n?'<div class="leg"><span>Acertó tu neto (±20%)</span><span>'+Q.ok+' de '+Q.n+' días</span></div><div class="leg"><span>Error promedio</span><span>'+Math.round(Q.err*100)+'%</span></div>'+(Q.rec?'<div class="leg"><span>Trabajaste en la zona recomendada</span><span>'+Q.seg+' de '+Q.rec+' días</span></div>':'')+'<small>Con cada jornada que registras con su zona, el agente compara lo que estimó con lo que ganaste y se corrige solo.</small>':'<p><small>Todavía no hay días para comparar. Cuando registres jornadas con su zona en días que el agente analizó, aquí verás cuánto acierta, y empezará a corregirse solo.</small></p>');
   h+='<b style="display:block;margin-top:14px">Estado de las fuentes</b>'+[['Clima (Open-Meteo)',z.src.clima],['Feriados',z.src.feriados],['Tránsito',z.src.transito],['Noticias (Gemini + web)',z.src.noticias],['Tu historial por zona',z.src.historial]].map(function(x){return '<div class="leg"><span>'+x[0]+'</span><span><small>'+esc(x[1]||'—')+'</small></span></div>'}).join('')}
  var ck=function(b){return b?' checked':''};
  h+='<details style="margin-top:16px"><summary>Ajustes del agente</summary><label style="flex-direction:row;align-items:center;gap:8px;margin-top:10px"><input type="checkbox" id="zc_on"'+ck(ZCFG.on)+'> Agente activado</label><label style="flex-direction:row;align-items:center;gap:8px;margin-top:6px"><input type="checkbox" id="zc_auto"'+ck(ZCFG.auto)+'> Analizar automáticamente al abrir la app (una vez al día)</label><label style="flex-direction:row;align-items:center;gap:8px;margin-top:6px"><input type="checkbox" id="zc_web"'+ck(ZCFG.web)+'> Buscar noticias en la web con Gemini (≈US$0.01–0.04 por análisis)</label><label style="flex-direction:row;align-items:center;gap:8px;margin-top:6px"><input type="checkbox" id="zc_fam"'+ck(ZCFG.familia)+'> Después de trabajar en Santiago duermo en Mao (familia) y regreso a SD al otro día</label><label style="flex-direction:row;align-items:center;gap:8px;margin-top:6px"><input type="checkbox" id="zc_rem"'+ck(ZCFG.rem)+'> Avisarme a la hora de salir (con la app abierta y los avisos activados)</label>'+
   '<div class="row" style="margin-top:10px"><label>Km SD → Santiago<input type="number" id="zc_km" value="'+ZCFG.km+'"></label><label>Peajes de ida (RD$)<input type="number" id="zc_pj" value="'+ZCFG.peaje+'"></label><label>Horas de manejo de ida<input type="number" step="0.5" id="zc_hr" value="'+ZCFG.horas+'"></label><label>GLP por km (RD$, si no registras km)<input type="number" step="0.1" id="zc_gk" value="'+ZCFG.glpkm+'"></label></div>'+
   '<div class="row" style="margin-top:8px"><label>Km Santiago → Mao<input type="number" id="zc_km2" value="'+ZCFG.kmMao+'"></label><label>Km Mao → SD (vacío)<input type="number" id="zc_kmv" value="'+ZCFG.kmV+'"></label><label>Horas Mao → SD<input type="number" step="0.5" id="zc_hv" value="'+ZCFG.horasV+'"></label><label>Peajes Mao → SD (RD$)<input type="number" id="zc_pjv" value="'+ZCFG.peajeV+'"></label></div>'+
+  '<div class="row" style="margin-top:8px"><label style="flex:3">Desde dónde sales a trabajar (para el costo de llegar a cada zona)<select id="zc_casa"><option value="">Sin indicar</option>'+ZK.map(function(k){return '<option value="'+k+'"'+(ZCFG.casa==k?' selected':'')+'>'+ZONAS[k].n+'</option>'}).join('')+'</select></label></div>'+
   '<div class="row" style="margin-top:8px"><label style="flex:3">Token de Mapbox (opcional, tránsito en vivo)<input type="password" id="zc_mb" value="'+esc(ZCFG.mb)+'" placeholder="pk.… · gratis en account.mapbox.com" autocomplete="off"></label><button style="flex:1" onclick="zTTTest()">Probar conexión</button><button class="pri" style="flex:1" onclick="zCfgSave()">Guardar</button></div><div id="zttm"></div><small>Registra la <b>zona</b> de cada jornada en Registrar: con unas 6 jornadas el agente empieza a usar tu rendimiento real por zona.</small><div id="zcm"></div></details>';
  el.innerHTML=h}
 function zCfgSave(){var n=function(i,d,mx){var v=+$(i).value;return isFinite(v)&&v>=0?Math.min(mx,v):d};ZCFG.on=$('zc_on').checked;ZCFG.auto=$('zc_auto').checked;ZCFG.web=$('zc_web').checked;ZCFG.familia=$('zc_fam').checked;ZCFG.rem=$('zc_rem').checked;
- ZCFG.km=n('zc_km',151,400);ZCFG.kmMao=n('zc_km2',54,300);ZCFG.kmV=n('zc_kmv',205,500);ZCFG.horasV=n('zc_hv',3,10);ZCFG.peajeV=n('zc_pjv',200,5000);ZCFG.peaje=n('zc_pj',200,5000);ZCFG.horas=n('zc_hr',2.5,8);ZCFG.glpkm=n('zc_gk',5,50);ZCFG.mb=$('zc_mb').value.replace(/\s+/g,'');zSaveCfg();var z=zGet();if(z){zScore(z);zPut(z)}zRender();var m=$('zcm');if(m)m.innerHTML='<div class="warn ok">Ajustes guardados. Toca “Actualizar” para volver a analizar.</div>'}
+ ZCFG.km=n('zc_km',151,400);ZCFG.kmMao=n('zc_km2',54,300);ZCFG.kmV=n('zc_kmv',205,500);ZCFG.horasV=n('zc_hv',3,10);ZCFG.peajeV=n('zc_pjv',200,5000);ZCFG.peaje=n('zc_pj',200,5000);ZCFG.horas=n('zc_hr',2.5,8);ZCFG.glpkm=n('zc_gk',5,50);ZCFG.mb=$('zc_mb').value.replace(/\s+/g,'');ZCFG.casa=$('zc_casa').value;zSaveCfg();var z=zGet();if(z){zScore(z);zPut(z)}zRender();var m=$('zcm');if(m)m.innerHTML='<div class="warn ok">Ajustes guardados. Toca “Actualizar” para volver a analizar.</div>'}
 
 /* =====================================================================================
    FASE 2: jornada en vivo, vehículo, importar Uber, presupuesto del hogar, pagos sugeridos y cierre semanal.
@@ -2192,6 +2431,7 @@ function renderJor(){var el=$('jor');if(!el)return;clearInterval(JT);var J=S.shi
  el.innerHTML='<div class="row" style="align-items:center"><div style="flex:3;min-width:200px"><span class="fi-ey">Jornada en curso'+(J.z&&ZONAS[J.z]?' · '+ZONAS[J.z].n:'')+'</span><h2 style="margin:0"><span id="jtime">'+hmin(Date.now()-J.start)+'</span> trabajando</h2></div><span class="tag">'+TURN[turnoOf(new Date(J.start).getHours(),new Date().getHours())]+'</span></div>'+
   (falta<=0.5?'<div class="warn ok" style="margin-top:10px">¡Cuota de hoy cubierta! Lo que ganes ahora va a tus metas.</div>':'<div class="verd" style="margin-top:10px"><span class="big">'+rd(ph)+' netos por hora</span><small>es lo que necesitas en las '+left.toFixed(1)+' h que te quedan para cubrir los '+rd(falta)+' que faltan hoy (unos '+rd(bph)+' brutos por hora contando gastos).</small></div>')+
   '<div class="row" style="margin-top:10px"><label>Bruto hasta ahora<input type="number" id="jg" min="0" value="'+(J.g||'')+'" onchange="jUpd()"></label><label>Gastos hasta ahora<input type="number" id="jx" min="0" value="'+(J.ex||'')+'" onchange="jUpd()"></label><label>Odómetro al llegar<input type="number" id="jk1" min="0" placeholder="'+(J.km0?'Más de '+J.km0:'Opcional')+'"></label></div>'+
+  '<div class="fi-l"><span>📍</span><span>¿Grabando el recorrido en tu app de GPS? Al terminar, cárgalo en Registrar → Recorrido GPS para ver km, paradas y tiempo detenido.</span></div>'+
   '<div class="row" style="margin-top:8px"><button class="pri" onclick="jEnd()">Terminar jornada</button><button class="x" style="flex:none" onclick="jCancel(this)">Cancelar</button></div><div id="jm"></div>';
  JT=setInterval(function(){var s=$('jtime');if(s)s.textContent=hmin(Date.now()-S.shift.start);else clearInterval(JT)},30000)}
 function jStart(){var k0=+$('jk0').value||0;S.shift={start:Date.now(),d:today(),z:$('jz').value,km0:k0,plan:Math.min(18,Math.max(1,+$('jpl').value||9))};if(k0>0)vehSetOdo(k0);save();all()}
@@ -2263,8 +2503,8 @@ function impSet(R){IMP=R.map(function(r){var ex=S.logs.filter(function(x){return
 function impTable(){return '<div class="scroll"><table class="cmp" style="margin-top:10px"><tr><th>Día</th><th>Ganancias Uber</th><th>Bruto ya registrado</th><th>Qué hacer</th></tr>'+IMP.map(function(r,i){return '<tr><td>'+fdate(r.d)+(r.v?' <small>'+r.v+' viajes</small>':'')+'</td><td>'+rd(r.g)+'</td><td>'+(r.has?rd(r.eg):'—')+'</td><td><select onchange="IMP['+i+'].act=this.value">'+[['crear','Crear el día'],['poner','Poner como bruto'],['sumar','Sumar al bruto'],['omitir','No importar']].filter(function(o){return r.has?o[0]!='crear':o[0]=='crear'||o[0]=='omitir'}).map(function(o){return '<option value="'+o[0]+'"'+(r.act==o[0]?' selected':'')+'>'+o[1]+'</option>'}).join('')+'</select></td></tr>'}).join('')+'</table></div><small>Si ya habías anotado el bruto de un día, por defecto no se importa para no contarlo dos veces.</small><div class="row" style="margin-top:10px"><button class="pri" onclick="impApply(this)">Confirmar e importar</button><button onclick="IMP=null;$(\'impo\').innerHTML=\'\'">Descartar</button></div>'}
 // Aplica el borrador: crea días nuevos o ajusta el bruto del registro existente de ese día. Guarda un punto de restauración antes.
 function impApplyCore(R){var n=0;R.forEach(function(r){if(r.act=='omitir')return;var ex=S.logs.filter(function(x){return x.d==r.d&&!x.off});
-  if(r.act=='crear'||!ex.length){S.logs.push({d:r.d,g:r.g,e:{glp:0,comida:0,hormiga:0,otros:0},x:[],h:r.h||0,off:false,n:'Importado de Uber'+(r.v?' ('+r.v+' viajes)':'')});n++}
-  else{var lg=ex[0];if(lg.g==null){lg.g=+lg.a||0;delete lg.a;lg.e=lg.e||{glp:0,comida:0,hormiga:0,otros:0}}if(r.act=='poner'){ex.slice(1).forEach(function(x){if(x.g!=null)x.g=0});lg.g=r.g}else lg.g+=r.g;if(r.h&&!lg.h)lg.h=r.h;n++}});
+  if(r.act=='crear'||!ex.length){S.logs.push({d:r.d,g:r.g,e:{glp:0,comida:0,hormiga:0,otros:0},x:[],h:r.h||0,off:false,n:'Importado de Uber'+(r.v?' ('+r.v+' viajes)':''),v:r.v>0?Math.round(r.v):undefined});n++}
+  else{var lg=ex[0];if(lg.g==null){lg.g=+lg.a||0;delete lg.a;lg.e=lg.e||{glp:0,comida:0,hormiga:0,otros:0}}if(r.act=='poner'){ex.slice(1).forEach(function(x){if(x.g!=null)x.g=0});lg.g=r.g;if(r.v>0)lg.v=Math.round(r.v)}else{lg.g+=r.g;if(r.v>0)lg.v=(lg.v||0)+Math.round(r.v)}if(r.h&&!lg.h)lg.h=r.h;n++}});
  S.logs.sort(function(a,b){return a.d<b.d?-1:a.d>b.d?1:0});_sm=null;return n}
 function impApply(b){if(!IMP)return;tap2(b,'¿Importar?',function(){addPoint('pre');var n=impApplyCore(IMP);IMP=null;save();all();$('impo').innerHTML='<div class="warn ok">'+n+' día(s) importados. Ahora completa los gastos de cada día en el Historial (✎).</div>'})}
 
