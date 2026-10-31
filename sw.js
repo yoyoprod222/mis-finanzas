@@ -1,6 +1,6 @@
 // Service worker de Mis Finanzas: funciona sin conexión y avisa de vencimientos.
 // Sube VERSION cada vez que cambies el HTML para que los teléfonos tomen la versión nueva.
-var VERSION = 'mf-v15';
+var VERSION = 'mf-v16';
 var APP = 'index.html';
 var CORE = ['./', './' + APP, './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './icons/apple-touch-icon.png', './icons/icon.svg'];
 var CDN = ['https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js', 'https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js'];
@@ -31,7 +31,9 @@ self.addEventListener('fetch', function (e) {
   // La página: primero red (para recibir cambios), si no hay conexión, la copia guardada.
   if (r.mode == 'navigate') {
     e.respondWith(fetch(r).then(function (res) {
-      var cp = res.clone(); caches.open(VERSION).then(function (c) { c.put('./' + APP, cp) }); return res;
+      // Solo se guarda una página buena: una de error (404, 500) dejaría la app rota sin conexión.
+      if (res.ok) { var cp = res.clone(); caches.open(VERSION).then(function (c) { c.put('./' + APP, cp) }) }
+      return res;
     }).catch(function () {
       return caches.match(r, { ignoreSearch: true }).then(function (m) { return m || caches.match('./' + APP) });
     }));
