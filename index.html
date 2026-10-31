@@ -2371,15 +2371,16 @@ function zIdxAdj(z,k){var H=z.H,h=H.Z[k]||{},A=H.A||{},o=z.Z[k],s=0,why=[];
 // Dentro de la app Android (window.MFAndroid) la página puede: grabar el GPS en segundo plano durante la jornada,
 // usar el lector de ofertas de Uber (accesibilidad) y guardar archivos en Descargas. En el navegador nada de esto existe
 // y la página funciona igual que siempre.
-var AND=window.MFAndroid||null,ANDCFG={on:true,lvl:'n',mk:'',mh:'',cap:true,shift:'off',kw_on:'',kw_off:'',kw_acc:'',kw_end:''},ANDLAST='';
+var AND=window.MFAndroid||null,ANDCFG={on:true,lvl:'n',mk:'',mh:'',gk:'',gh:'',cap:true,shift:'off',kw_on:'',kw_off:'',kw_acc:'',kw_end:''},ANDLAST='';
 try{var ac0=JSON.parse(localStorage.getItem('fin-and')||'{}');for(var ak0 in ac0)if(ak0 in ANDCFG)ANDCFG[ak0]=ac0[ak0]}catch(e){}ANDCFG.shift='off';
 function andJ(f){try{return JSON.parse(AND[f]()||'null')}catch(e){return null}}
 // Límites del lector. Una oferta no incluye la espera ni los km vacíos que vienen después, así que para mantener
 // tu promedio tiene que rendir más que él: por km, 115% (conviene) y 90% (mínimo); por hora, 130% y 100%.
-// «Exigencia» los mueve ±10%. Si escribes un mínimo propio, manda ese.
+// «Exigencia» los mueve ±10%. Si escribes un mínimo o un «conviene desde» propio, manda ese.
 function andNums(){var H=zHist(),A=H.A||{},cpk=(A.fpk||ZCFG.glpkm)+zMpk(),f={s:0.9,n:1,e:1.1}[ANDCFG.lvl]||1,
   kG=A.npk?A.npk*1.15*f:15,kM=A.npk?A.npk*0.9*f:10,hG=A.nph?A.nph*1.3*f:350,hM=A.nph?A.nph*f:250;
  if(+ANDCFG.mk>0){kM=+ANDCFG.mk;kG=Math.max(kG,kM*1.25)}if(+ANDCFG.mh>0){hM=+ANDCFG.mh;hG=Math.max(hG,hM*1.3)}
+ if(+ANDCFG.gk>0)kG=Math.max(+ANDCFG.gk,kM);if(+ANDCFG.gh>0)hG=Math.max(+ANDCFG.gh,hM);
  return{cpk:+cpk.toFixed(2),kmGood:Math.round(kG),kmMin:Math.round(kM),hrGood:Math.round(hG),hrMin:Math.round(hM),on:!!ANDCFG.on,base:!!(A.npk&&A.nph)}}
 var ANDZL='',ANDAL='';function andSync(){if(!AND)return;try{var o=andNums(),j;delete o.base;j=JSON.stringify(o);if(j!=ANDLAST){ANDLAST=j;AND.setNumbers(j)}
  var au=JSON.stringify({shiftMode:ANDCFG.shift,capture:!!ANDCFG.cap,kw_on:ANDCFG.kw_on,kw_off:ANDCFG.kw_off,kw_acc:ANDCFG.kw_acc,kw_end:ANDCFG.kw_end});if(au!=ANDAL&&AND.setAuto){ANDAL=au;AND.setAuto(au)}
@@ -2388,8 +2389,8 @@ function andKeep(){try{localStorage.setItem('fin-and',JSON.stringify(ANDCFG))}ca
 // Envía los límites al lector y comprueba (app 1.7 o más) que los tiene.
 function andPushMsg(){if(!AND)return '<small>Se envían al lector cuando abres la app Android.</small>';var I=andJ('info')||{},n=I.nums,N=andNums();if(!n)return '<small>Enviado. Actualiza la app Android a la 1.7 para ver aquí lo que tiene el lector.</small>';
  var ok=n.kmGood==N.kmGood&&n.kmMin==N.kmMin&&n.hrGood==N.hrGood&&n.hrMin==N.hrMin;
- return '<small style="color:'+(ok?'var(--ac)':'var(--wr)')+'">'+(ok?'✓ El lector usa':'⚠ El lector todavía tiene')+': mín. '+rd(n.kmMin)+'/km y '+rd(n.hrMin)+'/h · conviene desde '+rd(n.kmGood)+'/km y '+rd(n.hrGood)+'/h</small>'}
-function andPush(b){andKeep();ANDLAST='';ANDAL='';ANDZL='';andSync();var m=$('andpm');if(m)m.innerHTML=andPushMsg();if(b){b.textContent='✓ Guardado';setTimeout(function(){b.textContent='Guardar y enviar al lector'},1800)}}
+ return '<small style="color:'+(ok?'var(--ac)':'var(--wr)')+'">'+(ok?'✓ El lector usa':'⚠ El lector todavía tiene')+':</small><br><small>❌ menos de '+rd(n.kmMin)+'/km o '+rd(n.hrMin)+'/h · ✅ desde '+rd(n.kmGood)+'/km y '+rd(n.hrGood)+'/h</small>'}
+function andPush(b){andKeep();ANDLAST='';ANDAL='';ANDZL='';andSync();renderAndCf();b=document.querySelector('#and_cf button.pri');var m=$('andpm');if(m)m.innerHTML=andPushMsg();if(b){b.textContent='✓ Guardado';setTimeout(function(){b.textContent='Guardar y enviar al lector'},1800)}}
 function andSave(){try{localStorage.setItem('fin-and',JSON.stringify(ANDCFG))}catch(e){}ANDLAST='';ANDAL='';andSync();renderAnd()}
 function andOffers(day){var L=AND?andJ('offers')||[]:[];return day?L.filter(function(o){return ds(new Date(o.t))==day}):L}
 var ANDV=['❌ No conviene','⚠️ Justo','✅ Conviene'];
@@ -2443,9 +2444,12 @@ function renderAndZn(){var el=$('and_zn');if(!el)return;var Z=S.dz||[],n=Z.filte
 function dzAdd(){var n=$('dzn').value.trim();if(!n)return;S.dz.push({n:n,z:$('dzz').value,nota:$('dznt').value.trim(),lv:$('dzl').value});save();renderAndZn()}
 function renderAndCf(){var el=$('and_cf');if(!el)return;var N=andNums(),I=AND?andJ('info')||{}:{};
  var h='<h2>Ajustes del asistente</h2>'+(AND?'':'<p class="sub">Puedes prepararlos aquí; se usan en la app Android.</p>');
- h+='<div class="leg"><span>Costo del carro por km (GLP + mantenimiento)</span><span>RD$'+N.cpk.toFixed(1)+'</span></div><div class="leg"><span>✅ Conviene si deja al menos</span><span>'+rd(N.kmGood)+'/km y '+rd(N.hrGood)+'/h</span></div><div class="leg"><span>❌ No conviene si deja menos de</span><span>'+rd(N.kmMin)+'/km o '+rd(N.hrMin)+'/h</span></div>'+
-  '<div class="row" style="margin-top:10px"><label>Exigencia<select onchange="ANDCFG.lvl=this.value;andSave()">'+[['s','Suave'],['n','Normal'],['e','Exigente']].map(function(o){return '<option value="'+o[0]+'"'+(ANDCFG.lvl==o[0]?' selected':'')+'>'+o[1]+'</option>'}).join('')+'</select></label><label>Mínimo propio por km (RD$)<input type="number" min="0" value="'+esc(ANDCFG.mk)+'" placeholder="Automático" oninput="ANDCFG.mk=this.value;andKeep()" onchange="andSave()"></label><label>Mínimo propio por hora (RD$)<input type="number" min="0" value="'+esc(ANDCFG.mh)+'" placeholder="Automático" oninput="ANDCFG.mh=this.value;andKeep()" onchange="andSave()"></label></div>'+
-  '<div class="row" style="margin-top:10px;align-items:center"><button class="pri" style="flex:none" onclick="andPush(this)">Guardar y enviar al lector</button><span id="andpm" style="flex:1;min-width:160px">'+andPushMsg()+'</span></div>'+
+ h+='<div class="leg"><span>Costo del carro por km (GLP + mantenimiento)</span><span>RD$'+N.cpk.toFixed(1)+'</span></div>'+
+  '<div class="row" style="margin-top:10px"><label>Exigencia<select onchange="ANDCFG.lvl=this.value;andSave()">'+[['s','Suave'],['n','Normal'],['e','Exigente']].map(function(o){return '<option value="'+o[0]+'"'+(ANDCFG.lvl==o[0]?' selected':'')+'>'+o[1]+'</option>'}).join('')+'</select></label></div>'+
+  '<b style="display:block;margin-top:10px">❌ No conviene por debajo de</b><div class="row"><label>RD$ por km<input type="number" min="0" value="'+esc(ANDCFG.mk)+'" placeholder="Automático" oninput="ANDCFG.mk=this.value;andKeep()" onchange="andSave()"></label><label>RD$ por hora<input type="number" min="0" value="'+esc(ANDCFG.mh)+'" placeholder="Automático" oninput="ANDCFG.mh=this.value;andKeep()" onchange="andSave()"></label></div>'+
+  '<b style="display:block;margin-top:10px">✅ Conviene desde</b><div class="row"><label>RD$ por km<input type="number" min="0" value="'+esc(ANDCFG.gk)+'" placeholder="Automático" oninput="ANDCFG.gk=this.value;andKeep()" onchange="andSave()"></label><label>RD$ por hora<input type="number" min="0" value="'+esc(ANDCFG.gh)+'" placeholder="Automático" oninput="ANDCFG.gh=this.value;andKeep()" onchange="andSave()"></label></div>'+
+  '<small>Entre los dos es ⚠️ Justo. Lo que dejes vacío se calcula solo'+(+ANDCFG.mk>0||+ANDCFG.mh>0?' (conviene: 25% más por km y 30% más por hora que tu mínimo)':'')+'.</small>'+
+'<div class="row" style="margin-top:10px;align-items:center"><button class="pri" style="flex:none" onclick="andPush(this)">Guardar y enviar al lector</button><span id="andpm" style="flex:1;min-width:160px">'+andPushMsg()+'</span></div>'+
   '<small>'+(N.base?'Calculados con tu neto real por km y por hora. Una oferta no incluye la espera ni los km vacíos que vienen después, por eso tiene que rendir más que tu promedio.':'Todavía no hay suficientes jornadas con km y horas: se usan valores de partida.')+' Se actualizan solos con cada jornada.</small>';
  h+=foldHtml('and-kw','Palabras que busca el lector','Para cuando Uber cambie sus textos','<p class="sub" style="margin:0 0 8px">Déjalas vacías para usar las de fábrica. Si el diagnóstico muestra que Uber usa otras palabras, ponlas aquí separadas por <b>|</b> (sin tildes, en minúscula).</p>'+[['kw_on','Conectado','conectado|buscando viajes'],['kw_off','Desconectado','desconectado|conectarse'],['kw_acc','Viaje aceptado','recoger a|llegando|iniciar viaje'],['kw_end','Viaje terminado','viaje completado|ganaste|califica']].map(function(k){return '<label style="margin-top:8px">'+k[1]+'<input value="'+esc(ANDCFG[k[0]])+'" placeholder="De fábrica: '+k[2]+'…" onchange="ANDCFG.'+k[0]+'=this.value.trim();andSave()"></label>'}).join(''));
  if(AND){var D=I.diag?andJ('diag')||[]:[];

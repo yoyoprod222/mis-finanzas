@@ -1,6 +1,6 @@
 // Service worker de Mis Finanzas: funciona sin conexión y avisa de vencimientos.
 // Sube VERSION cada vez que cambies el HTML para que los teléfonos tomen la versión nueva.
-var VERSION = 'mf-v26';
+var VERSION = 'mf-v27';
 var APP = 'index.html';
 var CORE = ['./', './' + APP, './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './icons/apple-touch-icon.png', './icons/icon.svg'];
 var CDN = ['https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js', 'https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js'];
