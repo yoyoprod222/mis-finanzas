@@ -297,6 +297,33 @@ details summary{color:var(--tx);text-decoration:underline;text-underline-offset:
 .ctip{min-height:24px;margin-top:6px;font-size:14px;color:var(--mu)}.ctip b{color:var(--tx)}
 .cleg{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--mu);margin-top:6px}.cleg span{display:inline-flex;align-items:center;gap:6px}
 .cleg i{display:inline-block;width:14px;height:10px;border-radius:3px}.cleg i.ln{height:0;border-top:2px dashed currentColor;border-radius:0}
+/* Menos a la vista: cada apartado se pliega en una fila «título + resumen ›» que se abre al tocarla. */
+details.fold{border:1px solid var(--bd);border-radius:14px;margin-top:10px;background:var(--card)}
+details.fold>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:10px 14px;min-height:56px;text-decoration:none;color:var(--tx);font-size:inherit;font-weight:400}
+details.fold>summary::-webkit-details-marker{display:none}
+details.fold>summary::after{content:"";flex:none;width:9px;height:9px;border-right:2px solid var(--mu);border-bottom:2px solid var(--mu);transform:rotate(-45deg);transition:transform .2s;margin-right:4px}
+details.fold[open]>summary::after{transform:rotate(45deg)}
+details.fold>summary .ft{flex:1;min-width:0}.ft b{display:block;font-size:15.5px;font-weight:600}
+.ft small{display:block;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+details.fold>.fb{padding:2px 14px 14px}
+details.fold>.fb>.grid{display:block}details.fold>.fb>.grid>*{margin-top:12px}
+details.fold.cta{border:0;margin:0;background:transparent}
+details.fold.cta>summary{background:var(--ink);color:#fff;border-radius:14px}details.fold.cta>summary small{color:#c9d1d7}details.fold.cta>summary::after{border-color:var(--sig)}
+details.fold.cta[open]>summary{border-radius:14px 14px 0 0}details.fold.cta>.fb{border:1px solid var(--bd);border-top:0;border-radius:0 0 14px 14px;padding-top:12px}
+.kmore:not(.open)>:nth-child(n+5){display:none}
+.kpis{grid-template-columns:repeat(auto-fit,minmax(min(100%,132px),1fr))}
+.kbtn{margin-top:8px;min-height:40px;font-size:14px}
+/* Filas de resumen que llevan al detalle (como Zona del día). */
+.srow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:transparent;border:0;padding:2px 0;min-height:52px;font-weight:400;color:var(--tx)}
+.srow:hover{background:transparent}.srow>span{flex:1;min-width:0}.srow b{display:block;font-family:var(--fd);font-weight:700;font-size:21px;line-height:1.2}
+.srow small{display:block;margin-top:2px}.srow>i{font-style:normal;font-size:26px;color:var(--mu);line-height:1}
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.t3{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:10px;min-height:84px;font-weight:400;min-width:0}
+.t3>span{font-size:12.5px;color:var(--mu);font-weight:500}.t3 b{font-family:var(--fd);font-weight:700;font-size:19px;line-height:1.15;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.t3 small{font-size:12px}.t3.ok small{color:var(--ac);font-weight:600}.t3.w b{color:var(--wr)}.t3.r b{color:var(--rd)}
+#subseg{display:flex;gap:6px;flex-wrap:wrap;margin:-4px 0 12px}#subseg:empty{display:none}
+#subseg button{min-height:38px;padding:6px 14px;font-size:14px;border-radius:99px;background:transparent;border:1px solid var(--bd);color:var(--tx);font-weight:500}
+#subseg button.on{background:var(--card);border-color:var(--tx);font-weight:700}
 </style>
 </head>
 <body>
@@ -305,12 +332,12 @@ details summary{color:var(--tx);text-decoration:underline;text-underline-offset:
 <div id="hday" aria-live="polite"></div></div>
 <div id="srl" class="sr" aria-live="polite" role="status"></div>
 <div id="recov"></div>
-<div id="subnav"></div>
+<div id="subnav"></div><div id="subseg"></div>
 <div class="card" id="zona"></div>
 <div class="card" id="jor"></div>
 
 <div class="card">
-  <div class="kpis" id="kpis"></div>
+  <div id="kpis"></div>
   <div id="alert"></div></div>
 <div class="card" id="fisum"></div>
 <div class="card" id="wk"></div>
@@ -327,17 +354,20 @@ details summary{color:var(--tx);text-decoration:underline;text-underline-offset:
       <label>Bruto del día (RD$)<input type="number" id="monto" min="0" step="50" placeholder="4000" oninput="prev()"></label>
       <label>GLP / combustible<input type="number" id="ex_glp" min="0" placeholder="0" oninput="prev()"></label>
       <label>Comida<input type="number" id="ex_comida" min="0" placeholder="0" oninput="prev()"></label>
-      <label>Gastos hormiga (colmado, etc.)<input type="number" id="ex_hormiga" min="0" placeholder="0" oninput="prev()"></label>
-      <label>Otros gastos<input type="number" id="ex_otros" min="0" placeholder="0" oninput="prev()"></label>
       <label>Horas trabajadas<input type="number" id="horas" min="0" step="0.5" placeholder="8"></label>
       <label>Zona donde trabajaste<select id="zon"><option value="">Sin indicar</option><option value="sde">Santo Domingo Este</option><option value="dn">Distrito Nacional</option><option value="sdn">Santo Domingo Norte</option><option value="stgo">Santiago</option><option value="otra">Otra</option></select></label>
+    </div>
+    <details class="fold" data-f="reg-mas"><summary><span class="ft"><b>Más gastos y datos del viaje</b><small>Hormiga, otros gastos, turno y km (opcional)</small></span></summary><div class="fb"><div class="row">
+      <label>Gastos hormiga (colmado, etc.)<input type="number" id="ex_hormiga" min="0" placeholder="0" oninput="prev()"></label>
+      <label>Otros gastos<input type="number" id="ex_otros" min="0" placeholder="0" oninput="prev()"></label>
       <label>Turno<select id="tur"><option value="">Sin indicar</option><option value="m">Mañana (antes de 12 p. m.)</option><option value="t">Tarde (12–6 p. m.)</option><option value="n">Noche (después de 6 p. m.)</option><option value="x">Mixto / todo el día</option></select></label>
       <label>Km recorridos (opcional)<input type="number" id="km" min="0" placeholder="0"></label>
       <label>Km con pasajero (opcional)<input type="number" id="kmp" min="0" placeholder="0"></label>
-    </div>
-    <div style="margin-top:10px"><b>Ingresos extras del día</b> <small>(canción, mezcla, trabajo de habilidad…)</small>
+    </div></div></details>
+    <details class="fold" data-f="reg-ext"><summary><span class="ft"><b>Ingresos extras o día sin Uber</b><small>Canción, mezcla, trabajo de habilidad…</small></span></summary><div class="fb">
 <div class="row"><input id="xc" placeholder="Concepto (ej. mezcla)" oninput="prev()"><input type="number" id="xv" min="0" placeholder="Monto RD$" oninput="prev()"><button onclick="addPend()">+ Agregar</button></div><div id="pend"></div>
-<label style="display:block;margin-top:6px"><input type="checkbox" id="off" onchange="prev()" style="width:auto"> Día sin Uber (solo ingreso extra, no exige la cuota del día)</label></div>
+<label style="display:block;margin-top:6px"><input type="checkbox" id="off" onchange="prev()" style="width:auto"> Día sin Uber (solo ingreso extra, no exige la cuota del día)</label>
+</div></details>
 <div class="row" style="margin-top:8px"><input id="nota" placeholder="Nota (opcional)"><button class="pri" onclick="addLog()">Guardar día</button></div>
     <small>Neto = bruto − gastos del día. El reparto se calcula con el neto. Un día de 0 también se puede registrar.</small>
     <div id="prev" style="margin-top:10px"></div>
@@ -354,10 +384,10 @@ details summary{color:var(--tx);text-decoration:underline;text-underline-offset:
 <div class="card">
   <h2>Obligaciones y deudas (en orden de prioridad)</h2>
   <p class="sub">Menor número = se paga primero. Puedes agregar cualquier deuda nueva y todo se recalcula.</p>
-  <div class="row" style="margin-bottom:8px"><label>Días que trabajas por semana<input type="number" id="dpw" min="1" max="7" onchange="setDpw()"></label><label>Meta del fondo de días malos (días de cuota)<input type="number" id="cush" min="0" step="0.5" onchange="setCush()"></label></div>
+  <details class="fold" data-f="obl-cfg" style="margin-bottom:10px"><summary><span class="ft"><b>Ajustes del cálculo</b><small id="oblcfgs">Días de trabajo por semana y meta del fondo</small></span></summary><div class="fb"><div class="row"><label>Días que trabajas por semana<input type="number" id="dpw" min="1" max="7" onchange="setDpw()"></label><label>Meta del fondo de días malos (días de cuota)<input type="number" id="cush" min="0" step="0.5" onchange="setCush()"></label></div></div></details>
   <div class="scroll"><table id="tb"></table></div>
   <button onclick="addItem()" style="margin-top:8px">+ Agregar deuda u obligación</button>
-  <div style="margin-top:10px"><small>Gastos fijos de la casa (recurrentes, sin deuda total; luego ajusta el monto y el día de pago):</small><br><button class="chip" onclick="addFixed('Agua')">+ Agua</button><button class="chip" onclick="addFixed('Gas de la casa')">+ Gas de la casa</button><button class="chip" onclick="addFixed('Teléfono / plan celular')">+ Teléfono</button><button class="chip" onclick="addFixed('Cable / streaming')">+ Cable o streaming</button><button class="chip" onclick="addFixed('Colegio / escuela')">+ Colegio</button><button class="chip" onclick="addFixed('Seguro del carro')">+ Seguro</button></div></div>
+  <details class="fold" data-f="obl-fix"><summary><span class="ft"><b>Agregar un gasto fijo de la casa</b><small>Agua, gas, teléfono y más</small></span></summary><div class="fb"><small>Recurrentes, sin deuda total; luego ajusta el monto y el día de pago.</small><br><button class="chip" onclick="addFixed('Agua')">+ Agua</button><button class="chip" onclick="addFixed('Gas de la casa')">+ Gas de la casa</button><button class="chip" onclick="addFixed('Teléfono / plan celular')">+ Teléfono</button><button class="chip" onclick="addFixed('Cable / streaming')">+ Cable o streaming</button><button class="chip" onclick="addFixed('Colegio / escuela')">+ Colegio</button><button class="chip" onclick="addFixed('Seguro del carro')">+ Seguro</button></div></div></details>
 <div class="card" id="goals"></div>
 <div class="card" id="sup"></div>
 <div hidden>
@@ -403,6 +433,7 @@ var KEY="finanzas-uber-v1";
 var EX=[["glp","GLP / combustible"],["comida","Comida"],["hormiga","Gastos hormiga (colmado, etc.)"],["otros","Otros"]];
 function exOf(x){var e=x.e||{},t=0;EX.forEach(function(k){t+=+e[k[0]]||0});return t}
 function grossOf(x){return x.g!=null?x.g:x.a}
+var FOLD={};try{FOLD=JSON.parse(localStorage.getItem('fin-fold')||'{}')||{}}catch(e){}
 var COLORS=["#0f6b55","#c99a3b","#3b5b8c","#c8553d","#7a9e7e","#7d4e7d","#b9a37e","#2c8c99","#5b6b7a","#a8643c","#8a8f3a","#b8607a"];
 function def(){return{v:SCHEMA,dpw:7,nid:11,mig3:1,mig4:1,mig5:1,
 items:[
@@ -936,11 +967,17 @@ function kpis(){var need=dailyNeed(),L=S.logs,F=sim().st,ing=0,gr=0,gx=0,xt=0,pe
  L.forEach(function(x){ing+=realOf(x);gr+=grossOf(x);gx+=exOf(x);xt+=extrasOf(x)});
  Object.keys(F.arr).forEach(function(k){pend+=F.arr[k]});
  function K(b,s){return '<div class="kpi"><b>'+b+'</b><span>'+s+'</span></div>'}
- $("kpis").innerHTML=K(rd(need),"Meta diaria para cubrir todo")+K(rd(need*wd()),"Obligaciones al mes")+K(rd(gr),"Bruto Uber")+K(rd(gx),"Gastos")+K(rd(xt),"Ingresos extras")+K(rd(ing),"Neto total ("+L.length+" días)")+K(L.length?rd(ing/L.length):"—","Promedio neto por día")+K(rd(F.reserve)+" / "+rd(tgt),"Fondo de días malos (actual / meta)");
+ var avg=L.length?ing/L.length:0,nx=null;try{nx=fiDiag().U.filter(function(u){return u.venc||u.d})[0]}catch(e){}
+ // Inicio muestra 3 datos que se pueden tocar; el resto de los números queda plegado.
+ function T3(lb,v,sb,go,cl){return '<button class="t3'+(cl?' '+cl:'')+'" onclick="'+go+'"><span>'+lb+'</span><b>'+v+'</b><small>'+sb+'</small></button>'}
+ $("kpis").innerHTML='<div class="trio">'+T3('Fondo',rd(F.reserve),tgt>0?'de '+rd(tgt)+' ›':'sin meta ›',"setTab('hog','rep')")+
+  T3('Pendiente',rd(pend),pend>0.5?'se paga primero ›':'al día',"setTab('deu','est')",pend>0.5?'w':'ok')+
+  (nx?T3('Próximo pago',esc(nx.n),(nx.venc?'vencido':nx.dias==0?'hoy':nx.dias==1?'mañana':'en '+nx.dias+' días')+' ›',"setTab('deu','est')",nx.venc?'r':''):T3('Próximo pago','—','sin fechas ›',"setTab('deu','obl')"))+'</div>'+
+  foldHtml('ini-num','Todos los números',(L.length?'Neto promedio '+rd(avg)+' por día · ':'')+L.length+' días registrados',
+   '<div class="kpis">'+K(rd(need),"Meta diaria para cubrir todo")+K(rd(need*wd()),"Obligaciones al mes")+K(rd(gr),"Bruto Uber")+K(rd(gx),"Gastos")+K(rd(xt),"Ingresos extras")+K(rd(ing),"Neto total ("+L.length+" días)")+K(L.length?rd(ing/L.length):"—","Promedio neto por día")+K(rd(F.reserve)+" / "+rd(tgt),"Fondo de días malos (actual / meta)")+'</div>');
  var h="";
  // Avisa con tu promedio real (antes comparaba contra un RD$2,000 fijo).
- var avg=L.length?ing/L.length:0;if(L.length>=3&&avg<need)h+='<div class="warn">Tu neto promedio es de '+rd(avg)+' por día y la cuota diaria es de '+rd(need)+'. Los días buenos llenan el fondo y ese fondo cubre los días flojos, así que lo que cuenta es subir el promedio.</div>';
- if(pend>0.5)h+='<div class="warn">Tienes '+rd(pend)+' pendientes de días anteriores; los próximos días buenos los pagan primero.</div>';
+ if(L.length>=3&&avg<need)h+='<div class="warn">Tu neto promedio es de '+rd(avg)+' por día y la cuota diaria es de '+rd(need)+'. Los días buenos llenan el fondo y ese fondo cubre los días flojos, así que lo que cuenta es subir el promedio.</div>';
  if(isSample())h+='<div class="warn">Estás viendo obligaciones de <b>ejemplo</b>. Ajústalas a las tuyas en Deudas → Obligaciones, o empieza en blanco.<div class="row" style="margin-top:8px"><button class="pri" onclick="startBlank(this)">Empezar en blanco</button><button onclick="sampleOk()">Usar el ejemplo</button></div></div>';
  $("alert").innerHTML=h}
 function tb(){var T=totals(S.logs),F=sim().st;
@@ -956,8 +993,8 @@ function esc2(){var A=[0,2000,3000,4000,5000],F=sim().st,D=A.map(function(a){ret
 function exSum(){var L=filt(),t={},tot=0,g=0,xs={},xt=0,hr='<hr style="border:0;border-top:1px solid var(--bd)">';
  L.forEach(function(x){g+=grossOf(x);EX.forEach(function(k){var v=+(x.e||{})[k[0]]||0;t[k[0]]=(t[k[0]]||0)+v;tot+=v});(x.x||[]).forEach(function(p){var key=String(p.c).trim().toLowerCase();xs[key]=xs[key]||{n:p.c,v:0};xs[key].v+=p.v;xt+=p.v})});
  if(!L.length){$("exs").innerHTML="";return}
- var h=hr+'<b>Gastos del período</b>'+EX.map(function(k){return '<div class="leg"><span>'+k[1]+'</span><span>'+rd(t[k[0]]||0)+(g>0?" · "+((t[k[0]]||0)/g*100).toFixed(1)+"% del bruto":"")+'</span></div>'}).join("")+'<div class="leg"><b>Total gastos</b><span><b>'+rd(tot)+'</b></span></div>';
- if(xt>0)h+=hr+'<b>Ingresos extras</b>'+Object.keys(xs).map(function(k){return '<div class="leg"><span>'+esc(xs[k].n)+'</span><span>'+rd(xs[k].v)+'</span></div>'}).join("")+'<div class="leg"><b>Total extras</b><span><b>'+rd(xt)+'</b></span></div>';
+ var h=foldHtml('dist-gx','Gastos del período','Total '+rd(tot)+(g>0?' · '+(tot/g*100).toFixed(0)+'% del bruto':''),EX.map(function(k){return '<div class="leg"><span>'+k[1]+'</span><span>'+rd(t[k[0]]||0)+(g>0?" · "+((t[k[0]]||0)/g*100).toFixed(1)+"% del bruto":"")+'</span></div>'}).join("")+'<div class="leg"><b>Total gastos</b><span><b>'+rd(tot)+'</b></span></div>');
+ if(xt>0)h+=foldHtml('dist-xt','Ingresos extras','Total '+rd(xt),Object.keys(xs).map(function(k){return '<div class="leg"><span>'+esc(xs[k].n)+'</span><span>'+rd(xs[k].v)+'</span></div>'}).join("")+'<div class="leg"><b>Total extras</b><span><b>'+rd(xt)+'</b></span></div>');
  $("exs").innerHTML=h}
 function draw(){var f=filt(),T=totals(f),r=rowsOf(0).map(function(c){c.v=T[c.key]||0;return c}).concat(oldRows(T)).filter(function(c){return c.v>0.5}),tot=0,nd={},
   G=DGRP.map(function(g,i){return{i:i,n:g[0],c:g[1],v:0,it:[]}});
@@ -994,9 +1031,9 @@ function hist(){var h="<tr><th>Fecha</th><th>Bruto</th><th>Gastos</th><th>Extras
  var lim=Math.min(S.logs.length,HLIM);for(var i=S.logs.length-1;i>=S.logs.length-lim;i--)(function(x,i){var xn=(x.x||[]).map(function(p){return p.c}).join(", ");
  if(cnt[x.d]>1&&!shown[x.d]){shown[x.d]=1;h+='<tr><td colspan="7"><small>'+cnt[x.d]+' registros el '+x.d+'.</small> <button style="padding:4px 10px;font-size:12px" onclick="mergeDay(\''+x.d+'\',this)">Unir en uno</button></td></tr>'}
  h+="<tr><td>"+x.d+'</td><td><input type="number" value="'+grossOf(x)+'" onchange="updLog('+i+',this.value)"></td><td>'+rd(exOf(x))+'</td><td>'+rd(extrasOf(x))+'</td><td><b>'+rd(realOf(x))+'</b></td><td>'+esc((x.off?"Sin Uber. ":"")+(x.z&&ZONAS[x.z]?ZONAS[x.z].c+". ":"")+(x.n||"")+(xn?" ["+xn+"]":""))+'</td><td style="white-space:nowrap"><button class="x" style="color:var(--ac)" aria-label="Editar" onclick="editLog('+i+')">✎</button><button class="x" onclick="delLog('+i+',this)">✕</button></td></tr>'})(S.logs[i],i);
- if(S.logs.length>lim)h+='<tr><td colspan="7"><small>Mostrando los '+lim+' registros más recientes de '+S.logs.length+'.</small> <button style="padding:4px 10px;font-size:13px" onclick="HLIM+=60;hist()">Ver 60 más</button></td></tr>';
+ if(S.logs.length>lim)h+='<tr><td colspan="7"><small>Mostrando los '+lim+' registros más recientes de '+S.logs.length+'.</small> <button style="padding:4px 10px;font-size:13px" onclick="HLIM+=40;hist()">Ver 40 más</button></td></tr>';
  if(!S.logs.length)h+='<tr><td colspan="7"><small>Sin registros todavía.</small></td></tr>';$("hist").innerHTML=h}
-var HLIM=60;
+var HLIM=20;
 function ds(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 function wkStart(){var d=new Date();d.setDate(d.getDate()-(d.getDay()+6)%7);return ds(d)}
 function ens(){if(!S.goals)S.goals=[{n:"Fondo de emergencia",t:20000}];if(!S.sp)S.sp=[];if(!S.list)S.list=[]}
@@ -1218,6 +1255,55 @@ TABS.push(['mas','','M\u00e1s']);
 function tabs(){var map=[['#kpis','inicio','res'],['#zona','inicio','res'],['#jor','inicio','res'],['#veh','reg','veh'],['#impu','reg','imp'],['#pres','hog','pres'],['#cierre','cta','cierre'],['#sugp','deu','pag'],['#fisum','inicio','res'],['#fi_zona','ia','zona'],['#fi_cop','ia','cop'],['#fi_diag','ia','diag'],['#fi_wi','ia','wi'],['#fi_af','ia','af'],['#fi_st','ia','st'],['#fi_fc','ia','fc'],['#fi_au','ia','au'],['#fi_ub','ia','ub'],['#fi_ob','ia','ob'],['#fi_ad','ia','ad'],['#fi_me','ia','me'],['#fi_cfg','ia','cfg'],['#hoy','inicio','hoy'],['#wk','inicio','hoy'],['#pred','inicio','pred'],['#fecha','reg','dia'],['#pie','reg','dist'],['#hist','reg','hist'],['#accs','cta','cue'],['#movc','cta','mov'],['#ost','deu','est'],['#cal','deu','est'],['#payc','deu','pag'],['#tb','deu','obl'],['#odet','deu','obl'],['#goals','deu','meta'],['#simd','deu','sim'],['#sup','hog','sup'],['#cob','hog','cob'],['#split','hog','rep'],['#esc','hog','rep'],['#rend','ana','tend'],['#mes','ana','tend'],['#pdfc','ana','pdf'],['#resp','ana','resp'],['#vt','ana','mas'],['#masm','mas','menu']];
  document.querySelectorAll('main > .card, main > .grid > .card').forEach(function(e){var t='ana',s='mas';map.forEach(function(p){if(e.id==p[0].slice(1)||e.querySelector(p[0])){t=p[1];s=p[2]}});e.dataset.tab=t;e.dataset.sub=s});
  document.querySelectorAll('main > .grid').forEach(function(g){g.style.display='block'})}
+// ===== Menos a la vista =====
+// Arriba queda la conclusión (título, cifras clave, aviso principal, gráfico). Cada apartado con subtítulo se pliega
+// en una fila «título + resumen ›»; las listas largas muestran las 3 primeras y las tarjetas de cifras, las 4 primeras.
+// Lo que abres se recuerda (FOLD), así sigue abierto cuando la pantalla se vuelve a dibujar.
+// No se pliegan las pantallas donde escribes o conversas.
+var FOLDX={inicio:['res'],ia:['cop','wi','af','st'],reg:['dia'],deu:['pag','sim'],ana:['pdf'],mas:['menu']};
+function foldMem(d){FOLD[d.dataset.f]=d.open?1:0;try{localStorage.setItem('fin-fold',JSON.stringify(FOLD))}catch(e){}}
+function foldHtml(k,title,sum,body,cl){return '<details class="fold'+(cl?' '+cl:'')+'" data-f="'+k+'"'+(FOLD[k]?' open':'')+' ontoggle="foldMem(this)"><summary><span class="ft"><b>'+title+'</b>'+(sum?'<small>'+sum+'</small>':'')+'</span></summary><div class="fb">'+body+'</div></details>'}
+function fTxt(e){return(e?e.textContent:'').replace(/\s+/g,' ').trim()}
+function fCut(t){return t.length>72?t.slice(0,70).trim()+'…':t}
+function fIsHead(e){return(e.tagName=='B'||e.tagName=='STRONG')&&/display:\s*block/.test(e.getAttribute('style')||'')}
+// Se queda a la vista (y corta el apartado): botones de acción, resultados de la IA y contenedores con id que se rellenan después.
+function fKeep(e){return !!(e.id||e.tagName=='DETAILS'||/\b(msg|warn|verd)\b/.test(e.className)||(/\brow\b/.test(e.className)&&e.querySelector(':scope>button')))}
+function fSum(N){for(var i=0;i<N.length;i++){var e=N[i],c=e.className||'',t='';
+  if(/\bleg\b/.test(c)){var k=e.children;t=fTxt(k[0])+(k.length>1?' · '+fTxt(k[k.length-1]):'')}
+  else if(/\bfi-l\b/.test(c))t=fTxt(e.lastElementChild||e);
+  else if(/\bscroll\b/.test(c)||e.tagName=='TABLE'){var r=e.querySelectorAll('tr').length-1;t=r>0?r+(r==1?' fila':' filas'):''}
+  else if(/\bgrid\b/.test(c))t=[].map.call(e.children,function(x){return fTxt(x.querySelector('b,h3'))}).filter(Boolean).join(' · ');
+  else t=fTxt(e);
+  if(t)return fCut(t)}return ''}
+function fMake(card,key,title,N,before){var d=document.createElement('details');d.className='fold';d.dataset.f=key;if(FOLD[key])d.open=true;
+ d.innerHTML='<summary><span class="ft"><b></b><small></small></span></summary><div class="fb"></div>';d.querySelector('b').textContent=title;
+ var sm=fSum(N),fb=d.querySelector('.fb');if(sm)d.querySelector('small').textContent=sm;else d.querySelector('small').remove();
+ card.insertBefore(d,before||null);N.forEach(function(n){fb.appendChild(n)});d.addEventListener('toggle',function(){foldMem(d)})}
+function foldCard(card){var t=card.dataset.tab,s=card.dataset.sub;if(!t||(FOLDX[t]||[]).indexOf(s)>=0)return;var base=t+'/'+s+'/';
+ // 1) Apartados con subtítulo.
+ var cur=null,G=[];[].slice.call(card.children).forEach(function(e){
+  if(fIsHead(e)){cur={h:e,n:[]};G.push(cur);return}
+  if(cur){if(fKeep(e))cur=null;else cur.n.push(e)}});
+ G.forEach(function(g){if(!g.n.length)return;fMake(card,base+fTxt(g.h),fTxt(g.h),g.n,g.h);g.h.remove()});
+ // 2) Bloques de varias tarjetas sueltos (sin subtítulo), después del contenido principal.
+ [].slice.call(card.children).forEach(function(e,i){if(i>2&&/\bgrid\b/.test(e.className)&&!e.id&&e.children.length){var t1=fTxt(e.children[0].querySelector('b,h3'))||'Más detalle';fMake(card,base+'g'+t1,t1+(e.children.length>1?' y '+(e.children.length-1)+' más':''),[e],e.nextSibling)}});
+ // 3) Listas largas: 3 a la vista y el resto plegado.
+ var run=[];function flush(){if(run.length>5){var R=run.slice(3);fMake(card,base+'l'+fTxt(run[0]).slice(0,20),'Ver '+R.length+' más',R,R[R.length-1].nextSibling)}run=[]}
+ [].slice.call(card.children).forEach(function(e){if(/\b(leg|fi-l)\b/.test(e.className))run.push(e);else flush()});flush();
+ // 4) Cifras: 4 a la vista.
+ [].slice.call(card.querySelectorAll(':scope>.kpis')).forEach(function(k){if(k.children.length<=5||k.classList.contains('kmore'))return;var kk=base+'k',b=document.createElement('button');
+  k.classList.add('kmore');if(FOLD[kk])k.classList.add('open');b.className='kbtn';b.type='button';
+  var lab=function(){b.textContent=k.classList.contains('open')?'Ver menos':'Ver '+(k.children.length-4)+' datos más'};lab();
+  b.onclick=function(){k.classList.toggle('open');FOLD[kk]=k.classList.contains('open')?1:0;try{localStorage.setItem('fin-fold',JSON.stringify(FOLD))}catch(e){}lab()};k.after(b)})}
+var FQ=0;function foldAll(){FQ=0;document.querySelectorAll('main [data-tab]').forEach(foldCard);
+ // 5) Una segunda tarjeta muy larga en la misma pantalla queda como una sola fila con su título.
+ var seen={};document.querySelectorAll('main [data-tab]').forEach(function(c){if(c.hidden||!c.offsetParent)return;var k=c.dataset.tab+'/'+c.dataset.sub;if(!seen[k]){seen[k]=1;return}
+  var h=c.querySelector(':scope>h2');if(!h||c.offsetHeight<700||(FOLDX[c.dataset.tab]||[]).indexOf(c.dataset.sub)>=0)return;var R=[],n=h.nextElementSibling;while(n){R.push(n);n=n.nextElementSibling}
+  if(R.length){fMake(c,k+'/c'+fTxt(h),fTxt(h),R,null);c.querySelector(':scope>details.fold:last-child').style.marginTop='0';h.remove()}});
+ document.querySelectorAll('details.fold[data-f]:not([data-i])').forEach(function(d){d.dataset.i=1;if(FOLD[d.dataset.f])d.open=true;if(!d.hasAttribute('ontoggle'))d.addEventListener('toggle',function(){foldMem(d)})})}
+function foldWatch(){foldAll();new MutationObserver(function(){if(!FQ)FQ=requestAnimationFrame(foldAll)}).observe(document.querySelector('main'),{childList:true,subtree:true})}
+// IA: 4 apartados en vez de 13 botones; dentro de cada uno, sus secciones en una segunda fila.
+var IAG=[['Zona del día',['zona']],['Preguntar',['cop','wi','af','st']],['Análisis',['diag','fc','au','ub']],['Ajustes',['ob','ad','me','cfg']]];
 function subOf(t){var s=SUB[t];return SUBS[t].some(function(x){return x[0]==s})?s:SUBS[t][0][0]}
 // Barra de abajo con 5 pestañas. Las secciones internas (TABS/SUBS) no cambian: "Dinero" agrupa Cuentas y Hogar,
 // y "Más" abre un menú con IA y Análisis. Así todos los setTab('ia',…) y enlaces existentes siguen funcionando.
@@ -1226,8 +1312,11 @@ var NAVT=[['inicio',TABS[0][1],'Hoy',['inicio']],['reg',TABS[2][1],'Registrar',[
 function navOf(t){return NAVT.filter(function(x){return x[3].indexOf(t)>=0})[0]||NAVT[0]}
 function navGo(k){if(k=='din')setTab(TAB=='cta'||TAB=='hog'?TAB:(localStorage.getItem('fin-din')||'cta'));else setTab(k)}
 function vencN(){var n=0;try{sorted().forEach(function(i){if(!i.sv&&i.freq!='d'&&oblStatus(i).st=='Vencida')n++})}catch(e){}return n}
-function renderSubnav(){var t=TAB,el=$('subnav'),g=navOf(t),L=[];
+function renderSubnav(){var t=TAB,el=$('subnav'),g=navOf(t),L=[],sg=$('subseg');sg.innerHTML='';
  if(t=='mas'){el.innerHTML='';el.hidden=true;return}el.hidden=false;
+ if(t=='ia'){var cur=subOf('ia'),gi=0,lb={};SUBS.ia.forEach(function(x){lb[x[0]]=x[1]});IAG.forEach(function(q,i){if(q[1].indexOf(cur)>=0)gi=i});
+  el.innerHTML='<button class="back" onclick="setTab(\'mas\')" aria-label="Volver al menú Más">‹ Más</button>'+IAG.map(function(q,i){var on=i==gi;return '<button class="'+(on?'on':'')+'" aria-pressed="'+on+'" onclick="setTab(\'ia\',\''+(on?cur:q[1][0])+'\')">'+q[0]+'</button>'}).join('');
+  if(IAG[gi][1].length>1)sg.innerHTML=IAG[gi][1].map(function(k){var on=k==cur;return '<button class="'+(on?'on':'')+'" aria-pressed="'+on+'" onclick="setTab(\'ia\',\''+k+'\')">'+lb[k]+'</button>'}).join('');var ao=el.querySelector('.on');if(ao)el.scrollLeft=Math.max(0,ao.offsetLeft-(el.clientWidth-ao.offsetWidth)/2);return}
  (g[0]=='din'?['cta','hog']:[t]).forEach(function(tt){SUBS[tt].forEach(function(x){L.push([tt,x[0],x[1]])})});
  var back=t=='ia'||t=='ana'?'<button class="back" onclick="setTab(\'mas\')" aria-label="Volver al menú Más">‹ Más</button>':'';
  el.innerHTML=back+L.map(function(x){var on=x[0]==t&&x[1]==subOf(t),n=x[0]=='deu'&&x[1]=='est'?vencN():0;
@@ -1237,7 +1326,7 @@ function setTab(t,s){if(!SUBS[t])t='inicio';TAB=t;if(s)SUB[t]=s;var sb=subOf(t);
  document.querySelectorAll('[data-tab]').forEach(function(e){e.hidden=!(e.dataset.tab==t&&e.dataset.sub==sb)});
  var g=navOf(t)[0];
  $('nav').innerHTML='<div class="brand"><i>MF</i><b>Mis Finanzas</b><small>Panel personal</small></div><div class="in">'+NAVT.map(function(x){var on=x[0]==g,n=x[0]=='deu'?vencN():0;return '<button class="'+(on?'on':'')+'"'+(on?' aria-current="page"':'')+' data-t="'+x[0]+'" onclick="navGo(this.dataset.t)"><b aria-hidden="true">'+x[1]+'</b>'+x[2]+(n?'<span class="sr"> ('+n+' vencidas)</span>':'')+'</button>'}).join('')+'</div>';
- renderSubnav();var h=document.querySelector('.hero');if(h)h.classList.toggle('compact',t!='inicio');if(t=='ia')renderFI();if(t=='mas')renderMas();heroUpd();window.scrollTo(0,0)}
+ renderSubnav();var h=document.querySelector('.hero');if(h)h.classList.toggle('compact',t!='inicio');if(t=='ia')renderFI();if(t=='mas')renderMas();heroUpd();foldAll();window.scrollTo(0,0)}
 function setSub(s){SUB[TAB]=s;setTab(TAB)}
 // Menú "Más": todas las secciones de IA y Análisis en una cuadrícula, con una línea que dice para qué sirve cada una.
 var MASD={zona:'Dónde y si conviene trabajar hoy',cop:'Pregúntale a la IA sobre tu dinero',diag:'Tu salud financiera de 0 a 100',wi:'Qué pasa si cambias algo',af:'Antes de comprar algo',st:'Registrar con texto o voz',fc:'Cómo vas a cerrar el mes',au:'Qué pasó en un mes',ub:'Rendimiento por hora y km',ob:'Tus metas y su avance',ad:'Revisa errores y duplicados',me:'Lo que la IA recuerda de ti',cfg:'Clave y límites de la IA',tend:'Cómo te ha ido por semana y mes',pdf:'Reporte semanal para guardar',resp:'Copia de seguridad e importar',mas:'Instalar la app y avisos'};
@@ -1246,7 +1335,7 @@ function renderMas(){var el=$('masm');if(!el)return;var b=function(t,x){return '
 // Letrero de "Hoy": cuánto falta para cubrir el día y la zona recomendada. Lo más importante, arriba y grande.
 function heroUpd(){var el=$('hday');if(!el)return;if(TAB!='inicio'){el.innerHTML='';return}
  try{var n=jNeed(),f=Math.max(0,n.need-n.hoy),z=zGet(),zl='';
-  if(z&&z.rec&&z.d==today())zl='<button class="hz" onclick="setTab(\'ia\',\'zona\')">'+(z.rec.tipo=='descanso'?'Hoy conviene descansar':z.rec.tipo=='santiago'?'Hoy conviene Santiago':'Zona: '+ZONAS[z.rec.k].n)+'</button>';
+  if(0)zl='<button class="hz" onclick="setTab(\'ia\',\'zona\')">'+(z.rec.tipo=='descanso'?'Hoy conviene descansar':z.rec.tipo=='santiago'?'Hoy conviene Santiago':'Zona: '+ZONAS[z.rec.k].n)+'</button>';
   el.innerHTML=n.need>0&&f>0?'<span class="hl">Te faltan hoy</span><span class="hn">'+rd(f)+'</span><span class="hs">Llevas '+rd(n.hoy)+' de '+rd(n.need)+' netos que necesitas hoy</span>'+zl:
    '<span class="hl">'+(n.need>0?'Cuota de hoy cubierta':'Hoy llevas')+'</span><span class="hn">'+rd(n.hoy)+'</span><span class="hs">'+(n.need>0?'Meta del día: '+rd(n.need)+' netos':'Agrega tus obligaciones para calcular tu meta del día')+'</span>'+zl}catch(e){el.innerHTML=''}}
 // Lector de pantalla: anuncia los avisos nuevos (guardado, errores, respuestas de la IA) sin repetir.
@@ -1860,14 +1949,17 @@ function fiR_cfg(){var el=$('fi_cfg');if(!el)return;var P=AIS.prov=='gemini',L=a
 /* ---------- automatizaciones al abrir y resumen en Inicio ---------- */
 function fiDayAI(){try{var o=JSON.parse(localStorage.getItem('fin-ai-day')||'null');return o&&o.d==today()?o.t:null}catch(e){return null}}
 function fiSummary(){var el=$('fisum');if(!el)return;try{var g=fiDiag(),t=today(),u7=g.U.filter(function(u){return u.venc||(u.dias!=null&&u.dias<=3)}).slice(0,4),late=g.G.list.filter(function(o){return o.f&&o.ok===false}),wkd=wkStart(),pm=fiPrevYm(t.slice(0,7)),off=[];
-  var h='<div class="row" style="align-items:center"><div style="flex:3;min-width:200px"><span class="fi-ey">Inteligencia financiera</span><h2 style="margin:0">'+(g.score==null?'Resumen de hoy':'Salud financiera '+g.score+'/100 · '+g.lab)+'</h2></div><button style="flex:none;min-width:0" onclick="setTab(\'ia\',\'cop\')">Abrir copiloto</button></div>';
-  h+='<div style="margin-top:8px"><div class="leg"><span>Disponible real'+(g.acc?'':' <small>(sin saldos en cuentas)</small>')+'</span><span>'+rd(g.L.libre)+'</span></div>'+u7.map(function(u){return '<div class="leg"><span>'+(u.venc?'<span class="tag r">Vencida</span> ':u.dias==0?'<span class="tag w">Hoy</span> ':'<small>'+fdate(u.d)+'</small> ')+esc(u.n)+'</span><span>'+rd(u.m)+'</span></div>'}).join('')+
-   (g.A.length?'<div class="leg"><span>⚠️ '+g.A[0].t+': '+g.A[0].msg+(g.A.length>1?' <small>(+'+(g.A.length-1)+' más)</small>':'')+'</span><span><a href="#" onclick="setTab(\'ia\',\'ad\');return false">Ver</a></span></div>':'')+
-   late.map(function(o){return '<div class="leg"><span>🎯 '+esc(o.n)+' va atrasada</span><span><a href="#" onclick="setTab(\'ia\',\'ob\');return false">Ver</a></span></div>'}).join('')+'</div>';
-  var day=fiDayAI();if(day)h+='<div class="msg a" style="max-width:none;margin-top:10px">'+fiFmt(day)+'<div class="meta">Resumen del día con IA</div></div>';
+  var h='<button class="srow" onclick="setTab(\'ia\',\'diag\')"><span><span class="fi-ey">Salud financiera</span><b>'+(g.score==null?'Aún sin datos suficientes':g.score+'/100 · '+g.lab)+'</b><small>Disponible real '+rd(g.L.libre)+(g.acc?'':' (sin saldos en cuentas)')+'</small></span><i aria-hidden="true">›</i></button>';
+  if(g.A.length)h+='<div class="fi-l"><span>⚠️</span><span>'+g.A[0].t+': '+g.A[0].msg+(g.A.length>1?' <a href="#" onclick="setTab(\'ia\',\'ad\');return false">+'+(g.A.length-1)+' más</a>':'')+'</span></div>';
+  var vl=u7.map(function(u){return '<div class="leg"><span>'+(u.venc?'<span class="tag r">Vencida</span> ':u.dias==0?'<span class="tag w">Hoy</span> ':'<small>'+fdate(u.d)+'</small> ')+esc(u.n)+'</span><span>'+rd(u.m)+'</span></div>'}).join('')+late.map(function(o){return '<div class="leg"><span>🎯 '+esc(o.n)+' va atrasada</span><span><a href="#" onclick="setTab(\'ia\',\'ob\');return false">Ver</a></span></div>'}).join('');
+  if(vl)h+=foldHtml('ini-ven','Vence pronto',(u7.length?u7.length+(u7.length==1?' pago':' pagos')+' en 3 días':'')+(late.length?(u7.length?' · ':'')+late.length+' meta atrasada':''),vl);
+  var day=fiDayAI();if(day)h+=foldHtml('ini-ia','Resumen del día con IA',esc(fCut(String(day).replace(/[*#\n]+/g,' '))),'<div class="msg a" style="max-width:none">'+fiFmt(day)+'</div>');
   var lw=null;try{lw=localStorage.getItem('fin-ai-wk')}catch(e){}if(AIS.auto.week&&new Date().getDay()>=1&&new Date().getDay()<=3&&lw!=wkd&&S.logs.some(function(x){return x.d>=fiAdd(wkd,-7)&&x.d<wkd}))off.push('<button onclick="fiWeekly()">Informe de la semana pasada</button>');
   var lm=null;try{lm=localStorage.getItem('fin-ai-mo')}catch(e){}if(AIS.auto.month&&+t.slice(8)<=7&&lm!=pm&&!fiRepGet(pm)&&S.logs.some(function(x){return x.d.slice(0,7)==pm}))off.push('<button onclick="FI.au=\''+pm+'\';setTab(\'ia\',\'au\')">Autopsia de '+mname(pm)+'</button>');
-  if(off.length)h+='<div class="row" style="margin-top:10px">'+off.join('')+'</div>';var ext='';try{ext=presWarn()+cierreWarn()}catch(e){}el.innerHTML=h+(ext?'<div style="margin-top:6px">'+ext+'</div>':'')+backupWarn()}catch(e){el.innerHTML='<small>No se pudo calcular el resumen: '+esc(e.message||e)+'</small>'}}
+  if(off.length)h+='<div class="row" style="margin-top:10px">'+off.join('')+'</div>';var ext='';try{ext=presWarn()+cierreWarn()}catch(e){}
+  // Avisos: el primero a la vista y los demás plegados.
+  var tw=document.createElement('div');tw.innerHTML=ext+backupWarn();var W=[].slice.call(tw.children).map(function(x){return x.outerHTML});
+  el.innerHTML=h+(W[0]||'')+(W.length>1?foldHtml('ini-av',(W.length-1)+(W.length==2?' aviso más':' avisos más'),esc(fCut(fTxt(tw.children[1]))),W.slice(1).join('')):'')}catch(e){el.innerHTML='<small>No se pudo calcular el resumen: '+esc(e.message||e)+'</small>'}}
 function fiWeekly(){var w=wkStart(),a=fiAdd(w,-7),b=fiAdd(w,-1);try{localStorage.setItem('fin-ai-wk',w)}catch(e){}setTab('ia','cop');
  fiAsk('Hazme el informe de la semana pasada ('+a+' a '+b+'): qué salió bien, qué salió mal y qué hacer esta semana.',{ag:['uber','ana','liq'],extra:{semana_pasada:aggr(a,b),semana_anterior:aggr(fiAdd(a,-7),fiAdd(a,-1))}})}
 async function fiAutoSum(){if(!AIS.auto.sum||!aiReady()||!navigator.onLine||fiDayAI())return;
@@ -2025,6 +2117,7 @@ function zCard(compact){var z=zGet(),h='<div class="row" style="align-items:cent
  if(!ZCFG.on)return h+'<h2 style="margin:0">Agente desactivado</h2></div><button style="flex:none;min-width:0" onclick="ZCFG.on=true;zSaveCfg();zRun(1)">Activar</button></div>';
  if(!z)return h+'<h2 style="margin:0">'+(ZST.busy?'Analizando tu día…':'¿Dónde conviene trabajar hoy?')+'</h2></div>'+(ZST.busy?'':'<button class="pri" style="flex:none;min-width:0" onclick="zRun(1)">Analizar</button>')+'</div>'+(ZST.busy?fiLoading(ZST.msg):'');
  var r=z.rec,col=r.tipo=='descanso'?'r':r.tipo=='santiago'||r.tipo=='corta'?'w':'';
+ if(compact&&!ZST.busy){var na=z.ai&&z.ai.alertas?z.ai.alertas.length:0;return '<button class="srow" onclick="setTab(\'ia\',\'zona\')"><span><span class="fi-ey">Zona del día'+(z.d!=today()?' · mañana':'')+'</span><b>'+esc(r.lab)+'</b><small>'+r.via+'/100 · '+esc(r.hor)+(na?' · ⚠️ '+na+(na==1?' alerta':' alertas'):'')+'</small></span><i aria-hidden="true">›</i></button>'}
  h+='<h2 style="margin:0">'+esc(r.lab)+'</h2></div><div style="flex:none;text-align:right"><span class="tag '+col+'">Viabilidad '+r.via+'/100 · '+r.vlab+'</span></div></div>';
  h+='<div class="seg" style="margin-top:10px;gap:8px">'+ZK.map(function(k){var o=z.Z[k],on=r.k==k;return '<span class="tag '+(on?'':'e')+'" style="padding:6px 10px;font-size:11px'+(on?';outline:2px solid var(--ac)':'')+'">'+zIcon(z.W&&z.W[k])+' '+ZONAS[k].c+' '+o.s+'</span>'}).join('')+'</div>';
  if(r.tur)h+='<p style="margin:10px 0 0"><small>⭐ Tu mejor turno en '+ZONAS[r.k].c+': <b>'+TURN[r.tur.t]+'</b> ('+rd(r.tur.nph)+' netos por hora en '+r.tur.c+' jornadas)</small></p>';
@@ -2082,8 +2175,7 @@ function jNeed(){var t=today(),need=dailyNeed(),hoy=fiSum(S.logs.filter(function
 function renderJor(){var el=$('jor');if(!el)return;clearInterval(JT);var J=S.shift,n=jNeed(),P=fiProfile(),vd=vehDue().filter(function(x){return x.st!='ok'});
  var vline=vd.length?'<div class="fi-l"><span>🔧</span><span>'+vd.slice(0,2).map(function(x){return esc(x.n)+(x.st=='vencido'?' <b style="color:var(--rd)">vencido</b>':' pronto')}).join(' · ')+' <a href="#" onclick="setTab(\'reg\',\'veh\');return false">Ver</a></span></div>':'';
  if(!J){var z=zGet(),zk=z&&z.rec&&z.rec.k&&z.d==today()?z.rec.k:'';
-  el.innerHTML='<h2 style="margin:0">Empieza tu jornada</h2><p class="sub" style="margin:4px 0 8px">Mide horas y km, y te digo cuánto necesitas ganar por hora para '+(n.hoy>=n.need?'seguir sumando (la cuota de hoy ya está cubierta).':'cubrir los '+rd(Math.max(0,n.need-n.hoy))+' que faltan.')+'</p>'+
-   '<div class="row"><label>Zona<select id="jz">'+zoneOpts(zk)+'</select></label><label>Odómetro al salir (km)<input type="number" id="jk0" min="0" value="'+(S.veh&&S.veh.odo||'')+'" placeholder="Opcional"></label><label>Horas que piensas trabajar<input type="number" id="jpl" min="1" max="18" step="0.5" value="'+Math.round(P.h||9)+'"></label><button class="pri" onclick="jStart()">Empezar jornada</button></div>'+vline;return}
+  el.innerHTML=foldHtml('ini-jor','Empezar jornada',n.hoy>=n.need?'La cuota de hoy ya está cubierta':'Te digo cuánto ganar por hora para cubrir los '+rd(Math.max(0,n.need-n.hoy)),'<div class="row"><label>Zona<select id="jz">'+zoneOpts(zk)+'</select></label><label>Odómetro al salir (km)<input type="number" id="jk0" min="0" value="'+(S.veh&&S.veh.odo||'')+'" placeholder="Opcional"></label><label>Horas que piensas trabajar<input type="number" id="jpl" min="1" max="18" step="0.5" value="'+Math.round(P.h||9)+'"></label><button class="pri" onclick="jStart()">Empezar jornada</button></div>','cta')+vline;return}
  if(J.end){el.innerHTML='<span class="fi-ey">Jornada terminada</span><h2 style="margin:0">'+hmin(J.end-J.start)+(J.km1&&J.km0?' · '+(J.km1-J.km0)+' km':'')+'</h2><p class="sub" style="margin:4px 0 8px">Completa el bruto y los gastos para guardar el día.</p><div class="row"><button class="pri" onclick="jFill()">Completar registro</button><button class="x" style="flex:none" onclick="jCancel(this)">Descartar</button></div>';return}
  var hrs=(Date.now()-J.start)/36e5,left=Math.max(0.25,(+J.plan||9)-hrs),net=Math.max(0,(+J.g||0)-(+J.ex||0)),falta=Math.max(0,n.need-n.hoy-net),ph=falta/left,bph=(falta+P.ex*Math.max(0,1-hrs/(+J.plan||9)))/left;
  el.innerHTML='<div class="row" style="align-items:center"><div style="flex:3;min-width:200px"><span class="fi-ey">Jornada en curso'+(J.z&&ZONAS[J.z]?' · '+ZONAS[J.z].n:'')+'</span><h2 style="margin:0"><span id="jtime">'+hmin(Date.now()-J.start)+'</span> trabajando</h2></div><span class="tag">'+TURN[turnoOf(new Date(J.start).getHours(),new Date().getHours())]+'</span></div>'+
@@ -2097,7 +2189,7 @@ function jEnd(){var J=S.shift;if(!J)return;var k1=+$('jk1').value||0;if(k1&&J.km
  J.g=Math.max(0,+$('jg').value||J.g||0);J.ex=Math.max(0,+$('jx').value||J.ex||0);J.end=Date.now();if(k1){J.km1=k1;vehSetOdo(k1)}save();jFill()}
 // Pasa la jornada al formulario de Registrar (fecha, horas, km, zona, turno y bruto si lo anotaste).
 function jFill(){var J=S.shift;if(!J||!J.end)return;setTab('reg','dia');var h0=new Date(J.start),h1=new Date(J.end);
- $('fecha').value=J.d;$('horas').value=Math.round((J.end-J.start)/36e5*4)/4;if(J.km1&&J.km0)$('km').value=J.km1-J.km0;if(J.z)$('zon').value=J.z;$('tur').value=turnoOf(h0.getHours()+h0.getMinutes()/60,h1.getHours()+h1.getMinutes()/60);if(J.g)$('monto').value=J.g;if(J.ex)$('ex_otros').value=J.ex;prev();$('monto').focus()}
+ $('fecha').value=J.d;$('horas').value=Math.round((J.end-J.start)/36e5*4)/4;if(J.km1&&J.km0)$('km').value=J.km1-J.km0;if(J.z)$('zon').value=J.z;$('tur').value=turnoOf(h0.getHours()+h0.getMinutes()/60,h1.getHours()+h1.getMinutes()/60);if(J.g)$('monto').value=J.g;if(J.ex)$('ex_otros').value=J.ex;var mf=document.querySelector('[data-f="reg-mas"]');if(mf)mf.open=true;prev();$('monto').focus()}
 function jCancel(b){tap2(b,'¿Seguro?',function(){S.shift=null;save();all()})}
 
 /* ---------- 2. Mantenimiento del vehículo ---------- */
@@ -2242,7 +2334,7 @@ if(PWA.ok&&'serviceWorker' in navigator)navigator.serviceWorker.register('sw.js'
 var t0="inicio";try{var th0=localStorage.getItem("fin-theme");if(th0)document.documentElement.dataset.theme=th0;t0=localStorage.getItem("fin-tab")||"inicio"}catch(e){}
 try{var tq=new URLSearchParams(location.search).get("tab");if(tq)t0=tq}catch(e){}
 $("hd").textContent=new Date().toLocaleDateString("es-DO",{weekday:"long",day:"numeric",month:"long"});
-tabs();try{SUB=JSON.parse(localStorage.getItem("fin-subs")||"{}")||{}}catch(e){SUB={}}
+tabs();foldWatch();try{SUB=JSON.parse(localStorage.getItem("fin-subs")||"{}")||{}}catch(e){SUB={}}
 setTab(TABS.some(function(x){return x[0]==t0})?t0:"inicio");
 $("fecha").value=today();all();
 renderVT();idbRecover();renderPwa();fiBoot();
