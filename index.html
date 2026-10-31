@@ -2371,7 +2371,7 @@ function zIdxAdj(z,k){var H=z.H,h=H.Z[k]||{},A=H.A||{},o=z.Z[k],s=0,why=[];
 // Dentro de la app Android (window.MFAndroid) la página puede: grabar el GPS en segundo plano durante la jornada,
 // usar el lector de ofertas de Uber (accesibilidad) y guardar archivos en Descargas. En el navegador nada de esto existe
 // y la página funciona igual que siempre.
-var AND=window.MFAndroid||null,ANDCFG={on:true,lvl:'n',mk:'',mh:'',cap:true,shift:'off',kw_on:'',kw_off:'',kw_acc:'',kw_end:''},ANDLAST='';
+var AND=window.MFAndroid||null,ANDCFG={on:true,lvl:'n',mk:'',mh:'',tton:true,tt:null,cap:true,shift:'off',kw_on:'',kw_off:'',kw_acc:'',kw_end:''},ANDLAST='';
 try{var ac0=JSON.parse(localStorage.getItem('fin-and')||'{}');for(var ak0 in ac0)if(ak0 in ANDCFG)ANDCFG[ak0]=ac0[ak0]}catch(e){}ANDCFG.shift='off';
 function andJ(f){try{return JSON.parse(AND[f]()||'null')}catch(e){return null}}
 // Límites del lector. Una oferta no incluye la espera ni los km vacíos que vienen después, así que para mantener
@@ -2380,7 +2380,23 @@ function andJ(f){try{return JSON.parse(AND[f]()||'null')}catch(e){return null}}
 function andNums(){var H=zHist(),A=H.A||{},cpk=(A.fpk||ZCFG.glpkm)+zMpk(),f={s:0.9,n:1,e:1.1}[ANDCFG.lvl]||1,
   kG=A.npk?A.npk*1.15*f:15,kM=A.npk?A.npk*0.9*f:10,hG=A.nph?A.nph*1.3*f:350,hM=A.nph?A.nph*f:250;
  if(+ANDCFG.mk>0)kG=kM=+ANDCFG.mk;if(+ANDCFG.mh>0)hG=hM=+ANDCFG.mh;
- return{cpk:+cpk.toFixed(2),kmGood:Math.round(kG),kmMin:Math.round(kM),hrGood:Math.round(hG),hrMin:Math.round(hM),on:!!ANDCFG.on,base:!!(A.npk&&A.nph)}}
+ var o={cpk:+cpk.toFixed(2),kmGood:Math.round(kG),kmMin:Math.round(kM),hrGood:Math.round(hG),hrMin:Math.round(hM),on:!!ANDCFG.on,base:!!(A.npk&&A.nph)},T=ANDCFG.tton?andTTRows():[];
+ o.tN=T.length;T.forEach(function(r,i){o['tm'+i]=r[0];o['ta'+i]=r[1];o['tb'+i]=r[2];o['tc'+i]=r[3]});return o}
+// Tabla de tráfico: lo que debe pagar 1 km (bruto) según los minutos por km, con km y minutos totales (búsqueda + viaje).
+// Si el pago no llega al «mínimo» de la tabla, el lector avisa «tiempo mal pagado» y la oferta no conviene.
+var ANDTT0=[[2,12.9,14.7,17],[3,16.3,19,22.5],[4,19.7,23.3,28],[5,23.2,27.7,33.5]];
+function andTTRows(){var T=ANDCFG.tt&&ANDCFG.tt.length?ANDCFG.tt:ANDTT0;return T.filter(function(r){return r[0]>0&&r[1]>0}).slice().sort(function(a,b){return a[0]-b[0]})}
+// {mínimo, medio, bueno} por km para ese ritmo: interpola entre filas; más rápido que la primera usa la primera.
+function andTT(mpk){var t=andTTRows(),n=t.length;if(!n)return null;if(n==1||mpk<=t[0][0])return t[0].slice(1);var i=1;while(i<n-1&&mpk>t[i][0])i++;
+ var a=t[i-1],b=t[i],f=b[0]==a[0]?0:(mpk-a[0])/(b[0]-a[0]);return [1,2,3].map(function(j){return a[j]+f*(b[j]-a[j])})}
+function andTTSet(i,j,v){if(!ANDCFG.tt)ANDCFG.tt=JSON.parse(JSON.stringify(ANDTT0));ANDCFG.tt[i][j]=+v||0;andKeep();ANDLAST='';andSync()}
+function andTTHtml(){var T=ANDCFG.tt||ANDTT0,q=andTT(43/17);
+ return '<b style="display:block;margin-top:12px">Pago según el tráfico</b><label style="flex-direction:row;align-items:center;gap:8px;margin:4px 0"><input type="checkbox" style="width:auto"'+(ANDCFG.tton?' checked':'')+' onchange="ANDCFG.tton=this.checked;andSave()"> Avisar «tiempo mal pagado» si no llega al mínimo</label>'+
+ '<table class="tt" style="width:100%;border-collapse:collapse;font-size:13px"><tr><th style="text-align:left">Min por km</th><th>Mínimo</th><th>Medio</th><th>Bueno</th></tr>'+
+ T.map(function(r,i){return '<tr><td><input type="number" step="0.5" min="0" value="'+r[0]+'" style="width:56px" onchange="andTTSet('+i+',0,this.value)"> <small>'+(r[0]>0?Math.round(60/r[0])+' km/h':'')+'</small></td>'+
+  [1,2,3].map(function(j){return '<td><input type="number" step="0.1" min="0" value="'+r[j]+'" style="width:100%" onchange="andTTSet('+i+','+j+',this.value)"></td>'}).join('')+'</tr>'}).join('')+'</table>'+
+ '<small>RD$ por km, contando km y minutos totales (hasta el pasajero + viaje). Ej.: 17 km en 43 min → '+(q?'menos de '+rd(Math.round(q[0]*17))+' no conviene · medio '+rd(Math.round(q[1]*17))+' · bueno '+rd(Math.round(q[2]*17)):'tabla vacía')+'.</small>'+
+ (ANDCFG.tt?' <a href="#" onclick="ANDCFG.tt=null;andSave();return false"><small>Restaurar la tabla</small></a>':'')}
 var ANDZL='',ANDAL='';function andSync(){if(!AND)return;try{var o=andNums(),j;delete o.base;j=JSON.stringify(o);if(j!=ANDLAST){ANDLAST=j;AND.setNumbers(j)}
  var au=JSON.stringify({shiftMode:ANDCFG.shift,capture:!!ANDCFG.cap,kw_on:ANDCFG.kw_on,kw_off:ANDCFG.kw_off,kw_acc:ANDCFG.kw_acc,kw_end:ANDCFG.kw_end});if(au!=ANDAL&&AND.setAuto){ANDAL=au;AND.setAuto(au)}
  var z=JSON.stringify({night:S.dzn||[19,6],list:(S.dz||[]).map(function(x){return{n:x.n,lv:x.lv,nota:x.nota||''}})});if(z!=ANDZL&&AND.setZones){ANDZL=z;AND.setZones(z)}}catch(e){}}
@@ -2393,7 +2409,7 @@ function andPush(b){andKeep();ANDLAST='';ANDAL='';ANDZL='';andSync();renderAndCf
 function andSave(){try{localStorage.setItem('fin-and',JSON.stringify(ANDCFG))}catch(e){}ANDLAST='';ANDAL='';andSync();renderAnd()}
 function andOffers(day){var L=AND?andJ('offers')||[]:[];return day?L.filter(function(o){return ds(new Date(o.t))==day}):L}
 var ANDV=['❌ No conviene','⚠️ Justo','✅ Conviene'];
-function andOfferRows(L){return L.slice().reverse().slice(0,30).map(function(o){return '<div class="leg"><span>'+new Date(o.t).toLocaleTimeString('es-DO',{hour:'numeric',minute:'2-digit'})+' · '+rd(o.fare)+' · '+(o.pkm+o.tkm).toFixed(1)+' km · '+Math.round(o.pmin+o.tmin)+' min'+(o.mx!=null?' <small>(máx '+o.mx+')</small>':'')+'</span><span>'+ANDV[o.v]+'<br><small>'+rd(o.npk)+'/km · '+rd(o.nph)+'/h</small></span></div>'}).join('')}
+function andOfferRows(L){return L.slice().reverse().slice(0,30).map(function(o){return '<div class="leg"><span>'+new Date(o.t).toLocaleTimeString('es-DO',{hour:'numeric',minute:'2-digit'})+' · '+rd(o.fare)+' · '+(o.pkm+o.tkm).toFixed(1)+' km · '+Math.round(o.pmin+o.tmin)+' min'+(o.mx!=null?' <small>(máx '+o.mx+')</small>':'')+(o.tq&&o.fare<o.tq?' <small style="color:var(--wr)">⏱ pide '+rd(o.tq)+'</small>':'')+'</span><span>'+ANDV[o.v]+'<br><small>'+rd(o.npk)+'/km · '+rd(o.nph)+'/h</small></span></div>'}).join('')}
 // ===== Asistente de viajes (sección propia) =====
 function renderAndAll(){try{renderAndEst();renderAndOf();renderAndZn();renderAndCf();renderAndMap()}catch(e){}}
 function renderAnd(){renderAndAll()}
@@ -2429,7 +2445,7 @@ function renderAndOf(){var el=$('and_of');if(!el)return;if(!AND){andNoApp(el,'Of
  var h='<h2>Ofertas evaluadas</h2><div class="seg">'+[['hoy','Hoy'],['7','7 días'],['all','Todas']].map(function(x){return '<button class="'+(ANDF==x[0]?'on':'')+'" onclick="ANDF=\''+x[0]+'\';renderAndOf()">'+x[1]+'</button>'}).join('')+'</div>';
  var ac=L.filter(function(o){return o.acc}),aok=ac.filter(function(o){return o.v==2}),VV=andTrips().filter(function(t){return !lim||ds(new Date(t.t1))>=lim});
  h+='<div class="kpis" style="margin-top:12px">'+K(L.length,'Ofertas')+K(L.length?Math.round(ok.length/L.length*100)+'%':'—','Convenían')+K(ac.length+(ac.length?' ('+Math.round(aok.length/ac.length*100)+'% buenas)':''),'Aceptaste')+K(VV.length?rd(VV.reduce(function(a,t){return a+t.fare},0)):'—','Cobrado en '+VV.length+' viajes captados')+K(ok.length?rd(av(ok,'npk'))+'/km':'—','Promedio de las que convenían')+K(rk.length,'Con zona de cuidado')+'</div>';
- h+=L.length?'<div style="margin-top:10px">'+L.slice().reverse().slice(0,80).map(function(o){return '<div class="leg"><span>'+new Date(o.t).toLocaleString('es-DO',{weekday:'short',hour:'numeric',minute:'2-digit'})+' · '+rd(o.fare)+' · '+(o.pkm+o.tkm).toFixed(1)+' km · '+Math.round(o.pmin+o.tmin)+' min'+(o.mx!=null?' <small>(máx '+o.mx+')</small>':'')+(o.acc?' · <b>aceptada</b>':'')+(o.risk?'<br><span class="tag w">⚠ '+esc(o.risk)+'</span>':'')+'</span><span>'+ANDV[o.v]+'<br><small>'+rd(o.npk)+'/km · '+rd(o.nph)+'/h</small></span></div>'}).join('')+'</div>':'<p><small>No hay ofertas en este período.</small></p>';
+ h+=L.length?'<div style="margin-top:10px">'+L.slice().reverse().slice(0,80).map(function(o){return '<div class="leg"><span>'+new Date(o.t).toLocaleString('es-DO',{weekday:'short',hour:'numeric',minute:'2-digit'})+' · '+rd(o.fare)+' · '+(o.pkm+o.tkm).toFixed(1)+' km · '+Math.round(o.pmin+o.tmin)+' min'+(o.mx!=null?' <small>(máx '+o.mx+')</small>':'')+(o.tq&&o.fare<o.tq?' <small style="color:var(--wr)">⏱ pide '+rd(o.tq)+'</small>':'')+(o.acc?' · <b>aceptada</b>':'')+(o.risk?'<br><span class="tag w">⚠ '+esc(o.risk)+'</span>':'')+'</span><span>'+ANDV[o.v]+'<br><small>'+rd(o.npk)+'/km · '+rd(o.nph)+'/h</small></span></div>'}).join('')+'</div>':'<p><small>No hay ofertas en este período.</small></p>';
  if(all.length)h+='<button class="x" style="width:auto;padding:6px 12px;margin-top:10px" onclick="tap2(this,\'¿Borrar todas?\',function(){AND.clearOffers();renderAndAll()})">Borrar historial de ofertas</button>';
  el.innerHTML=h}
 function renderAndZn(){var el=$('and_zn');if(!el)return;var Z=S.dz||[],n=Z.filter(function(x){return x.lv!='x'}).length,nt=S.dzn||[19,6],lvs=[['p','Precaución'],['e','Evitar'],['x','No avisar']];
@@ -2448,7 +2464,7 @@ function renderAndCf(){var el=$('and_cf');if(!el)return;var N=andNums(),I=AND?an
   '<b style="display:block;margin-top:10px">Tu mínimo</b><div class="row"><label>RD$ por km<input type="number" min="0" value="'+esc(ANDCFG.mk)+'" placeholder="Automático" oninput="ANDCFG.mk=this.value;andKeep()" onchange="andSave()"></label><label>RD$ por hora<input type="number" min="0" value="'+esc(ANDCFG.mh)+'" placeholder="Automático" oninput="ANDCFG.mh=this.value;andKeep()" onchange="andSave()"></label></div>'+
   '<small>Desde tu mínimo hacia arriba: ✅ conviene. Por debajo: ❌ no conviene. Si dejas uno vacío, ese se calcula solo con tu promedio (con un tramo ⚠️ justo).</small>'+
 '<div class="row" style="margin-top:10px;align-items:center"><button class="pri" style="flex:none" onclick="andPush(this)">Guardar y enviar al lector</button><span id="andpm" style="flex:1;min-width:160px">'+andPushMsg()+'</span></div>'+
-  '<small>'+(N.base?'Calculados con tu neto real por km y por hora. Una oferta no incluye la espera ni los km vacíos que vienen después, por eso tiene que rendir más que tu promedio.':'Todavía no hay suficientes jornadas con km y horas: se usan valores de partida.')+' Se actualizan solos con cada jornada.</small>';
+  '<small>'+(N.base?'Calculados con tu neto real por km y por hora. Una oferta no incluye la espera ni los km vacíos que vienen después, por eso tiene que rendir más que tu promedio.':'Todavía no hay suficientes jornadas con km y horas: se usan valores de partida.')+' Se actualizan solos con cada jornada.</small>'+andTTHtml();
  h+=foldHtml('and-kw','Palabras que busca el lector','Para cuando Uber cambie sus textos','<p class="sub" style="margin:0 0 8px">Déjalas vacías para usar las de fábrica. Si el diagnóstico muestra que Uber usa otras palabras, ponlas aquí separadas por <b>|</b> (sin tildes, en minúscula).</p>'+[['kw_on','Conectado','conectado|buscando viajes'],['kw_off','Desconectado','desconectado|conectarse'],['kw_acc','Viaje aceptado','recoger a|llegando|iniciar viaje'],['kw_end','Viaje terminado','viaje completado|ganaste|califica']].map(function(k){return '<label style="margin-top:8px">'+k[1]+'<input value="'+esc(ANDCFG[k[0]])+'" placeholder="De fábrica: '+k[2]+'…" onchange="ANDCFG.'+k[0]+'=this.value.trim();andSave()"></label>'}).join(''));
  if(AND){var D=I.diag?andJ('diag')||[]:[];
   h+=foldHtml('and-dg','Diagnóstico del lector',I.diag?'Activado · '+D.length+' lecturas guardadas':'Si no reconoce tus ofertas, actívalo',
