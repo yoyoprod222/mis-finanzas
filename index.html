@@ -714,6 +714,8 @@ function runTests(){var T=[],saved=S,near=function(a,b){return Math.abs(a-b)<0.0
  t('IA: las acciones inventadas o con montos inválidos se descartan antes del borrador',function(){return run(mk(A(),[],X()),function(){var c=cleanActs([{t:'super',monto:-1},{t:'super',monto:900,nota:'Nacional'},{t:'eval',monto:5},{t:'gasto',cat:'glp',monto:450,comercio:'Shell'}]);return c.length==2&&c[0].t=='super'&&c[1].com=='Shell'})});
  var W=function(storm,heavy){return{prob:storm||heavy?90:10,mm:storm||heavy?20:0,mmh:storm||heavy?10:0,storm:!!storm,heavy:!!heavy,wind:15,tmax:31,rainH:storm||heavy?5:0,dry:storm||heavy?null:[6,22],hrs:16}},ZT=function(w){return run(mk(A(),[],X()),function(){var z={hoy:today(),d:'2026-03-10',src:{},hol:null,T:null,H:{Z:{},A:{c:0,n:0,h:0,nd:0,nph:null}},W:w};return zScore(z).rec})};
  t('Zona: con tormenta en Santo Domingo y buen tiempo en Santiago recomienda Santiago',function(){var r=ZT({sde:W(1),dn:W(1),sdn:W(1),stgo:W()});return r.tipo=='santiago'&&r.k=='stgo'});
+ t('Zona: si al menos una zona de Santo Domingo está bien, no manda a Santiago aunque allá esté mejor',function(){var r=ZT({sde:W(),dn:W(1),sdn:W(1),stgo:W()});return r.tipo!='santiago'&&r.k=='sde'});
+ t('Zona: el costo de Santiago incluye dormir en Mao y el regreso vacío Mao → SD (o ida y vuelta si no duerme en Mao)',function(){var f=ZCFG.familia;try{return run(mk(A(),[],X()),function(){ZCFG.familia=true;var a=zStgoCost(fiProfile());ZCFG.familia=false;var b=zStgoCost(fiProfile());return near(a.km,ZCFG.km+ZCFG.kmMao+ZCFG.kmV)&&near(a.toll,ZCFG.peaje+ZCFG.peajeV)&&near(b.km,2*ZCFG.km)&&a.fuel>b.fuel})}finally{ZCFG.familia=f}});
  t('Zona: con buen tiempo en todas recomienda trabajar en Santo Domingo, no viajar',function(){var r=ZT({sde:W(),dn:W(),sdn:W(),stgo:W()});return r.tipo=='trabajar'&&ZSD.indexOf(r.k)>=0&&r.via>=60});
  t('Zona: con tormenta en todas las zonas recomienda no trabajar',function(){var r=ZT({sde:W(1),dn:W(1),sdn:W(1),stgo:W(1)});return r.tipo=='descanso'});
  t('Zona: la lista interna de feriados incluye fechas fijas y Viernes Santo 2026 (3 de abril)',function(){var L=zHolLocal(2026).map(function(h){return h.d});return L.indexOf('2026-02-27')>=0&&L.indexOf('2026-04-03')>=0&&L.indexOf('2026-06-04')>=0});
@@ -1713,12 +1715,14 @@ var ZONAS={sde:{n:'Santo Domingo Este',c:'SDE',lat:18.4885,lon:-69.857,rt:[[18.4
  sdn:{n:'Santo Domingo Norte',c:'SDN',lat:18.542,lon:-69.91,rt:[[18.53127,-69.90709,18.5482,-69.90149,'Av. Hermanas Mirabal'],[18.52836,-69.84136,18.54772,-69.88934,'Av. Charles de Gaulle']]},
  stgo:{n:'Santiago de los Caballeros',c:'Santiago',lat:19.4517,lon:-70.697,rt:[[19.44498,-70.68784,19.475,-70.6952,'Av. Estrella Sadhalá'],[19.45828,-70.67015,19.45344,-70.69759,'Av. Juan Pablo Duarte']]},otra:{n:'Otra zona',c:'Otra'}};
 var ZK=['sde','dn','sdn','stgo'],ZSD=['sde','dn','sdn'];
-// Ajustes del agente ('fin-zcfg'): peaje = total de peajes de ida a Santiago (ajústalo), glpkm = RD$ de GLP por km si aún no registras km.
-var ZCFG={on:true,auto:true,web:true,mb:'',km:155,peaje:200,horas:2.5,glpkm:5,familia:true,rem:true};
+// Ajustes del agente ('fin-zcfg'). Viaje a Santiago: ida SD → Santiago (km, horas, peaje); después de la jornada, Santiago → Mao a dormir
+// donde la familia (kmMao); al otro día Mao → SD vacío (kmV, horasV, peajeV). familia=false: regreso Santiago → SD esa misma noche.
+// glpkm = RD$ de GLP por km si aún no registras km. Distancias medidas con OSRM: 151, 54 y 205 km.
+var ZCFG={on:true,auto:true,web:true,mb:'',km:151,peaje:200,horas:2.5,kmMao:54,kmV:205,horasV:3,peajeV:200,glpkm:5,familia:true,rem:true};
 try{var zc0=JSON.parse(localStorage.getItem('fin-zcfg')||'{}');for(var zk0 in zc0)if(zk0 in ZCFG)ZCFG[zk0]=zc0[zk0]}catch(e){}
 var ZST={busy:0,msg:''};
 function zSaveCfg(){try{localStorage.setItem('fin-zcfg',JSON.stringify(ZCFG))}catch(e){}}
-function zGet(){try{var z=JSON.parse(localStorage.getItem('fin-zona')||'null');return z&&z.hoy==today()&&z.v==2?z:null}catch(e){return null}}
+function zGet(){try{var z=JSON.parse(localStorage.getItem('fin-zona')||'null');return z&&z.hoy==today()&&z.v==3?z:null}catch(e){return null}}
 function zPut(z){try{localStorage.setItem('fin-zona',JSON.stringify(z))}catch(e){}}
 function fetchT(u,ms,o){var c=new AbortController(),t=setTimeout(function(){c.abort()},ms||9000);return fetch(u,Object.assign({signal:c.signal,cache:'no-store'},o||{})).then(function(r){clearTimeout(t);if(!r.ok)throw new Error('HTTP '+r.status);return r.json()},function(e){clearTimeout(t);throw e})}
 // Clima de las 4 zonas para el día objetivo (hoy; o mañana si ya pasan de las 9 p. m.), de 6 a. m. a 10 p. m.
@@ -1772,8 +1776,15 @@ async function zTTTest(){var m=$('zttm'),key=($('zc_mb')&&$('zc_mb').value||'').
 // Tu historial por zona: neto (bruto − gastos) por jornada y por hora.
 function zHist(){var m={},A={n:0,h:0,c:0,nh:0};S.logs.forEach(function(x){if(!x.z||x.off||x.g==null)return;var o=m[x.z]=m[x.z]||{n:0,h:0,c:0,hn:0},nn=Math.max(0,x.g-exOf(x));o.n+=nn;o.c++;if(+x.h>0){o.h+=+x.h;o.hn+=nn}A.n+=nn;A.c++;if(+x.h>0){A.h+=+x.h;A.nh+=nn}});
  for(var k in m){var o=m[k];o.nd=o.n/o.c;o.nph=o.h>0?o.hn/o.h:null}A.nd=A.c?A.n/A.c:0;A.nph=A.h>0?A.nh/A.h:null;return{Z:m,A:A}}
-// Costo de ir a trabajar a Santiago: GLP y peajes de ida y vuelta + horas de manejo sin producir.
-function zStgoCost(P){var fk=fiUber(30).fk||ZCFG.glpkm,nph=P.h>0?P.med/P.h:0,fuel=2*ZCFG.km*fk,toll=2*ZCFG.peaje,lost=2*ZCFG.horas*nph;return{fuel:fuel,toll:toll,lost:lost,tot:fuel+toll+lost,fk:fk,nph:nph}}
+// Costo completo de ir a trabajar a Santiago: GLP de todos los tramos, peajes y horas de manejo sin producir:
+// - ida: valorada a lo que harías por hora HOY en la mejor zona de SD (sdExp), que está mal; sin ese dato, a tu neto por hora normal;
+// - regreso vacío Mao → SD (al otro día): a tu neto por hora normal, porque ese día podrías trabajar en SD.
+// Santiago → Mao va después de la jornada: cuesta GLP, pero no se cuenta como horas perdidas.
+function zStgoCost(P,sdExp){var fk=fiUber(30).fk||ZCFG.glpkm,nph=P.h>0?P.med/P.h:0,fam=ZCFG.familia,
+  km=fam?ZCFG.km+ZCFG.kmMao+ZCFG.kmV:2*ZCFG.km,hv=fam?ZCFG.horasV:0,fuel=km*fk,toll=ZCFG.peaje+(fam?ZCFG.peajeV:ZCFG.peaje),
+  ida=ZCFG.horas*(sdExp!=null&&P.h>0?Math.max(0,sdExp)/P.h:nph),vac=hv*nph,lost=ida+vac;
+ return{fuel:fuel,toll:toll,lost:lost,ida:ida,vac:vac,tot:fuel+toll+lost,fk:fk,nph:nph,km:km,hl:ZCFG.horas+hv,fam:fam}}
+function zStgoRuta(){return ZCFG.familia?'SD → Santiago ('+ZCFG.km+' km), Santiago → Mao a dormir ('+ZCFG.kmMao+' km) y al otro día Mao → SD vacío ('+ZCFG.kmV+' km)':'SD → Santiago y regreso esa noche ('+2*ZCFG.km+' km)'}
 // Puntuación por zona (75 = día normal). Devuelve motivos legibles por cada ajuste.
 function zScore(z){var day=z.d,dt=new Date(day+'T00:00'),dow=dt.getDay(),dd=+day.slice(8),last=new Date(dt.getFullYear(),dt.getMonth()+1,0).getDate(),P=fiProfile(),H=z.H,Z={};
  var common=[],cb=0;if(dd>=14&&dd<=16||dd>=last-1||dd==1){cb+=6;common.push('+ Quincena: la gente sale más')}if(dow==5||dow==6){cb+=5;common.push('+ '+(dow==5?'Viernes':'Sábado')+': más salidas de noche')}if(dow==0){cb-=4;common.push('− Domingo: mañana floja')}
@@ -1784,15 +1795,19 @@ function zScore(z){var day=z.d,dt=new Date(day+'T00:00'),dow=dt.getDay(),dd=+day
   if(t){if(t.r<0.5){s-=12;why.push('− Tránsito muy lento ahora ('+Math.round(t.r*100)+'% de la velocidad normal)')}else if(t.r<0.7){s-=5;why.push('− Tránsito lento ('+Math.round(t.r*100)+'%)')}else why.push('+ Tránsito fluido ('+Math.round(t.r*100)+'%)');if(t.cl){s-=10;why.push('− Cierre de vía detectado')}}
   else if(z.TE&&z.TE[k])why.push('• Tránsito estimado '+(z.d==today()?'ahora':'a esta hora')+': '+z.TE[k].tx+' (horario típico, no es en vivo)');
   if(h&&h.c>=3&&H.A.c>=6){var a=h.nph!=null&&H.A.nph?h.nph/H.A.nph:h.nd/H.A.nd,adj=Math.max(-20,Math.min(20,(a-1)*60));s+=adj;why.push((adj>=0?'+ ':'− ')+'Tu historial aquí: '+(h.nph!=null?rd(h.nph)+'/h':rd(h.nd)+'/jornada')+' vs. '+(h.nph!=null&&H.A.nph?rd(H.A.nph)+'/h':rd(H.A.nd))+' en promedio ('+h.c+' jornadas)')}
-  if(k=='stgo'){s-=8;why.push('− Viaje largo: '+ZCFG.km+' km y unas '+ZCFG.horas+' h de manejo de ida')}
+  if(k=='stgo'){s-=8;why.push('− Viaje largo: '+zStgoRuta())}
   var aj=z.ai&&z.ai.ajustes?+z.ai.ajustes[k]||0:0;if(aj){s+=aj;why.push((aj>0?'+ ':'− ')+'Noticias de hoy (IA)')}
   Z[k]={s:Math.max(0,Math.min(100,Math.round(s))),why:why}});
  var base=P.n>=3?P.med:null;ZK.forEach(function(k){var o=Z[k],h=H.Z[k],f=h&&h.c>=3&&H.A.nd?Math.max(0.7,Math.min(1.3,h.nd/H.A.nd)):1;o.exp=base!=null?base*f*(0.6+0.4*o.s/75):null});
- var C=zStgoCost(P);if(Z.stgo.exp!=null)Z.stgo.exp-=C.tot;Z.stgo.why.push('− Viaje: GLP '+rd(C.fuel)+' + peajes '+rd(C.toll)+(C.lost>0?' + '+(2*ZCFG.horas)+' h manejando ('+rd(C.lost)+' que no produces)':'')+' ida y vuelta'+(ZCFG.familia?'; si te quedas donde tu familia, el regreso se reparte en varios días':''));
- // Decisión
- var by=function(a,b){return Z[b].exp!=null&&Z[a].exp!=null?Z[b].exp-Z[a].exp:Z[b].s-Z[a].s},best=ZSD.slice().sort(by)[0],bs=Z[best].s,rec;
- if(Math.max(bs,Z.stgo.s)<35)rec={tipo:'descanso',k:null,lab:'Hoy no es buen día para trabajar'};
- else if(bs<50&&Z.stgo.s>=60&&(Z.stgo.exp==null||Z[best].exp==null||Z.stgo.exp>Z[best].exp))rec={tipo:'santiago',k:'stgo',lab:'Conviene ir a trabajar a Santiago'};
+ var sdB=ZSD.map(function(k){return Z[k].exp}).filter(function(v){return v!=null}),C=zStgoCost(P,sdB.length?Math.max.apply(null,sdB):null);if(Z.stgo.exp!=null)Z.stgo.exp-=C.tot;Z.stgo.why.push('− Viaje completo: GLP '+rd(C.fuel)+' ('+C.km+' km) + peajes '+rd(C.toll)+(C.lost>0?' + '+C.hl+' h manejando ('+rd(C.lost)+' que no produces)':'')+(C.fam?'; el regreso Mao → SD va vacío y se cobra aquí':''));
+ // Decisión. Santiago es el último recurso: solo si TODAS las zonas de Santo Domingo están pésimas (menos de 45), Santiago está bien (60+)
+ // y, con historial, lo que queda después de pagar el viaje completo supera lo que harías en SD por un margen claro.
+ var by=function(a,b){return Z[b].exp!=null&&Z[a].exp!=null?Z[b].exp-Z[a].exp:Z[b].s-Z[a].s},best=ZSD.slice().sort(by)[0],bs=Z[best].s,rec,
+  sdMal=ZSD.every(function(k){return Z[k].s<45}),mg=base!=null?Math.max(500,base*0.15):0,
+  stOk=Z.stgo.exp==null||Z.stgo.exp>Math.max(0,Z[best].exp||0)+mg;
+ C.sdMal=sdMal;C.mg=mg;C.ok=sdMal&&Z.stgo.s>=60&&stOk;
+ if(C.ok)rec={tipo:'santiago',k:'stgo',lab:'Conviene ir a trabajar a Santiago'};
+ else if(bs<35)rec={tipo:'descanso',k:null,lab:'Hoy no es buen día para trabajar'};
  else rec={tipo:bs<50?'corta':'trabajar',k:best,lab:(bs<50?'Jornada corta en ':'Trabaja en ')+ZONAS[best].n};
  var vk=rec.k||best;rec.via=rec.tipo=='descanso'?Math.max(bs,Z.stgo.s):Z[vk].s;rec.vlab=rec.via>=75?'Muy buena':rec.via>=60?'Buena':rec.via>=45?'Regular':'Baja';
  var w=z.W&&z.W[vk];rec.hor=w&&w.dry?'Sin lluvia de '+zH(w.dry[0])+' a '+zH(w.dry[1]):'Horas pico típicas: 6–9 a. m. y 4–8 p. m.';
@@ -1817,7 +1832,7 @@ async function zNews(z){var lines=ZK.map(function(k){var o=z.Z[k],w=z.W&&z.W[k];
  var al=(Array.isArray(j.alertas)?j.alertas:[]).filter(function(a){return a&&typeof a.texto=='string'&&a.texto.trim()}).slice(0,6).map(function(a){return{zona:ZONAS[a.zona]?a.zona:'todas',texto:a.texto.slice(0,220),fuente:String(a.fuente||'').slice(0,60)}});
  return{ajustes:aj,alertas:al,resumen:typeof j.resumen=='string'?j.resumen.slice(0,600):'',cites:o.cites||[],web:!!(ZCFG.web&&AIS.prov=='gemini'&&!o.webFail)}}
 async function zRun(force){if(ZST.busy)return;var old=zGet();if(old&&!force){zRender();return}if(!ZCFG.on)return;ZST.busy=1;ZST.msg='Revisando clima, feriados'+(ZCFG.mb?', tránsito':'')+' y tu historial';zRender();
- var h=new Date().getHours(),day=h>=21?fiAdd(today(),1):today(),z={v:2,hoy:today(),d:day,ts:Date.now(),src:{},H:zHist()};
+ var h=new Date().getHours(),day=h>=21?fiAdd(today(),1):today(),z={v:3,hoy:today(),d:day,ts:Date.now(),src:{},H:zHist()};
  var R=await Promise.allSettled([zWeather(day),zHoliday(day),zTraffic()]);
  z.W=R[0].status=='fulfilled'?R[0].value:null;z.src.clima=z.W?'ok':'Sin datos del clima ('+(navigator.onLine?'Open-Meteo no respondió':'sin internet')+')';
  z.hol=R[1].status=='fulfilled'?R[1].value.n:null;z.src.feriados=R[1].status=='fulfilled'?R[1].value.src:'No se pudo consultar';
@@ -1845,16 +1860,27 @@ function zCard(compact){var z=zGet(),h='<div class="row" style="align-items:cent
  return h}
 function zR_full(){var el=$('fi_zona');if(!el)return;var z=zGet(),h=zCard(false);
  if(z){h+='<b style="display:block;margin-top:16px">Comparación de zonas</b>'+ZK.map(function(k){var o=z.Z[k],w=z.W&&z.W[k];return '<details class="arow" style="margin-top:8px"'+(z.rec.k==k?' open':'')+'><summary style="color:var(--tx)">'+zIcon(w)+' <b>'+ZONAS[k].n+'</b> · '+o.s+'/100'+(o.exp!=null?' · neto estimado '+rd(o.exp):'')+'</summary>'+bar(o.s,7)+(w?'<small>Lluvia máx. '+w.prob+'% · '+w.mm.toFixed(1)+' mm en el día · viento '+Math.round(w.wind)+' km/h'+(w.tmax!=null?' · '+Math.round(w.tmax)+'°C':'')+'</small>':'')+o.why.map(function(x){return '<div style="font-size:13px;margin-top:4px">'+esc(x)+'</div>'}).join('')+'</details>'}).join('');
-  var C=z.cost;h+='<b style="display:block;margin-top:16px">¿Ir a Santiago?</b><p class="sub" style="margin:4px 0">Costo de ida y vuelta: GLP '+rd(C.fuel)+' ('+ZCFG.km+' km × 2 a RD$'+C.fk.toFixed(1)+'/km) + peajes '+rd(C.toll)+(C.lost?' + '+rd(C.lost)+' de horas sin producir':'')+' = <b>'+rd(C.tot)+'</b>. La app recomienda Santiago solo si Santo Domingo está por debajo de 50 y Santiago por encima de 60, y aun así rinde más.</p>';
+  var C=z.cost,st=z.Z.stgo,bk=ZSD.slice().sort(function(a,b){return z.Z[b].s-z.Z[a].s})[0];
+  h+='<b style="display:block;margin-top:16px">¿Ir a Santiago?</b><p class="sub" style="margin:4px 0">Ruta: '+esc(zStgoRuta())+'.</p>'+
+   '<div class="leg"><span>GLP ('+C.km+' km a RD$'+C.fk.toFixed(1)+'/km)</span><span>'+rd(C.fuel)+'</span></div><div class="leg"><span>Peajes</span><span>'+rd(C.toll)+'</span></div>'+
+   (C.ida?'<div class="leg"><span>'+ZCFG.horas+' h de ida sin producir (a lo que harías hoy en SD)</span><span>'+rd(C.ida)+'</span></div>':'')+
+   (C.vac?'<div class="leg"><span>'+ZCFG.horasV+' h de regreso vacío Mao → SD (día siguiente)</span><span>'+rd(C.vac)+'</span></div>':'')+
+   '<div class="leg"><span><b>Costo total del viaje</b></span><span><b>'+rd(C.tot)+'</b></span></div>'+
+   (st.exp!=null&&z.Z[bk].exp!=null?'<div class="leg"><span>Te quedaría en Santiago (ya restado el viaje)</span><span>'+rd(st.exp)+'</span></div><div class="leg"><span>Mejor opción en SD ('+ZONAS[bk].c+')</span><span>'+rd(z.Z[bk].exp)+'</span></div>':'')+
+   '<p class="sub" style="margin:6px 0">'+(C.ok&&st.exp==null?'⚠️ Santo Domingo está pésimo en todas las zonas y Santiago está bien, pero todavía no tengo suficientes jornadas registradas para calcular tu ganancia. Ve solo si esperas ganar en Santiago bastante más que '+rd(C.tot)+' (el viaje completo) más lo que harías en una jornada normal.':C.ok?'✅ Hoy sí compensa: Santo Domingo está pésimo en todas las zonas y Santiago deja más aun pagando el viaje completo.':
+    !C.sdMal?'⛔ No vale la pena: al menos una zona de Santo Domingo está aceptable ('+ZONAS[bk].c+' '+z.Z[bk].s+'/100). Santiago solo se considera cuando SDE, DN y SDN están pésimas (menos de 45).':
+    st.s<60?'⛔ Santo Domingo está mal, pero Santiago tampoco está bien hoy ('+st.s+'/100).':
+    '⛔ Santo Domingo está mal, pero después de pagar el viaje completo Santiago no deja lo suficiente'+(C.mg?' (debe superar a SD por al menos '+rd(C.mg)+')':'')+'.')+'</p>';
   if(z.ai&&z.ai.cites.length)h+='<b style="display:block;margin-top:14px">Fuentes consultadas</b>'+z.ai.cites.map(function(c){return /^https:\/\//.test(c.url)?'<div style="font-size:13px;margin-top:4px"><a href="'+esc(c.url)+'" target="_blank" rel="noopener noreferrer">'+esc(c.t||c.url.replace(/^https:\/\/(www\.)?/,'').slice(0,60))+'</a></div>':''}).join('');
   h+='<b style="display:block;margin-top:14px">Estado de las fuentes</b>'+[['Clima (Open-Meteo)',z.src.clima],['Feriados',z.src.feriados],['Tránsito',z.src.transito],['Noticias (Gemini + web)',z.src.noticias],['Tu historial por zona',z.src.historial]].map(function(x){return '<div class="leg"><span>'+x[0]+'</span><span><small>'+esc(x[1]||'—')+'</small></span></div>'}).join('')}
  var ck=function(b){return b?' checked':''};
- h+='<details style="margin-top:16px"><summary>Ajustes del agente</summary><label style="flex-direction:row;align-items:center;gap:8px;margin-top:10px"><input type="checkbox" id="zc_on"'+ck(ZCFG.on)+'> Agente activado</label><label style="flex-direction:row;align-items:center;gap:8px;margin-top:6px"><input type="checkbox" id="zc_auto"'+ck(ZCFG.auto)+'> Analizar automáticamente al abrir la app (una vez al día)</label><label style="flex-direction:row;align-items:center;gap:8px;margin-top:6px"><input type="checkbox" id="zc_web"'+ck(ZCFG.web)+'> Buscar noticias en la web con Gemini (≈US$0.01–0.04 por análisis)</label><label style="flex-direction:row;align-items:center;gap:8px;margin-top:6px"><input type="checkbox" id="zc_fam"'+ck(ZCFG.familia)+'> Puedo quedarme con mi familia cerca de Santiago</label><label style="flex-direction:row;align-items:center;gap:8px;margin-top:6px"><input type="checkbox" id="zc_rem"'+ck(ZCFG.rem)+'> Avisarme a la hora de salir (con la app abierta y los avisos activados)</label>'+
-  '<div class="row" style="margin-top:10px"><label>Km de ida a Santiago<input type="number" id="zc_km" value="'+ZCFG.km+'"></label><label>Peajes de ida (RD$)<input type="number" id="zc_pj" value="'+ZCFG.peaje+'"></label><label>Horas de manejo de ida<input type="number" step="0.5" id="zc_hr" value="'+ZCFG.horas+'"></label><label>GLP por km (RD$, si no registras km)<input type="number" step="0.1" id="zc_gk" value="'+ZCFG.glpkm+'"></label></div>'+
+ h+='<details style="margin-top:16px"><summary>Ajustes del agente</summary><label style="flex-direction:row;align-items:center;gap:8px;margin-top:10px"><input type="checkbox" id="zc_on"'+ck(ZCFG.on)+'> Agente activado</label><label style="flex-direction:row;align-items:center;gap:8px;margin-top:6px"><input type="checkbox" id="zc_auto"'+ck(ZCFG.auto)+'> Analizar automáticamente al abrir la app (una vez al día)</label><label style="flex-direction:row;align-items:center;gap:8px;margin-top:6px"><input type="checkbox" id="zc_web"'+ck(ZCFG.web)+'> Buscar noticias en la web con Gemini (≈US$0.01–0.04 por análisis)</label><label style="flex-direction:row;align-items:center;gap:8px;margin-top:6px"><input type="checkbox" id="zc_fam"'+ck(ZCFG.familia)+'> Después de trabajar en Santiago duermo en Mao (familia) y regreso a SD al otro día</label><label style="flex-direction:row;align-items:center;gap:8px;margin-top:6px"><input type="checkbox" id="zc_rem"'+ck(ZCFG.rem)+'> Avisarme a la hora de salir (con la app abierta y los avisos activados)</label>'+
+  '<div class="row" style="margin-top:10px"><label>Km SD → Santiago<input type="number" id="zc_km" value="'+ZCFG.km+'"></label><label>Peajes de ida (RD$)<input type="number" id="zc_pj" value="'+ZCFG.peaje+'"></label><label>Horas de manejo de ida<input type="number" step="0.5" id="zc_hr" value="'+ZCFG.horas+'"></label><label>GLP por km (RD$, si no registras km)<input type="number" step="0.1" id="zc_gk" value="'+ZCFG.glpkm+'"></label></div>'+
+  '<div class="row" style="margin-top:8px"><label>Km Santiago → Mao<input type="number" id="zc_km2" value="'+ZCFG.kmMao+'"></label><label>Km Mao → SD (vacío)<input type="number" id="zc_kmv" value="'+ZCFG.kmV+'"></label><label>Horas Mao → SD<input type="number" step="0.5" id="zc_hv" value="'+ZCFG.horasV+'"></label><label>Peajes Mao → SD (RD$)<input type="number" id="zc_pjv" value="'+ZCFG.peajeV+'"></label></div>'+
   '<div class="row" style="margin-top:8px"><label style="flex:3">Token de Mapbox (opcional, tránsito en vivo)<input type="password" id="zc_mb" value="'+esc(ZCFG.mb)+'" placeholder="pk.… · gratis en account.mapbox.com" autocomplete="off"></label><button style="flex:1" onclick="zTTTest()">Probar conexión</button><button class="pri" style="flex:1" onclick="zCfgSave()">Guardar</button></div><div id="zttm"></div><small>Registra la <b>zona</b> de cada jornada en Registrar: con unas 6 jornadas el agente empieza a usar tu rendimiento real por zona.</small><div id="zcm"></div></details>';
  el.innerHTML=h}
 function zCfgSave(){var n=function(i,d,mx){var v=+$(i).value;return isFinite(v)&&v>=0?Math.min(mx,v):d};ZCFG.on=$('zc_on').checked;ZCFG.auto=$('zc_auto').checked;ZCFG.web=$('zc_web').checked;ZCFG.familia=$('zc_fam').checked;ZCFG.rem=$('zc_rem').checked;
- ZCFG.km=n('zc_km',155,400);ZCFG.peaje=n('zc_pj',200,5000);ZCFG.horas=n('zc_hr',2.5,8);ZCFG.glpkm=n('zc_gk',5,50);ZCFG.mb=$('zc_mb').value.replace(/\s+/g,'');zSaveCfg();var z=zGet();if(z){zScore(z);zPut(z)}zRender();var m=$('zcm');if(m)m.innerHTML='<div class="warn ok">Ajustes guardados. Toca “Actualizar” para volver a analizar.</div>'}
+ ZCFG.km=n('zc_km',151,400);ZCFG.kmMao=n('zc_km2',54,300);ZCFG.kmV=n('zc_kmv',205,500);ZCFG.horasV=n('zc_hv',3,10);ZCFG.peajeV=n('zc_pjv',200,5000);ZCFG.peaje=n('zc_pj',200,5000);ZCFG.horas=n('zc_hr',2.5,8);ZCFG.glpkm=n('zc_gk',5,50);ZCFG.mb=$('zc_mb').value.replace(/\s+/g,'');zSaveCfg();var z=zGet();if(z){zScore(z);zPut(z)}zRender();var m=$('zcm');if(m)m.innerHTML='<div class="warn ok">Ajustes guardados. Toca “Actualizar” para volver a analizar.</div>'}
 
 /* =====================================================================================
    FASE 2: jornada en vivo, vehículo, importar Uber, presupuesto del hogar, pagos sugeridos y cierre semanal.
