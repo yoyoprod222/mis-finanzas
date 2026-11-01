@@ -173,7 +173,7 @@ body.drvon main{padding-bottom:calc(180px + env(safe-area-inset-bottom,0px))}
 .dv-g{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.dv-t{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:14px 10px;display:flex;flex-direction:column;gap:2px;text-align:center}
 .dv-t b{font-size:clamp(20px,6.5vw,28px);font-variant-numeric:tabular-nums}.dv-t span{font-size:13px;color:var(--mu)}
 .dv-i{font-size:16px;line-height:1.7;color:var(--tx)}.dv-b{margin-top:auto;display:flex;flex-direction:column;gap:10px}.dv-b button{min-height:58px;font-size:18px;font-weight:700}
-.obs{display:flex;gap:10px;align-items:center;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--bd);border-radius:0;padding:12px 2px;min-height:48px;color:var(--tx);font-size:15px}.obs span{width:22px;color:var(--ac);font-weight:700}.obs.ok{color:var(--mu);text-decoration:line-through;opacity:.8}
+.obstep{display:flex;gap:10px;align-items:center;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--bd);border-radius:0;padding:12px 2px;min-height:48px;color:var(--tx);font-size:15px}.obstep span{width:22px;color:var(--ac);font-weight:700}.obstep.ok{color:var(--mu);text-decoration:line-through;opacity:.8}
 #fab{position:fixed;right:16px;bottom:calc(92px + env(safe-area-inset-bottom,0px));z-index:40;width:56px;height:56px;border-radius:50%;padding:0;display:grid;place-items:center;background:var(--ac);color:var(--onac);border:0;box-shadow:0 14px 30px -8px rgba(10,30,22,.65)}
 #fab svg,.mic svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 #sheet{position:fixed;inset:0;z-index:60;background:rgba(5,15,12,.55);display:flex;align-items:flex-end;justify-content:center}
@@ -671,9 +671,10 @@ function dueIn(it,per){if(!it.due)return null;var a=new Date(per.a+'T00:00'),y=a
  if(it.freq=='m')dt=new Date(y,m,Math.min(it.due,dim));else if(it.freq=='q')dt=new Date(y,m,Math.min(it.due+(a.getDate()==16?15:0),dim));
  else if(it.freq=='w')dt=new Date(y,m,a.getDate()+Math.min(7,Math.max(1,it.due))-1);else return null;
  return{date:ds(dt),days:Math.round((dt-new Date(today()+'T00:00'))/864e5)}}
-// it.rst = día en que se reinició el conteo: los vencimientos de ese período hasta ese día ya no cuentan; se mira el siguiente.
-function oblStatus(it){var per=periodOf(it),dd0=dueIn(it,per);
- if(it.rst&&it.rst>=per.a&&dd0&&dd0.date<=it.rst){var nx=new Date(per.b+'T00:00');nx.setDate(nx.getDate()+1);return{paid:0,dd:dueIn(it,periodOf(it,ds(nx))),st:'Pendiente',rst:1}}
+// it.rst = día en que se reinició el conteo: el período en que lo reiniciaste queda resuelto (haya llegado o no su fecha),
+// se mira el siguiente, y lo pendiente que el reparto había acumulado hasta ese día se borra (ver sim()).
+function oblStatus(it){var per=periodOf(it);
+ if(it.rst&&it.rst>=per.a&&it.freq!='d'){var nx=new Date(per.b+'T00:00');nx.setDate(nx.getDate()+1);return{paid:0,dd:dueIn(it,periodOf(it,ds(nx))),st:'Pendiente',rst:1}}
  var paid=PAYS().filter(function(p){return p.oid==it.id&&p.d>=per.a&&p.d<=per.b}).reduce(function(s,p){return s+p.amt},0),dd=dueIn(it,per),od=dd&&dd.days<0&&paid<it.amt-0.5;
  return{paid:paid,dd:dd,st:paid>=it.amt-0.5?'Pagada':od?'Vencida':paid>0?'Parcial':'Pendiente'}}
 function pushPay(oid,amt,d,acc,note){ens3();if(!(amt>0)||!/^\d{4}-\d{2}-\d{2}$/.test(d))return 0;var it=S.items.filter(function(i){return i.id==oid})[0];if(!it)return 0;
@@ -910,6 +911,7 @@ function runTests(){var T=[],saved=S,near=function(a,b){return Math.abs(a-b)<0.0
  t('Una transferencia mueve dinero entre cuentas sin cambiar el total',function(){var s=mk(A(),[],{acc:[{id:1,type:'cash',name:'E',bal0:100},{id:2,type:'bank',name:'B',bal0:0}],nacc:3,mov:[],nmov:1});return run(s,function(){var t0=accTotal();pushMov('tra',1,2,40,'2026-01-01','');return near(accBal(1),60)&&near(accBal(2),40)&&near(accTotal(),t0)&&!pushMov('tra',1,1,5,'x','')&&!pushMov('dep',1,0,-5,'x','')})});
  t('El interés mensual aumenta el saldo de una deuda',function(){var s=mk([it(1,'Tarjeta',0,'m',1000)],[],{pay:[],npay:1});s.items[0].apr=60;s.items[0].start=addMonths(today(),-3);return run(s,function(){return near(debtState(s.items[0]).bal,1157.63)&&near(debtState(s.items[0]).int,157.63)})});
  t('Un pago reduce el saldo antes de que se cargue el interés',function(){var st=addMonths(today(),-2),s=mk([it(1,'Tarjeta',0,'m',1000)],[],{pay:[{id:1,d:st,oid:1,amt:200}],npay:2});s.items[0].apr=60;s.items[0].start=st;return run(s,function(){var r=debtState(s.items[0]);return near(r.bal,882)&&near(r.paid,200)})});
+ t('Reiniciar conteo borra lo pendiente acumulado y da por resuelto el período',function(){var d=today(),s=mk([it(1,'Casa',3000,'m')],[{d:fiAdd(d,-3),g:0,e:{},x:[],h:0},{d:fiAdd(d,-1),g:0,e:{},x:[],h:0}],{pay:[],npay:1,acc:[{id:1,type:'cash',name:'E',bal0:0}],nacc:2,mov:[],nmov:1});s.items[0].due=28;return run(s,function(){var a=sim().st.arr[1]||0;S.items[0].rst=d;_sm=null;var b=sim().st.arr[1]||0,o=oblStatus(S.items[0]);return a>0&&b==0&&o.dd&&o.dd.date>periodOf(S.items[0]).b})});
  t('Un pago parcial marca Parcial y el pago completo marca Pagada',function(){var s=mk([it(1,'Casa',3000,'m')],[],{pay:[],npay:1,acc:[{id:1,type:'cash',name:'E',bal0:0}],nacc:2,mov:[],nmov:1});s.items[0].due=31;return run(s,function(){var a=oblStatus(s.items[0]).st;pushPay(1,1000,today(),0,'');var b=oblStatus(s.items[0]).st;pushPay(1,2000,today(),0,'');return a=='Pendiente'&&b=='Parcial'&&oblStatus(s.items[0]).st=='Pagada'})});
  t('Pagar desde una cuenta descuenta su saldo y borrar el pago lo devuelve',function(){var s=mk(A(),[],{pay:[],npay:1,acc:[{id:1,type:'cash',name:'E',bal0:100}],nacc:2,mov:[],nmov:1});return run(s,function(){var id=pushPay(1,40,today(),1,'x'),b1=accBal(1);removePay(id);return near(b1,60)&&near(accBal(1),100)&&S.pay.length==0&&!pushPay(1,-5,today(),0,'')&&!pushPay(99,5,today(),0,'')})});
  t('Se entienden montos como 8,000, 8 mil, 1.5 mil y 2k',function(){var f=function(x){return amtsOf(x)[0].v};return f('8,000')==8000&&f('8 mil')==8000&&f('1.5 mil')==1500&&f('800')==800&&f('2k')==2000});
@@ -1041,7 +1043,7 @@ function sim(){if(_sm)return _sm;var st={reserve:0,arr:{},pd:{}},res=[],by={},do
  S.logs.forEach(function(x){(by[x.d]=by[x.d]||[]).push(x)});
  try{S.logs.forEach(function(x){var r,c=cfgFor(x.d);S.items=c.i;S.dpw=c.d;S.split=c.s;S.cushion=c.c;
   if(done[x.d])r=allocDay(0,st,true);else{done[x.d]=1;var gs=0,es=0,xs=0,off=true;by[x.d].forEach(function(y){if(y.g!=null){gs+=y.g;es+=exOf(y);xs+=extrasOf(y)}else gs+=y.a;if(!y.off)off=false});var net=Math.max(0,gs-es)+xs;r=allocDay(net,st,off)}
-  st=r.st;r.log=x;res.push(r)})}finally{S.items=bk.i;S.dpw=bk.d;S.split=bk.s;S.cushion=bk.c}
+  st=r.st;bk.i.forEach(function(it){if(it.rst&&x.d<=it.rst&&st.arr[it.id])st.arr[it.id]=0});r.log=x;res.push(r)})}finally{S.items=bk.i;S.dpw=bk.d;S.split=bk.s;S.cushion=bk.c}
  return(_sm={res:res,st:st})}
 // Cada concepto pertenece a uno de 4 grupos; el color sigue al grupo (paleta validada para daltonismo en claro y oscuro).
 var DGRP=[['Obligaciones fijas','var(--c1)'],['Deudas','var(--c2)'],['Ahorro y fondo','var(--c3)'],['Hogar y personal','var(--c4)']];
@@ -1110,11 +1112,11 @@ function oblEdit(i,n,d){var isD=i.total>0,
   (isD?'<div class="row" style="margin-top:8px"><label>Tasa anual (%)<input type="number" min="0" step="0.5" value="'+(i.apr||0)+'" onchange="updObl('+i.id+',\'apr\',this.value)"></label><label>Pagado antes de usar la app<input type="number" min="0" value="'+(i.paid0||0)+'" onchange="updObl('+i.id+',\'paid0\',this.value)"></label>'+(i.apr>0?'<label>Intereses desde<input type="date" value="'+(i.start||today())+'" onchange="updObl('+i.id+',\'start\',this.value)"></label>':'')+'</div>':'')+
   '<small style="display:block;margin-top:6px"><b>'+rd(quota(i))+' por día de trabajo</b>'+(d?' · pagado '+Math.round(d.p/Math.max(1,d.p+d.bal)*100)+'% ('+rd(d.p)+')'+(d.int>0.5?' · intereses '+rd(d.int):''):'')+'. '+(i.sv?'Ahorro: se aparta cada día como una obligación más.':isD?'Deuda: termina cuando pagas el total. La tasa hace crecer el saldo cada mes.':'Recurrente: se cobra cada período y nunca termina (alquiler, luz, internet…). Pon una deuda total si es algo que se acaba de pagar.')+'</small>'+
   '<div class="row obb"><button onclick="oblMove('+i.id+',-1)" aria-label="Pagar antes"'+(n<=1?' disabled':'')+'>↑ Pagar antes</button><button onclick="oblMove('+i.id+',1)" aria-label="Pagar después"'+(n>=S.items.length?' disabled':'')+'>↓ Pagar después</button>'+
-  (isD?'<button onclick="oblRecurring(this,'+i.id+')">No termina</button>':'')+''+(i.freq!='d'&&i.due?'<button onclick="oblReset('+i.id+')" title="El próximo pago se cuenta desde hoy">↻ Reiniciar conteo</button>':'')+'<button class="x" onclick="oblDel('+i.id+')">Quitar</button></div>'+(i.rst&&i.freq!='d'?'<small style="display:block;margin-top:6px">Conteo reiniciado el '+fdate(i.rst)+'.</small>':'')+'</div>'}
+  (isD?'<button onclick="oblRecurring(this,'+i.id+')">No termina</button>':'')+''+'<button onclick="oblReset('+i.id+')" title="Borra lo pendiente acumulado hasta hoy y empieza a contar de nuevo">↻ Reiniciar conteo</button>'+'<button class="x" onclick="oblDel('+i.id+')">Quitar</button></div>'+(i.rst&&i.freq!='d'?'<small style="display:block;margin-top:6px">Conteo reiniciado el '+fdate(i.rst)+'.</small>':'')+'</div>'}
 // Quitar no pregunta: se hace al instante y queda 3 s un botón para deshacerlo.
 function oblDel(id){var it=S.items.filter(function(x){return x.id==id})[0];if(!it)return;var snap=JSON.stringify(S);S.items=S.items.filter(function(x){return x.id!=id});OBLX=null;save();all();undoBar('Quitaste «'+it.name+'»',snap)}
 // Reiniciar conteo: lo vencido hasta hoy deja de contar y el próximo pago es la siguiente fecha de vencimiento.
-function oblReset(id){var it=S.items.filter(function(x){return x.id==id})[0];if(!it)return;var snap=JSON.stringify(S);it.rst=today();save();all();var o=oblStatus(it);undoBar('Próximo pago: '+(o.dd?fdate(o.dd.date):'sin fecha'),snap)}
+function oblReset(id){var it=S.items.filter(function(x){return x.id==id})[0];if(!it)return;var snap=JSON.stringify(S);it.rst=today();_sm=null;save();all();var o=oblStatus(it);undoBar('Pendiente borrado. '+(o.dd?'Próximo pago: '+fdate(o.dd.date):'Se cuenta de nuevo desde hoy'),snap)}
 var UNDOS=null,UNDOT=0;
 function undoBar(msg,snap){var b=$('undob');if(!b){b=document.createElement('div');b.id='undob';b.setAttribute('role','status');document.body.appendChild(b)}
  clearTimeout(UNDOT);UNDOS=snap;b.innerHTML='<span>'+esc(msg)+'</span><button onclick="undoDo()">Deshacer cambio</button>';b.className='on';UNDOT=setTimeout(undoHide,3000)}
@@ -1609,7 +1611,7 @@ function fiDueDates(it,a,b){if(!it.due||it.freq=='d')return[];var out=[],t=new D
 function fiUpcoming(n){var t=today(),end=fiAdd(t,n),L=[];
  sorted().forEach(function(it){if(it.sv||it.freq=='d')return;var o=oblStatus(it),per=periodOf(it);
   if(o.dd&&o.dd.days<0&&o.st!='Pagada')L.push({id:it.id,n:it.name,d:o.dd.date,dias:o.dd.days,m:Math.max(0,it.amt-o.paid),venc:true});
-  fiDueDates(it,t,end).forEach(function(d){var m=d>=per.a&&d<=per.b?Math.max(0,it.amt-o.paid):it.amt;if(m>0.5)L.push({id:it.id,n:it.name,d:d,dias:dayDiff(t,d),m:m})});
+  fiDueDates(it,t,end).forEach(function(d){if(it.rst&&it.rst>=per.a&&d<=per.b)return;var m=d>=per.a&&d<=per.b?Math.max(0,it.amt-o.paid):it.amt;if(m>0.5)L.push({id:it.id,n:it.name,d:d,dias:dayDiff(t,d),m:m})});
   if(!it.due)L.push({id:it.id,n:it.name,d:null,dias:null,m:monthlyEq(it)*n/30.4,sinf:true})});
  return L.sort(function(a,b){return(a.dias==null?999:a.dias)-(b.dias==null?999:b.dias)})}
 
@@ -2861,7 +2863,7 @@ function renderOb(){var el=$('obk');if(!el)return;if(S.obOff){el.innerHTML='';re
  if(ok==st.length){el.innerHTML='';return}
  el.innerHTML='<div class="row" style="align-items:center"><div style="flex:1"><span class="fi-ey">Primeros pasos · '+ok+' de '+st.length+'</span><h2 style="margin:0">Termina de configurar la app</h2></div><button class="x" style="flex:none;width:auto;padding:6px 12px" onclick="S.obOff=1;save();renderOb()">Ocultar</button></div>'+
   '<div class="dv-bar" style="margin:10px 0"><i style="width:'+(ok/st.length*100)+'%"></i></div>'+
-  st.map(function(x){return '<button class="obs'+(x[0]?' ok':'')+'" '+(x[0]?'disabled':'onclick="setTab(\''+x[2]+'\',\''+x[3]+'\')"')+'><span>'+(x[0]?'✓':'○')+'</span>'+x[1]+(x[0]?'':' ›')+'</button>'}).join('')}
+  st.map(function(x){return '<button class="obstep'+(x[0]?' ok':'')+'" '+(x[0]?'disabled':'onclick="setTab(\''+x[2]+'\',\''+x[3]+'\')"')+'><span>'+(x[0]?'✓':'○')+'</span>'+x[1]+(x[0]?'':' ›')+'</button>'}).join('')}
 function jStart(){var k0=+$('jk0').value||0,dr=$('jdr');if(dr){ANDCFG.drive=dr.checked;andKeep()}S.shift={start:Date.now(),d:today(),z:$('jz').value,km0:k0,plan:Math.min(18,Math.max(1,+$('jpl').value||9))};if(k0>0)vehSetOdo(k0);if(AND){S.shift.and=1;try{AND.startTrip()}catch(e){}}save();all();driveAuto()}
 function jUpd(){if(!S.shift)return;S.shift.g=Math.max(0,+$('jg').value||0);S.shift.ex=Math.max(0,+$('jx').value||0);save();renderJor()}
 function jEnd(){var J=S.shift;if(!J)return;var k1=+$('jk1').value||0;if(k1&&J.km0&&k1<J.km0){$('jm').innerHTML='<div class="warn">El odómetro al llegar debe ser mayor que al salir ('+J.km0+').</div>';return}
