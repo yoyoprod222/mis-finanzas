@@ -557,7 +557,7 @@ items:[
 {id:9,name:"Ahorro mínimo diario",amt:100,freq:"d",total:0,prio:3,sv:1}],
 split:[{k:"res",n:"Fondo para días malos (hasta su meta)",p:12.5},{k:"extra",n:"Abono extra a deudas (tarjeta primero)",p:42.5},{k:"ahorro",n:"Ahorro",p:15},{k:"super",n:"Supermercado de la casa",p:20},{k:"pers",n:"Personal / ocio",p:10}],
 logs:[]}}
-var HNAV=false,SCHEMA=6,_sm=null,_nosnap=false,PAGEV='mf-v40';
+var HNAV=false,SCHEMA=6,_sm=null,_nosnap=false,PAGEV='mf-v41';
 var S;
 try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 function upgrade(){if(S&&S.items&&(S.v||0)<SCHEMA){try{localStorage.setItem(KEY+'-bak-'+(S.v||0)+'-'+Date.now(),JSON.stringify(S));pruneBak()}catch(e){}}
@@ -748,7 +748,7 @@ var AI_DEF_MODEL='google/gemini-3.5-flash';
 var AIS={prov:window.claude?'claude':'gemini',key:'',model:AI_DEF_MODEL,pdf:false,mode:'estr',maxDay:40,maxTok:1500,gap:2,auto:{sum:false,week:true,month:true}},AIERR=false,REC=null,RECON=false,UNDO=null,SHV='main',AIP='';
 function aiLoad(){try{var o=JSON.parse(localStorage.getItem('fin-ai')||'{}');for(var k in o)if(k in AIS)AIS[k]=o[k]}catch(e){}
  if(AIS.model=='google/gemini-2.5-flash'||!AIS.model)AIS.model=AI_DEF_MODEL;if(AIS.maxTok==900)AIS.maxTok=1500;if(!AIS.auto||typeof AIS.auto!='object')AIS.auto={sum:false,week:true,month:true};if(['cons','estr','agr'].indexOf(AIS.mode)<0)AIS.mode='estr'}
-function aiSave(){try{localStorage.setItem('fin-ai',JSON.stringify(AIS))}catch(e){}}
+function aiSave(){try{localStorage.setItem('fin-ai',JSON.stringify(AIS))}catch(e){}try{fbQ()}catch(e){}}
 aiLoad();
 // Consumo local de IA por día ('fin-ai-use') y últimos errores ('fin-ai-log').
 function aiUse(){var u=null;try{u=JSON.parse(localStorage.getItem('fin-ai-use')||'null')}catch(e){}if(!u||!u.T)u={d:today(),n:0,tin:0,tout:0,cost:0,T:{n:0,tin:0,tout:0,cost:0}};if(u.d!=today()){u.d=today();u.n=0;u.tin=0;u.tout=0;u.cost=0}return u}
@@ -2320,7 +2320,7 @@ var ZK=['sde','dn','sdn','stgo'],ZSD=['sde','dn','sdn'];
 var ZCFG={on:true,auto:true,web:true,mb:'',km:151,peaje:200,horas:2.5,kmMao:54,kmV:205,horasV:3,peajeV:200,glpkm:5,familia:true,rem:true,casa:''};
 try{var zc0=JSON.parse(localStorage.getItem('fin-zcfg')||'{}');for(var zk0 in zc0)if(zk0 in ZCFG)ZCFG[zk0]=zc0[zk0]}catch(e){}
 var ZST={busy:0,msg:''};
-function zSaveCfg(){try{localStorage.setItem('fin-zcfg',JSON.stringify(ZCFG))}catch(e){}}
+function zSaveCfg(){try{localStorage.setItem('fin-zcfg',JSON.stringify(ZCFG))}catch(e){}try{fbQ()}catch(e){}}
 function zGet(){try{var z=JSON.parse(localStorage.getItem('fin-zona')||'null');return z&&z.hoy==today()&&z.v==3?z:null}catch(e){return null}}
 function zPut(z){try{localStorage.setItem('fin-zona',JSON.stringify(z))}catch(e){}}
 function fetchT(u,ms,o){var c=new AbortController(),t=setTimeout(function(){c.abort()},ms||9000);return fetch(u,Object.assign({signal:c.signal,cache:'no-store'},o||{})).then(function(r){clearTimeout(t);if(!r.ok)throw new Error('HTTP '+r.status);return r.json()},function(e){clearTimeout(t);throw e})}
@@ -2557,13 +2557,13 @@ function andGoal(){var J=S.shift&&!S.shift.end?S.shift:null;if(!J)return{goal:0,
 function andWidget(){try{var n=jNeed(),f=Math.max(0,n.need-n.hoy),u=fiUpcoming(15).filter(function(x){return x.dias!=null})[0],
   nx=u?(u.venc?'Vencido: ':'Próximo: ')+u.n+' '+rd(u.m)+(u.venc?'':u.dias==0?' hoy':u.dias==1?' mañana':' en '+u.dias+' días'):'Nada vence en 15 días';
  return n.need>0&&f>0?{l:'Te faltan hoy',b:rd(f),s:nx}:{l:n.need>0?'Cuota de hoy cubierta':'Hoy llevas',b:rd(n.hoy),s:nx}}catch(e){return{l:'Mis Finanzas',b:'—',s:''}}}
-function andKeep(){try{localStorage.setItem('fin-and',JSON.stringify(ANDCFG))}catch(e){}}
+function andKeep(){try{localStorage.setItem('fin-and',JSON.stringify(ANDCFG))}catch(e){}try{fbQ()}catch(e){}}
 // Envía los límites al lector y comprueba (app 1.7 o más) que los tiene.
 function andPushMsg(){if(!AND)return '<small>Se envían al lector cuando abres la app Android.</small>';var I=andJ('info')||{},n=I.nums,N=andNums();if(!n)return '<small>Enviado. Actualiza la app Android a la 1.7 para ver aquí lo que tiene el lector.</small>';
  var ok=n.kmGood==N.kmGood&&n.kmMin==N.kmMin&&n.hrGood==N.hrGood&&n.hrMin==N.hrMin;
  return '<small style="color:'+(ok?'var(--ac)':'var(--wr)')+'">'+(ok?'✓ El lector usa':''+ic('alert','wn')+' El lector todavía tiene')+':</small><br><small>'+ic('check','ok')+' conviene desde '+rd(n.kmGood)+'/km y '+rd(n.hrGood)+'/h'+(n.kmMin<n.kmGood||n.hrMin<n.hrGood?' · '+ic('x','no')+' no conviene con menos de '+rd(n.kmMin)+'/km o '+rd(n.hrMin)+'/h':' · por debajo, '+ic('x','no')+' no conviene')+'</small>'}
 function andPush(b){andKeep();ANDLAST='';ANDAL='';ANDZL='';andSync();renderAndCf();b=document.querySelector('#and_cf button.pri');var m=$('andpm');if(m)m.innerHTML=andPushMsg();if(b){b.textContent='✓ Guardado';setTimeout(function(){b.textContent='Guardar y enviar al lector'},1800)}}
-function andSave(){try{localStorage.setItem('fin-and',JSON.stringify(ANDCFG))}catch(e){}ANDLAST='';ANDAL='';andSync();renderAnd()}
+function andSave(){try{localStorage.setItem('fin-and',JSON.stringify(ANDCFG))}catch(e){}try{fbQ()}catch(e){}ANDLAST='';ANDAL='';andSync();renderAnd()}
 function andOffers(day){var L=AND?andJ('offers')||[]:[];return day?L.filter(function(o){return ds(new Date(o.t))==day}):L}
 var ANDV=[''+ic('x','no')+' No conviene',''+ic('alert','wn')+' Justo',''+ic('check','ok')+' Conviene'];
 function andOfferRows(L){return L.slice().reverse().slice(0,30).map(function(o){return '<div class="leg"><span>'+new Date(o.t).toLocaleTimeString('es-DO',{hour:'numeric',minute:'2-digit'})+' · '+rd(o.fare)+' · '+(o.pkm+o.tkm).toFixed(1)+' km · '+Math.round(o.pmin+o.tmin)+' min'+(o.mx!=null?' <small>(máx '+o.mx+')</small>':'')+(o.tq&&o.fare<o.tq?' <small style="color:var(--wr)">⏱ pide '+rd(o.tq)+'</small>':'')+'</span><span>'+ANDV[o.v]+'<br><small>'+rd(o.npk)+'/km · '+rd(o.nph)+'/h</small></span></div>'}).join('')}
@@ -3507,14 +3507,14 @@ function fbLogout(b){tap2(b,'¿Seguro? Toca otra vez',async function(){if(fbSync
 function renderNube(){var el=$('nube');if(!el)return;var c=fbCfg(),a=fbAuth(),sy=fbSync(),h='<h2>Cuenta y nube</h2>';
  if(!a)h+='<p class="sub">Entra con tu cuenta para guardar tus datos en la nube (gratis) y usarlos en cualquier teléfono. Cada persona ve solo los suyos.</p><button class="pri" onclick="loginShow(\'in\')">Entrar o crear cuenta</button>';
  else h+='<p>'+ic('check','ok')+' Sesión iniciada: <b>'+esc(a.e)+'</b></p><p class="sub">'+(FB.busy?'Guardando en la nube…':sy.dirty?'Hay cambios por subir (se suben solos en unos segundos).':sy.at?'Todo guardado en la nube · '+new Date(sy.at).toLocaleString('es-DO',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):'')+'</p>'+
-  '<div class="row"><button onclick="fbPush()">Guardar ahora</button><button onclick="fbLogout(this)">Cerrar sesión</button></div><small>Al cerrar la sesión, los datos se borran de este teléfono y quedan en tu cuenta.</small>';
+  '<p class="sub">Se guarda todo: tus registros, clientes y ajustes, y también tus claves (la de la IA, el token de Mapbox y la del bot). Así, al entrar en otro teléfono, ya quedan puestas.</p><div class="row"><button onclick="fbPush()">Guardar ahora</button><button onclick="fbLogout(this)">Cerrar sesión</button></div><small>Al cerrar la sesión, los datos se borran de este teléfono y quedan en tu cuenta.</small>';
  if(FB.msg)h+='<div class="warn" role="alert">'+esc(FB.msg)+'</div>';el.innerHTML=h}
 
 // App instalable (PWA): service worker, instalación y avisos de vencimientos.
 // El SW no puede leer localStorage, así que la página le deja la lista de vencimientos en Cache Storage.
 var PWA={ok:location.protocol=='https:'||/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname),reg:null,ev:null,t:null};
 function ntfCfg(){var o={on:false,lead:2};try{var s=JSON.parse(localStorage.getItem('fin-ntf')||'{}');if(typeof s.on=='boolean')o.on=s.on;if(s.lead>=0&&s.lead<=7)o.lead=s.lead}catch(e){}return o}
-function ntfSet(o){try{localStorage.setItem('fin-ntf',JSON.stringify(o))}catch(e){}pwaSync();renderPwa()}
+function ntfSet(o){try{localStorage.setItem('fin-ntf',JSON.stringify(o))}catch(e){}try{fbQ()}catch(e){}pwaSync();renderPwa()}
 function pwaDue(){var out=[];
  try{sorted().forEach(function(i){if(i.sv||i.freq=='d')return;var s=oblStatus(i);if(s.st=='Pagada'||!s.dd)return;out.push({id:'o'+i.id+'-'+s.dd.date,t:i.name,date:s.dd.date,amt:rd(Math.max(0,i.amt-s.paid))})})}catch(e){}
  try{(S.cal||[]).forEach(function(c,k){var dt=new Date();dt.setDate(dt.getDate()+nextIn(c.d));out.push({id:'c'+k+'-'+ds(dt),t:c.n,date:ds(dt),amt:c.a?rd(c.a):''})})}catch(e){}
