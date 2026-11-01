@@ -833,14 +833,15 @@ function AndSR(){this.lang='es-DO'}
 AndSR.prototype.start=function(){STTI=this;window.MFAndroid.sttStart(this.lang||'es-DO')};
 AndSR.prototype.stop=function(){try{window.MFAndroid.sttStop()}catch(e){}};
 function mfStt(k,t){var r=STTI;if(!r)return;if(k=='partial'||k=='final'){if(t&&r.onresult)r.onresult({results:[[{transcript:t}]]})}else if(k=='error'){if(r.onerror)r.onerror({error:t})}else if(k=='end'){STTI=null;if(r.onend)r.onend()}}
-if(!(window.SpeechRecognition||window.webkitSpeechRecognition)&&window.MFAndroid&&window.MFAndroid.sttStart)window.SpeechRecognition=AndSR;
+// El WebView sí define webkitSpeechRecognition, pero no funciona (responde «not-allowed»): en la app manda siempre el de Android.
+if(window.MFAndroid&&window.MFAndroid.sttStart)window.SpeechRecognition=AndSR;
 function micToggle(){var SR=window.SpeechRecognition||window.webkitSpeechRecognition,P=AIP;if(!SR){aiMsg('Este navegador no permite dictado dentro de la p\u00e1gina. Usa el micr\u00f3fono del teclado de tu tel\u00e9fono en el cuadro de texto.');return}
  if(RECON){REC.stop();return}AIERR=false;var base=$(P+'aiin').value;REC=new SR();REC.lang='es-DO';REC.interimResults=true;REC.continuous=false;
  REC.onresult=function(e){var t='';for(var i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;$(P+'aiin').value=(base?base+' ':'')+t};
  REC.onerror=function(e){AIERR=true;if(e.error=='aborted')return;var kb=' Toca el cuadro de texto y usa el <b>micr\u00f3fono del teclado</b> de tu tel\u00e9fono para dictar.',ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
   aiMsg(e.error=='no-speech'?'No te escuch\u00e9. Toca el micr\u00f3fono y habla de nuevo.'
    :e.error=='audio-capture'?'No se encontr\u00f3 un micr\u00f3fono.'+kb
-   :e.error=='not-allowed'||e.error=='service-not-allowed'?(ios?'El dictado de la p\u00e1gina no est\u00e1 disponible (en iPhone necesita Siri y Dictado activados, y no funciona en la app instalada).':'No hay permiso para el micr\u00f3fono en esta p\u00e1gina.')+kb
+   :e.error=='not-allowed'||e.error=='service-not-allowed'?(ios?'El dictado de la p\u00e1gina no est\u00e1 disponible (en iPhone necesita Siri y Dictado activados, y no funciona en la app instalada).':(window.MFAndroid&&!window.MFAndroid.sttStart?'Para dictar dentro de la app instala la versi\u00f3n 2.5 de Mis Finanzas para Android (o una m\u00e1s nueva).':window.MFAndroid?'No diste permiso al micr\u00f3fono. Act\u00edvalo en Ajustes \u2192 Apps \u2192 Mis Finanzas \u2192 Permisos \u2192 Micr\u00f3fono.':'No hay permiso para el micr\u00f3fono en esta p\u00e1gina.'))+kb
    :e.error=='network'?(navigator.onLine?'Este navegador no tiene servicio de dictado dentro de la p\u00e1gina.':'El dictado necesita internet y no hay conexi\u00f3n.')+kb
    :'No se pudo escuchar ('+esc(e.error)+').'+kb);
   var t=$(P+'aiin');if(t)t.focus()};
