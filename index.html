@@ -157,6 +157,19 @@ details summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--ac)}
 .hero{transition:padding .2s}.hero.compact{padding:14px 18px;margin-bottom:10px;border-radius:20px}
 .hero.compact .hero-sub,.hero.compact .eyebrow{display:none}.hero.compact h1{font-size:21px}.hero.compact #th{top:10px;right:12px;width:34px;height:34px}
 main>.card:empty{display:none}
+.geo{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 8px}.geo .chip{text-align:left;white-space:normal;max-width:100%;margin:0}
+.cli-dias{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px}.cli-dias button{min-width:44px;min-height:44px;border-radius:99px;padding:0 6px}.cli-dias button[aria-pressed=true]{background:var(--ac);color:var(--onac);border-color:var(--ac)}
+.cli-fs{border:0;padding:0;margin:10px 0;display:flex;gap:18px;flex-wrap:wrap}.cli-fs legend{font-size:13px;color:var(--mu);margin-bottom:4px;padding:0}
+label.cli-ck,.cli-fs label{display:flex!important;flex-direction:row!important;align-items:center;justify-content:flex-start;gap:10px;min-height:44px;font-size:14px;color:var(--tx);text-align:left}
+.cli-act{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;align-items:center}
+.cli-occ{padding:10px 0;border-bottom:1px solid var(--bd)}.cli-occ .ct{display:flex;justify-content:space-between;gap:8px;align-items:baseline}.cli-occ .row{margin-top:6px}
+.cli-day{margin:16px 0 0;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mu)}
+#login{position:fixed;inset:0;z-index:120;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto;overscroll-behavior:contain}
+.lgbox{width:100%;max-width:420px;background:var(--card);border-radius:20px;padding:22px;box-shadow:var(--sh)}
+.lgb{display:flex;gap:12px;align-items:center;margin-bottom:12px}.lgb i{flex:none;width:46px;height:46px;border-radius:13px;background:var(--ac);color:var(--onac);display:flex;align-items:center;justify-content:center;font-style:normal;font-weight:800}.lgb h2{margin:0}
+.lgtab{display:flex;gap:6px;margin:12px 0 4px}.lgtab button{flex:1;min-height:44px}.lgtab button[aria-pressed=true]{background:var(--ac2);color:var(--ac);border-color:var(--ac);font-weight:700}
+#login form label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mu);margin:10px 0}#login input{width:100%;min-height:44px}
+#login .pri{width:100%;margin-top:12px;min-height:48px}#login .lnk{min-height:44px}
 .ic{width:1.15em;height:1.15em;vertical-align:-.2em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .ic.ok{color:var(--ac)}.ic.no{color:var(--rd)}.ic.wn{color:var(--wr)}
 .fi-l>span:first-child .ic,.dv-i .ic{width:20px;height:20px}
@@ -503,7 +516,8 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px color-mix(in srgb,v
 <div class="card" id="and_zn"></div>
 <div class="card" id="and_map"></div>
 <div class="card" id="and_cf"></div>
-<div class="card" id="vt"></div><div class="card" id="pdfc"></div><div class="card" id="resp"></div><div class="card" id="pwa"></div>
+<div class="card" id="cli_c"></div><div class="card" id="cli_v"></div><div class="card" id="cli_p"></div><div class="card" id="cli_w"></div>
+<div class="card" id="vt"></div><div class="card" id="pdfc"></div><div class="card" id="nube"></div><div class="card" id="resp"></div><div class="card" id="pwa"></div>
 <div class="card" id="masm"></div><div class="card" id="veh"></div><div class="card" id="impu"></div><div class="card" id="pres"></div><div class="card" id="cierre"></div><div class="card" id="sugp"></div>
 <div class="card" id="fi_zona"></div><div class="card" id="fi_cop"></div><div class="card" id="fi_diag"></div><div class="card" id="fi_wi"></div><div class="card" id="fi_af"></div><div class="card" id="fi_st"></div><div class="card" id="fi_fc"></div><div class="card" id="fi_au"></div><div class="card" id="fi_ub"></div><div class="card" id="fi_ob"></div><div class="card" id="fi_ad"></div><div class="card" id="fi_me"></div><div class="card" id="fi_cfg"></div>
 <div hidden>
@@ -543,7 +557,7 @@ items:[
 {id:9,name:"Ahorro mínimo diario",amt:100,freq:"d",total:0,prio:3,sv:1}],
 split:[{k:"res",n:"Fondo para días malos (hasta su meta)",p:12.5},{k:"extra",n:"Abono extra a deudas (tarjeta primero)",p:42.5},{k:"ahorro",n:"Ahorro",p:15},{k:"super",n:"Supermercado de la casa",p:20},{k:"pers",n:"Personal / ocio",p:10}],
 logs:[]}}
-var HNAV=false,SCHEMA=6,_sm=null,_nosnap=false,PAGEV='mf-v38';
+var HNAV=false,SCHEMA=6,_sm=null,_nosnap=false,PAGEV='mf-v39';
 var S;
 try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 function upgrade(){if(S&&S.items&&(S.v||0)<SCHEMA){try{localStorage.setItem(KEY+'-bak-'+(S.v||0)+'-'+Date.now(),JSON.stringify(S));pruneBak()}catch(e){}}
@@ -926,6 +940,15 @@ function runTests(){var T=[],saved=S,near=function(a,b){return Math.abs(a-b)<0.0
  function mk(items,logs,x){var s=def();s.items=items;s.logs=logs;s.cfg=[];s.dpw=7;s.cushion=2;s.goals=[];s.sp=[];s.list=[];s.cob=[];s.cal=[];s.lim={comida:0,hormiga:0};if(x)for(var k in x)s[k]=x[k];return s}
  function run(s,f){S=s;_sm=null;try{return f()}finally{S=saved;_sm=null;try{carApply()}catch(e){}}}
  function t(n,f){var ok=false;try{ok=!!f()}catch(e){}T.push([n,ok])}
+ // Clientes: viajes recurrentes, días saltados, fecha de fin, saldos, archivados y precio sugerido.
+ var cl=function(x){return mk([],[],{cli:Object.assign({c:[{id:1,n:'Ana',tel:'8095551234'}],v:[],p:[],sent:{},nid:9,wa:{},mg:5},x)})},T0=new Date('2026-10-05T00:00').getTime(),T1=new Date('2026-10-11T23:59').getTime(),
+  rv={id:2,cid:1,d:'2026-10-05',h:'07:30',m:300,rec:1,dias:[1,2,3,4,5],hasta:'',off:[],o:{t:'Naco'}};
+ t('Clientes: un viaje de lunes a viernes da 5 viajes en la semana',function(){return run(cl({v:[rv]}),function(){return cliOcc(T0,T1).length==5})});
+ t('Clientes: «No se hizo» y la fecha de fin quitan viajes',function(){return run(cl({v:[Object.assign({},rv,{off:['2026-10-07'],hasta:'2026-10-08'})]}),function(){return cliOcc(T0,T1).length==3})});
+ t('Clientes: un viaje único sale solo su día',function(){return run(cl({v:[Object.assign({},rv,{rec:0,dias:[],d:'2026-10-06'})]}),function(){var L=cliOcc(T0,T1);return L.length==1&&L[0].ds=='2026-10-06'})});
+ t('Clientes: saldo = viajes hechos − pagos',function(){return run(cl({v:[Object.assign({},rv,{hasta:'2026-10-09',off:['2026-10-07']})],p:[{id:3,cid:1,m:700,d:'2026-10-09'}]}),function(){var o=cliOwed(1);return o.n==4&&o.due==1200&&o.bal==500})});
+ t('Clientes: un cliente archivado no sale en la agenda',function(){return run(cl({c:[{id:1,n:'Ana',arch:1}],v:[rv]}),function(){return cliOcc(T0,T1).length==0})});
+ t('Precio: lo que paga el pasajero en Uber (a ti te llega el 75%)',function(){var q=cliPriceOf(10,20,{gpk:25,gph:600,cpk:8},0.25);return near(q.drv,250)&&Math.abs(q.pas-333.33)<0.01&&q.pr==340&&near(q.cost,80)});
  var A=function(){return[it(1,'Auto',700,'d'),it(2,'Casa',3000,'m')]},E={reserve:0,arr:{},pd:{}};
  t('El dinero se conserva: neto + fondo usado = total repartido',function(){return[0,500,1000,2500,5000,12000].every(function(a){return run(mk(A(),[]),function(){var r=allocDay(a,{reserve:1000,arr:{1:100},pd:{}},false);return near(r.cats.reduce(function(q,c){return q+c.v},0),a+r.draw)})})});
  t('Las prioridades se pagan en orden y lo que falta queda pendiente',function(){return run(mk(A(),[]),function(){var r=allocDay(500,E,false);return near(r.cats[0].v,500)&&near(r.cats[1].v,0)&&near(r.st.arr[1],200)&&r.st.arr[2]>0})});
@@ -1002,7 +1025,7 @@ function runTests(){var T=[],saved=S,near=function(a,b){return Math.abs(a-b)<0.0
   return g.mov==10&&g.stop==10&&g.gap==15&&g.stops.length==1&&g.stops[0].m==10&&g.km>9&&g.km<10.5});
  return T}
 function renderVT(){var T=runTests(),ok=T.filter(function(q){return q[1]}).length;$('vt').innerHTML='<h2>Verificaci\u00f3n del motor financiero</h2><p class="sub">Estas pruebas se ejecutan al abrir la p\u00e1gina y comprueban que el reparto, las prioridades, el fondo y los pendientes calculen bien.</p><div class="warn" style="'+(ok==T.length?'background:var(--ac2);color:var(--ac)':'')+'">'+ok+' de '+T.length+' pruebas correctas.</div>'+T.map(function(q){return '<div class="leg"><span>'+q[0]+'</span><span>'+(q[1]?'Correcta':'FALLA')+'</span></div>'}).join('')}
-function save(){snapCfg();_sm=null;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}idbQueue();pwaSync()}
+function save(){snapCfg();_sm=null;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}idbQueue();pwaSync();try{fbQ()}catch(e){}}
 function $(i){return document.getElementById(i)}
 function rd(n){return "RD$"+Math.round(n).toLocaleString("es-DO")}
 // Íconos (trazo de 2 px, mismo estilo que la barra de abajo). Reemplazan a los emojis, que cambian según el teléfono
@@ -1077,6 +1100,7 @@ function rPend(){$("pend").innerHTML=PEND.map(function(p,i){return '<div class="
 function pendAll(){var a=PEND.slice(),v=+$("xv").value;if(v>0)a.push({c:$("xc").value||"Extra",v:v});return a}
 function addLog(){var gs=$("monto").value,xs=pendAll(),g=+gs||0;if(gs===""&&!xs.length)return;var e={};EX.forEach(function(k){e[k[0]]=+$("ex_"+k[0]).value||0});
  var lg={d:$("fecha").value||today(),g:g,e:e,x:xs,h:+$("horas").value||0,off:$("off").checked,n:$("nota").value},km=+$("km").value||0,kmp=+$("kmp").value||0;if($("zon").value)lg.z=$("zon").value;if($("tur").value)lg.t=$("tur").value;if(km>0)lg.km=km;if(kmp>0)lg.kmp=Math.min(kmp,km||kmp);var vj=Math.round(+$("vj").value||0);if(vj>0&&vj<200)lg.v=vj;
+ if(!lg.off)S.logs=S.logs.filter(function(l){if(l.d==lg.d&&l.off&&l.n=='Clientes'&&!l.g){lg.x=lg.x.concat(l.x||[]);return false}return true});
  if(PGPS&&PGPS.d==lg.d)lg.gps=PGPS;PGPS=null;var gv=$('gpsv');if(gv)gv.innerHTML='';var av0=$('autov');if(av0)av0.innerHTML='';S.logs.push(lg);S.logs.sort(function(a,b){return a.d<b.d?-1:1});
  // Vehículo: suma los km al odómetro (salvo que la jornada ya lo fijó con el odómetro real) y cierra la jornada pendiente de ese día.
  var fromShift=S.shift&&S.shift.end&&S.shift.d==lg.d;if(!lg.gps&&fromShift&&S.shift.gps)lg.gps=S.shift.gps;if(km>0&&S.veh&&S.veh.odo&&!(fromShift&&S.shift.km1))S.veh.odo+=km;if(fromShift)S.shift=null;
@@ -1499,11 +1523,11 @@ function renderPdf(){var ms=weekMonths();$('pdfc').innerHTML='<h2>Reporte semana
 // Pantallas pesadas que no se ven (gráficos de Análisis, el Asistente con su mapa): se dibujan al abrirlas, no en cada cambio.
 var LZ={},LZF={ana:function(){renderRend();renderMes();renderPdf();renderResp()},and:function(){renderAndAll()}};
 function lazy(t){if(TAB==t){LZ[t]=0;try{LZF[t]()}catch(e){}}else LZ[t]=1}
-function all(){ens();ens2();try{andShiftSync()}catch(e){}$("dpw").value=S.dpw;$("cush").value=cush();kpis();renderWk();tb();renderGoals();renderSup();split();esc2();hist();draw();prev();rPend();renderCal();renderSim();renderCob();lazy('ana');renderAcc();renderMov();renderOst();renderPay();renderOdet();renderPred();renderSubnav();renderOb();try{fuelMig();carApply()}catch(e){}fiSummary();p2All();heroUpd();try{andSync()}catch(e){}lazy('and');if(TAB=='ia'&&['cop','st','wi','af'].indexOf(subOf('ia'))<0)renderFI();try{driveAuto();if($('drive'))driveDraw();driveBtn()}catch(e){}}
+function all(){ens();ens2();try{andShiftSync()}catch(e){}$("dpw").value=S.dpw;$("cush").value=cush();kpis();renderWk();tb();renderGoals();renderSup();split();esc2();hist();draw();prev();rPend();renderCal();renderSim();renderCob();try{renderCli();renderNube()}catch(e){}lazy('ana');renderAcc();renderMov();renderOst();renderPay();renderOdet();renderPred();renderSubnav();renderOb();try{fuelMig();carApply()}catch(e){}fiSummary();p2All();heroUpd();try{andSync()}catch(e){}lazy('and');if(TAB=='ia'&&['cop','st','wi','af'].indexOf(subOf('ia'))<0)renderFI();try{driveAuto();if($('drive'))driveDraw();driveBtn()}catch(e){}}
 var TABS=[["inicio",'<svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-5h4v5"/></svg>',"Inicio"],["ia",'<svg viewBox="0 0 24 24"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M18.5 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>',"IA"],["reg",'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>',"Registrar"],["cta",'<svg viewBox="0 0 24 24"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3"/><path d="M4 7.5V17a2 2 0 0 0 2 2h13a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1H6.5A2.5 2.5 0 0 1 4 7.5Z"/><circle cx="16.5" cy="13.5" r="1.1"/></svg>',"Cuentas"],["deu",'<svg viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h4"/></svg>',"Deudas"],["hog",'<svg viewBox="0 0 24 24"><path d="M5 9h14l-1.4 9.2a2 2 0 0 1-2 1.8H8.4a2 2 0 0 1-2-1.8L5 9Z"/><path d="M9 9l3-5 3 5"/></svg>',"Hogar"],["ana",'<svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M21 20H3"/></svg>',"Análisis"]];
 var SUBS={inicio:[['res','Resumen'],['hoy','Hoy y semana'],['pred','Predicci\u00f3n']],ia:[['zona','Zona del día'],['cop','Copiloto'],['diag','Diagn\u00f3stico'],['fc','Pron\u00f3stico'],['au','Autopsia'],['ub','Uber'],['ob','Objetivos'],['ad','Auditor'],['me','Memoria'],['cfg','Ajustes IA']],reg:[['dia','Registrar'],['dist','Distribuci\u00f3n'],['hist','Historial'],['imp','Importar Uber'],['veh','Veh\u00edculo']],cta:[['cue','Cuentas'],['mov','Movimientos'],['cierre','Cierre semanal']],deu:[['est','Estado'],['pag','Pagos'],['obl','Obligaciones'],['meta','Metas'],['sim','Simulador']],hog:[['sup','S\u00faper'],['pres','Presupuesto'],['cob','Por cobrar'],['rep','Reparto']],ana:[['tend','Tendencias'],['pdf','Reporte PDF'],['resp','Respaldo'],['mas','App y avisos']],mas:[['menu','Todo']]},SUB={},TAB='inicio';
-TABS.push(['mas','','M\u00e1s']);TABS.push(['and','','Asistente']);SUBS.and=[['aest','Estado'],['aof','Ofertas'],['azon','Zonas de cuidado'],['amap','Mapa'],['acfg','Ajustes']];
-function tabs(){var map=[['#kpis','inicio','res'],['#obk','inicio','res'],['#zona','inicio','res'],['#jor','inicio','res'],['#veh','reg','veh'],['#impu','reg','imp'],['#pres','hog','pres'],['#cierre','cta','cierre'],['#sugp','deu','pag'],['#fisum','inicio','res'],['#fi_zona','ia','zona'],['#fi_cop','ia','cop'],['#fi_diag','ia','diag'],['#fi_wi','ia','cop'],['#fi_af','ia','cop'],['#fi_st','ia','cop'],['#fi_fc','ia','fc'],['#fi_au','ia','au'],['#fi_ub','ia','ub'],['#fi_ob','ia','ob'],['#fi_ad','ia','ad'],['#fi_me','ia','me'],['#fi_cfg','ia','cfg'],['#hoy','inicio','hoy'],['#wk','inicio','hoy'],['#pred','inicio','pred'],['#fecha','reg','dia'],['#pie','reg','dist'],['#hist','reg','hist'],['#accs','cta','cue'],['#movc','cta','mov'],['#ost','deu','est'],['#cal','deu','est'],['#payc','deu','pag'],['#tb','deu','obl'],['#odet','deu','obl'],['#goals','deu','meta'],['#simd','deu','sim'],['#sup','hog','sup'],['#cob','hog','cob'],['#split','hog','rep'],['#esc','hog','rep'],['#rend','ana','tend'],['#mes','ana','tend'],['#pdfc','ana','pdf'],['#resp','ana','resp'],['#vt','ana','mas'],['#and_est','and','aest'],['#and_of','and','aof'],['#and_zn','and','azon'],['#and_map','and','amap'],['#and_cf','and','acfg'],['#masm','mas','menu']];
+TABS.push(['mas','','M\u00e1s']);TABS.push(['and','','Asistente']);TABS.push(['cli','','Clientes']);SUBS.cli=[['clis','Clientes'],['cvia','Agenda'],['cpag','Pagos'],['cbot','Ajustes']];SUBS.and=[['aest','Estado'],['aof','Ofertas'],['azon','Zonas de cuidado'],['amap','Mapa'],['acfg','Ajustes']];
+function tabs(){var map=[['#kpis','inicio','res'],['#obk','inicio','res'],['#zona','inicio','res'],['#jor','inicio','res'],['#veh','reg','veh'],['#impu','reg','imp'],['#pres','hog','pres'],['#cierre','cta','cierre'],['#sugp','deu','pag'],['#fisum','inicio','res'],['#fi_zona','ia','zona'],['#fi_cop','ia','cop'],['#fi_diag','ia','diag'],['#fi_wi','ia','cop'],['#fi_af','ia','cop'],['#fi_st','ia','cop'],['#fi_fc','ia','fc'],['#fi_au','ia','au'],['#fi_ub','ia','ub'],['#fi_ob','ia','ob'],['#fi_ad','ia','ad'],['#fi_me','ia','me'],['#fi_cfg','ia','cfg'],['#hoy','inicio','hoy'],['#wk','inicio','hoy'],['#pred','inicio','pred'],['#fecha','reg','dia'],['#pie','reg','dist'],['#hist','reg','hist'],['#accs','cta','cue'],['#movc','cta','mov'],['#ost','deu','est'],['#cal','deu','est'],['#payc','deu','pag'],['#tb','deu','obl'],['#odet','deu','obl'],['#goals','deu','meta'],['#simd','deu','sim'],['#sup','hog','sup'],['#cob','hog','cob'],['#split','hog','rep'],['#esc','hog','rep'],['#rend','ana','tend'],['#mes','ana','tend'],['#pdfc','ana','pdf'],['#resp','ana','resp'],['#vt','ana','mas'],['#and_est','and','aest'],['#and_of','and','aof'],['#and_zn','and','azon'],['#and_map','and','amap'],['#and_cf','and','acfg'],['#cli_c','cli','clis'],['#cli_v','cli','cvia'],['#cli_p','cli','cpag'],['#cli_w','cli','cbot'],['#nube','ana','resp'],['#masm','mas','menu']];
  document.querySelectorAll('main > .card, main > .grid > .card').forEach(function(e){var t='ana',s='mas';map.forEach(function(p){if(e.id==p[0].slice(1)||e.querySelector(p[0])){t=p[1];s=p[2]}});e.dataset.tab=t;e.dataset.sub=s});
  document.querySelectorAll('main > .grid').forEach(function(g){g.style.display='block'})}
 // ===== Menos a la vista =====
@@ -1584,18 +1608,20 @@ function foldWatch(){foldAll();new MutationObserver(function(){if(!FQ)FQ=request
 var IAG=[['Copiloto',['cop']],['Zona y Uber',['zona','ub']],['Salud',['diag','fc','au','ad']],['Metas y ajustes',['ob','me','cfg']]];
 // Dinero: 3 apartados (Cuentas, Deudas, Hogar) y, dentro de cada uno, sus secciones en una segunda fila.
 var DING=[['cta','Cuentas'],['deu','Deudas'],['hog','Hogar']];
+// Viajes: 2 apartados (el asistente de Uber y tus clientes particulares), igual que Dinero.
+var VIAG=[['and','Uber'],['cli','Clientes']],GRPS={din:DING,and:VIAG};
 function subOf(t){var s=SUB[t];return SUBS[t].some(function(x){return x[0]==s})?s:SUBS[t][0][0]}
 // Barra de abajo con 5 pestañas (Hoy, Registrar, Viajes, Dinero, Más) de al menos 56 px. Las secciones internas
 // (TABS/SUBS) no cambian: "Dinero" agrupa Cuentas, Deudas y Hogar, y "Más" abre un menú con la IA y Análisis. Así todos los setTab('ia',…) y enlaces existentes siguen funcionando.
-var NAVT=[['inicio',TABS[0][1],'Hoy',['inicio']],['reg',TABS[2][1],'Registrar',['reg']],['and','<svg viewBox="0 0 24 24"><path d="M5 16.5V12l1.8-4.6A2 2 0 0 1 8.7 6h6.6a2 2 0 0 1 1.9 1.4L19 12v4.5"/><path d="M3.5 12h17v4.5h-17z"/><circle cx="7.5" cy="16.5" r="1.6"/><circle cx="16.5" cy="16.5" r="1.6"/></svg>','Viajes',['and']],['din',TABS[3][1],'Dinero',['cta','deu','hog']],
+var NAVT=[['inicio',TABS[0][1],'Hoy',['inicio']],['reg',TABS[2][1],'Registrar',['reg']],['and','<svg viewBox="0 0 24 24"><path d="M5 16.5V12l1.8-4.6A2 2 0 0 1 8.7 6h6.6a2 2 0 0 1 1.9 1.4L19 12v4.5"/><path d="M3.5 12h17v4.5h-17z"/><circle cx="7.5" cy="16.5" r="1.6"/><circle cx="16.5" cy="16.5" r="1.6"/></svg>','Viajes',['and','cli']],['din',TABS[3][1],'Dinero',['cta','deu','hog']],
  ['mas','<svg viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18.5" cy="12" r="1.6"/></svg>','Más',['mas','ana','ia']]];
 function navOf(t){return NAVT.filter(function(x){return x[3].indexOf(t)>=0})[0]||NAVT[0]}
-function navGo(k){var d;try{d=localStorage.getItem('fin-din')}catch(e){}if(k=='din')setTab(['cta','deu','hog'].indexOf(TAB)>=0?TAB:(d||'cta'));else setTab(k)}
+function navGo(k){var d,v;try{d=localStorage.getItem('fin-din');v=localStorage.getItem('fin-via')}catch(e){}if(k=='and')setTab(['and','cli'].indexOf(TAB)>=0?TAB:(v||'and'));else if(k=='din')setTab(['cta','deu','hog'].indexOf(TAB)>=0?TAB:(d||'cta'));else setTab(k)}
 function vencN(){var n=0;try{sorted().forEach(function(i){if(!i.sv&&i.freq!='d'&&oblStatus(i).st=='Vencida')n++})}catch(e){}return n}
 function renderSubnav(){var t=TAB,el=$('subnav'),g=navOf(t),L=[],sg=$('subseg');sg.innerHTML='';
  if(t=='mas'){el.innerHTML='';el.hidden=true;return}el.hidden=false;
  var seg=function(tt){return SUBS[tt].map(function(x){var on=x[0]==subOf(tt),n=tt=='deu'&&x[0]=='est'?vencN():0;return '<button class="'+(on?'on':'')+'" aria-pressed="'+on+'" data-t="'+tt+'" data-s="'+x[0]+'" onclick="setTab(this.dataset.t,this.dataset.s)">'+x[1]+(n?'<i class="dot2" aria-label="'+n+' vencidas">'+n+'</i>':'')+'</button>'}).join('')};
- if(g[0]=='din'){el.innerHTML=DING.map(function(q){var on=q[0]==t,n=q[0]=='deu'?vencN():0;return '<button class="'+(on?'on':'')+'" aria-pressed="'+on+'" onclick="setTab(\''+q[0]+'\')">'+q[1]+(n?'<i class="dot2" aria-label="'+n+' vencidas">'+n+'</i>':'')+'</button>'}).join('');sg.innerHTML=seg(t);var so=sg.querySelector('.on');if(so)sg.scrollLeft=Math.max(0,so.offsetLeft-(sg.clientWidth-so.offsetWidth)/2);return}
+ if(GRPS[g[0]]){el.innerHTML=GRPS[g[0]].map(function(q){var on=q[0]==t,n=q[0]=='deu'?vencN():0;return '<button class="'+(on?'on':'')+'" aria-pressed="'+on+'" onclick="setTab(\''+q[0]+'\')">'+q[1]+(n?'<i class="dot2" aria-label="'+n+' vencidas">'+n+'</i>':'')+'</button>'}).join('');sg.innerHTML=seg(t);var so=sg.querySelector('.on');if(so)sg.scrollLeft=Math.max(0,so.offsetLeft-(sg.clientWidth-so.offsetWidth)/2);return}
  if(t=='ia'){var cur=subOf('ia'),gi=0,lb={};SUBS.ia.forEach(function(x){lb[x[0]]=x[1]});IAG.forEach(function(q,i){if(q[1].indexOf(cur)>=0)gi=i});
   el.innerHTML='<button class="back" onclick="setTab(\'mas\')" aria-label="Volver al menú Más">‹ Más</button>'+IAG.map(function(q,i){var on=i==gi;return '<button class="'+(on?'on':'')+'" aria-pressed="'+on+'" onclick="setTab(\'ia\',\''+(on?cur:q[1][0])+'\')">'+q[0]+'</button>'}).join('');
   if(cur!='cop'&&IAG[gi][1].length>1)sg.innerHTML=IAG[gi][1].map(function(k){var on=k==cur;return '<button class="'+(on?'on':'')+'" aria-pressed="'+on+'" onclick="setTab(\'ia\',\''+k+'\')">'+lb[k]+'</button>'}).join('');var ao=el.querySelector('.on');if(ao)el.scrollLeft=Math.max(0,ao.offsetLeft-(el.clientWidth-ao.offsetWidth)/2);return}
@@ -1604,11 +1630,11 @@ function renderSubnav(){var t=TAB,el=$('subnav'),g=navOf(t),L=[],sg=$('subseg');
  el.innerHTML=back+L.map(function(x){var on=x[0]==t&&x[1]==subOf(t),n=x[0]=='deu'&&x[1]=='est'?vencN():0;
   return '<button class="'+(on?'on':'')+'" aria-pressed="'+on+'" data-t="'+x[0]+'" data-s="'+x[1]+'" onclick="setTab(this.dataset.t,this.dataset.s)">'+x[2]+(n?'<i class="dot2" aria-label="'+n+' vencidas">'+n+'</i>':'')+'</button>'}).join('');
  var a=el.querySelector('.on');if(a)el.scrollLeft=Math.max(0,a.offsetLeft-(el.clientWidth-a.offsetWidth)/2)}
-function setTab(t,s){if(!SUBS[t])t='inicio';if(t=='ia'&&(s=='wi'||s=='af'||s=='st'))s='cop';TAB=t;if(s)SUB[t]=s;var sb=subOf(t);try{var nh='#'+t+'/'+sb;if(location.hash!=nh){if(HNAV&&location.hash)history.pushState(null,'',nh);else history.replaceState(null,'',nh)}}catch(e){}try{localStorage.setItem('fin-tab',t);localStorage.setItem('fin-subs',JSON.stringify(SUB));if(t=='cta'||t=='hog'||t=='deu')localStorage.setItem('fin-din',t)}catch(e){}
+function setTab(t,s){if(!SUBS[t])t='inicio';if(t=='ia'&&(s=='wi'||s=='af'||s=='st'))s='cop';TAB=t;if(s)SUB[t]=s;var sb=subOf(t);try{var nh='#'+t+'/'+sb;if(location.hash!=nh){if(HNAV&&location.hash)history.pushState(null,'',nh);else history.replaceState(null,'',nh)}}catch(e){}try{localStorage.setItem('fin-tab',t);localStorage.setItem('fin-subs',JSON.stringify(SUB));if(t=='cta'||t=='hog'||t=='deu')localStorage.setItem('fin-din',t);if(t=='and'||t=='cli')localStorage.setItem('fin-via',t)}catch(e){}
  document.querySelectorAll('[data-tab]').forEach(function(e){e.hidden=!(e.dataset.tab==t&&e.dataset.sub==sb)});
  var g=navOf(t)[0];
  $('nav').innerHTML='<div class="brand"><i>MF</i><b>Mis Finanzas</b><small>Panel personal</small></div><div class="in">'+NAVT.map(function(x){var on=x[0]==g,n=x[0]=='din'?vencN():0;return '<button class="'+(on?'on':'')+'"'+(on?' aria-current="page"':'')+' data-t="'+x[0]+'" onclick="navGo(this.dataset.t)"><b aria-hidden="true">'+x[1]+'</b>'+x[2]+(n?'<span class="sr"> ('+n+' vencidas)</span>':'')+'</button>'}).join('')+'</div>';
- renderSubnav();var h=document.querySelector('.hero');if(h)h.classList.toggle('compact',t!='inicio');if(t=='ia')renderFI();if(t=='mas')renderMas();heroUpd();if(t=='and')renderAndAll();else if(LZ[t])lazy(t);foldAll();window.scrollTo(0,0)}
+ renderSubnav();var h=document.querySelector('.hero');if(h)h.classList.toggle('compact',t!='inicio');if(t=='ia')renderFI();if(t=='mas')renderMas();heroUpd();if(t=='and')renderAndAll();else if(t=='cli')renderCli();else if(LZ[t])lazy(t);foldAll();window.scrollTo(0,0)}
 function setSub(s){SUB[TAB]=s;setTab(TAB)}
 // Menú "Más": todas las secciones de IA y Análisis en una cuadrícula, con una línea que dice para qué sirve cada una.
 var MASD={amap:'El recorrido del GPS en el mapa',aest:'Encender o apagar el lector y el GPS',aof:'Ofertas que evaluó el lector',azon:'Sectores donde ir con cuidado',acfg:'Tus límites y el diagnóstico',zona:'Dónde y si conviene trabajar hoy',cop:'Pregúntale a la IA sobre tu dinero',diag:'Tu salud financiera de 0 a 100',wi:'Qué pasa si cambias algo',af:'Antes de comprar algo',st:'Registrar con texto o voz',fc:'Cómo vas a cerrar el mes',au:'Qué pasó en un mes',ub:'Rendimiento por hora y km',ob:'Tus metas y su avance',ad:'Revisa errores y duplicados',me:'Lo que la IA recuerda de ti',cfg:'Clave y límites de la IA',tend:'Cómo te ha ido por semana y mes',pdf:'Reporte semanal para guardar',resp:'Copia de seguridad e importar',mas:'Instalar la app y avisos'};
@@ -3099,6 +3125,346 @@ function cierreCore(real){var dif=0,n=0;S.acc.forEach(function(a){var r=real[a.i
 function cierreApply(b){var real={},any=false;S.acc.forEach(function(a){var v=$('cr'+a.id).value;if(v!==''){real[a.id]=+v;any=true}});if(!any){$('crm').innerHTML='<div class="warn">Escribe al menos un saldo real (las cuentas en blanco no se tocan).</div>';return}
  tap2(b,'¿Confirmar ajustes?',function(){var r=cierreCore(real);save();all();var m=$('crm');if(m)m.innerHTML='<div class="warn ok">Cierre guardado: '+(r.n?r.n+' cuenta(s) ajustadas, diferencia total '+fiSg(r.dif):'todo cuadraba')+'.</div>'})}
 
+// ===== Clientes particulares (por fuera de Uber): clientes, viajes únicos o recurrentes, pagos y avisos por WhatsApp.
+// Datos en S.cli: c (clientes), v (viajes), p (pagos), sent (avisos enviados por viaje y fecha), wa (bot), mg (margen).
+// Los avisos automáticos los hace la app Android aunque esté cerrada (Clients.java, con la agenda de 14 días que le
+// deja la página); en el navegador, solo mientras la página está abierta.
+var CLIWD=['D','L','M','X','J','V','S'],CLIWN=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],CLIGEO={},CLIP={},CLIWT={},CLIDIAS=[1,2,3,4,5],CLIED=0,CLIAL='';
+function cliEns(){if(!S.cli||typeof S.cli!='object')S.cli={};var C=S.cli;['c','v','p'].forEach(function(k){if(!Array.isArray(C[k]))C[k]=[]});
+ if(!C.sent||typeof C.sent!='object')C.sent={};if(!C.nid)C.nid=1;if(!C.wa)C.wa={url:'',key:'',me:'',yo:true,sal:true,lleg:true};if(C.mg==null)C.mg=5;if(C.com==null)C.com=25;if(!C.cob)C.cob={on:1,dia:5,h:'18:00'};return C}
+function cliById(id){return cliEns().c.filter(function(x){return x.id==id})[0]}
+// Teléfono en formato internacional sin «+»: 809/829/849 + 7 dígitos → 1809…
+function cliTel(t){var d=String(t||'').replace(/\D/g,'');if(d.length==10&&/^8[024]9/.test(d))d='1'+d;return d}
+function cliFirst(n){return String(n||'').trim().split(/\s+/)[0]||'cliente'}
+function hm12(ts){return new Date(ts).toLocaleTimeString('es-DO',{hour:'numeric',minute:'2-digit',hour12:true})}
+function cliDs(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function cliOn(t,ds){if((t.off||[]).indexOf(ds)>=0)return false;if(!t.rec)return t.d==ds;if(ds<t.d||(t.hasta&&ds>t.hasta))return false;return (t.dias||[]).indexOf(new Date(ds+'T12:00').getDay())>=0}
+function cliTs(t,ds){return new Date(ds+'T'+(t.h||'08:00')).getTime()}
+// Cada vez que toca hacer un viaje entre dos momentos: {k:'<viaje>-<fecha>', t, c, ds, ts}.
+function cliOcc(from,to){var C=cliEns(),out=[],d=new Date(from);d.setHours(0,0,0,0);
+ for(;d.getTime()<=to;d.setDate(d.getDate()+1)){var ds=cliDs(d);C.v.forEach(function(t){if(!cliOn(t,ds))return;var ts=cliTs(t,ds),c=cliById(t.cid);if(ts>=from&&ts<=to&&c&&!c.arch)out.push({k:t.id+'-'+ds,t:t,c:c,ds:ds,ts:ts})})}
+ return out.sort(function(a,b){return a.ts-b.ts})}
+function cliFind(k){var now=Date.now();return cliOcc(now-864e5,now+15*864e5).filter(function(o){return o.k==k})[0]}
+// Saldo: los viajes ya hechos (los que pasaron y no marcaste «No se hizo») menos lo pagado.
+function cliOwed(cid){var C=cliEns(),now=Date.now(),due=0,n=0;C.v.forEach(function(t){if(t.cid!=cid||!(t.m>0))return;var d=new Date(t.d+'T00:00');
+  for(var i=0;d.getTime()<=now&&i<800;d.setDate(d.getDate()+1),i++){var ds=cliDs(d);if(cliOn(t,ds)&&cliTs(t,ds)<=now){due+=t.m;n++}}});
+ var paid=C.p.filter(function(p){return p.cid==cid}).reduce(function(s,p){return s+p.m},0);return {due:due,n:n,paid:paid,bal:due-paid}}
+
+// --- Ubicación, tráfico y hora de salida
+function cliHere(){return new Promise(function(ok){try{if(AND&&AND.here){var a=JSON.parse(AND.here()||'null');if(a&&a.length==2){ok({la:+a[0],lo:+a[1]});return}}}catch(e){}
+ if(!navigator.geolocation){ok(null);return}navigator.geolocation.getCurrentPosition(function(p){ok({la:p.coords.latitude,lo:p.coords.longitude})},function(){ok(null)},{maximumAge:120000,timeout:9000})})}
+function cliRush(ts){var d=new Date(ts),h=d.getHours()+d.getMinutes()/60,w=d.getDay();return w>0&&w<6&&((h>=6.5&&h<9.5)||(h>=16.5&&h<19.5))}
+// Minutos hasta el punto: Mapbox con el tráfico de ahora; sin token, la distancia en línea recta × 1.4 a 17 km/h en hora pico o 27 km/h.
+async function cliEta(a,b,ts){if(ZCFG.mb){try{var r=await fetch('https://api.mapbox.com/directions/v5/mapbox/driving-traffic/'+a.lo+','+a.la+';'+b.lo+','+b.la+'?overview=false&access_token='+encodeURIComponent(ZCFG.mb));
+  if(r.ok){var j=await r.json();if(j.routes&&j.routes[0])return {s:j.routes[0].duration,km:j.routes[0].distance/1000,src:'tráfico en vivo'}}}catch(e){}}
+ var km=gHav(a,b)/1000*1.4;return {s:km/(cliRush(ts)?17:27)*3600,km:km,src:'estimado'}}
+async function cliPlan(o,force){var p=CLIP[o.k],now=Date.now();if(p&&!force&&now-p.at<(o.ts-now<90*60000?5:15)*60000)return p;
+ var pt=o.t.o;if(!pt||pt.la==null)p={err:'Sin ubicación de recogida: edita el viaje y toca Buscar.',at:now};
+ else{var h=await cliHere();if(!h)p={err:'No pude leer tu ubicación (revisa el permiso).',at:now};
+  else{var e=await cliEta(h,pt,o.ts);p={eta:e.s,km:e.km,src:e.src,leave:o.ts-e.s*1000-(cliEns().mg||0)*60000,at:now}}}
+ CLIP[o.k]=p;return p}
+
+// --- Bot de WhatsApp (whatsapp-bot/worker.js). t: conductor | salida | llegando | prueba
+async function cliSend(to,t,p){var w=cliEns().wa;if(!w.url||!w.key)throw new Error('configura el bot en Clientes → WhatsApp');to=cliTel(to);if(to.length<11)throw new Error('número de WhatsApp inválido');
+ var r=await fetch(w.url.trim().replace(/\/+$/,'')+'/send',{method:'POST',headers:{'Content-Type':'application/json','X-Key':w.key},body:JSON.stringify({to:to,t:t,p:p||[]})}),j={};
+ try{j=await r.json()}catch(e){}if(!r.ok||!j.ok)throw new Error(j.error||('el bot respondió '+r.status));return j}
+function cliErr(e){var m=String(e&&e.message||e);return /fetch|network|load failed/i.test(m)?'no pude conectar con el bot (revisa la dirección y tu internet)':m}
+function cliMark(k,f){var C=cliEns();C.sent[k]=C.sent[k]||{};C.sent[k][f]=Date.now();save()}
+function cliPlace(o){return (o.t.o&&o.t.o.t)||'el punto de recogida'}
+function cliPSal(o,eta){return [cliFirst(o.c.n),hm12(Date.now()+eta*1000),cliPlace(o)]}
+function cliPLleg(o,eta){return [cliFirst(o.c.n),cliPlace(o),String(Math.max(1,Math.round(eta/60)))]}
+function cliPYo(o,p){return [cliPlace(o),o.c.n,hm12(o.ts),String(Math.round(p.eta/60))]}
+function cliBot(){var w=cliEns().wa;return !!(w.url&&w.key)}
+function cliTxt(kind,o,eta){var a=kind=='s'?cliPSal(o,eta):cliPLleg(o,eta);return kind=='s'?'Hola '+a[0]+', tu conductor ya va en camino. Llega a las '+a[1]+' aproximadamente a '+a[2]+'. ¡Nos vemos pronto!':'Hola '+a[0]+', tu conductor está llegando a '+a[1]+'. Faltan unos '+a[2]+' minutos, ve saliendo por favor.'}
+// Sin bot: abre WhatsApp con el mensaje escrito para ese cliente; desde tu número, tú tocas Enviar.
+function cliOpenWa(tel,txt){var u='https://wa.me/'+cliTel(tel)+'?text='+encodeURIComponent(txt);if(AND)location.href=u;else window.open(u,'_blank','noopener')}
+function cliSay(t,ok){var m=$('cli_msg');if(m)m.innerHTML='<div class="warn" role="status"'+(ok?' style="background:var(--ac2);color:var(--ac)"':'')+'>'+t+'</div>'}
+// Botones «Ya salí» y «Llegando»: mandan el aviso al cliente al momento.
+async function cliGo(k,kind,b){var o=cliFind(k);if(!o)return;
+ if(!cliBot()){if(cliTel(o.c.tel).length<11){cliSay(esc(o.c.n)+' no tiene WhatsApp guardado. Agrégalo en Clientes → Editar.');return}var pl=CLIP[o.k],e0=pl&&pl.eta?pl.eta:600;if(b){b.disabled=true;b.textContent='Calculando…'}
+  try{if(kind=='s'){pl=await cliPlan(o,true);if(pl.eta)e0=pl.eta}}catch(x){}cliOpenWa(o.c.tel,cliTxt(kind,o,kind=='s'?e0:Math.min(e0,300)));cliMark(k,kind);renderCliAg();return}
+ if(b){b.disabled=true;b.textContent='Enviando…'}
+ try{var p=await cliPlan(o,true),eta=p.eta||600;
+  if(kind=='s'){await cliSend(o.c.tel,'salida',cliPSal(o,eta));cliMark(k,'s');if(AND&&AND.cliArrive)AND.cliArrive(k);else cliWatch(o)}
+  else{await cliSend(o.c.tel,'llegando',cliPLleg(o,Math.min(eta,300)));cliMark(k,'l');cliUnwatch(k)}
+  cliSay(ic('check','ok')+' Le avisé a '+esc(o.c.n)+(kind=='s'?' que vas en camino.':' que estás llegando.'),1)}catch(e){cliSay('No se envió: '+esc(cliErr(e)))}renderCliAg()}
+function cliNotify(t,b){try{if(PWA.reg&&window.Notification&&Notification.permission=='granted')PWA.reg.showNotification(t,{body:b,icon:'icons/icon-192.png',tag:'mf-cli',requireInteraction:true})}catch(e){}cliSay(ic('alert','wn')+' <b>'+esc(t)+'</b><br>'+esc(b))}
+// En el navegador (sin la app Android): mientras la página está abierta revisa cada minuto los viajes de las próximas 3 h.
+// En el navegador los avisos automáticos están apagados salvo en el aparato donde los actives: así la computadora no calcula
+// «Sal ahora» con su propia ubicación ni repite los WhatsApp que ya manda el teléfono.
+function cliAuto(){try{return localStorage.getItem('mf-cli-auto')=='1'}catch(e){return false}}
+async function cliTick(){var C=cliEns();if(!C.v.length&&!C.c.length)return;if(AND&&AND.setClients){cliAndSync();cliAndSent();if(TAB=='cli')renderCliAg();return}
+ if(!cliAuto()){if(TAB=='cli')renderCliAg();return}
+ var cn=cliCobNext();if(C.cob.on&&cn&&Date.now()>=cn.t){var ct=cliCobTxt();cliMark(cn.k,'y');if(ct)cliNotify('Día de cobro','Te deben: '+ct)}
+ var now=Date.now(),L=cliOcc(now,now+3*3600000);
+ for(var i=0;i<L.length;i++){var o=L[i],s=C.sent[o.k]||{};if(o.t.av===0||s.y)continue;var p=await cliPlan(o);if(!p||p.err)continue;
+  if(now>=p.leave-60000){cliMark(o.k,'y');cliNotify('Sal ahora a buscar a '+o.c.n,'Recogida a las '+hm12(o.ts)+' en '+cliPlace(o)+' · '+Math.round(p.eta/60)+' min con el tráfico');
+   if(cliBot()){if(C.wa.yo&&C.wa.me)cliSend(C.wa.me,'conductor',cliPYo(o,p)).catch(function(){});if(C.wa.sal||C.wa.lleg)cliWatch(o)}}}
+ if(TAB=='cli')renderCliAg()}
+// Sigue el GPS hasta el cliente: al alejarte 300 m de donde estabas, «va en camino»; a 3 min o 400 m, «está llegando».
+function cliWatch(o){if(CLIWT[o.k]||!navigator.geolocation)return;var C=cliEns(),st={d0:null,last:0,busy:0,id:null},end=o.ts+40*60000;CLIWT[o.k]=st;
+ st.id=navigator.geolocation.watchPosition(function(pos){var now=Date.now();if(now>end){cliUnwatch(o.k);return}var h={la:pos.coords.latitude,lo:pos.coords.longitude},d=gHav(h,o.t.o),s=C.sent[o.k]||{};if(st.d0==null)st.d0=d;
+  if(st.busy||(now-st.last<60000&&d>400))return;st.busy=1;st.last=now;
+  cliEta(h,o.t.o,now).then(function(e){var q=[];s=C.sent[o.k]||{};
+   if(!s.l&&C.wa.lleg&&(d<=400||e.s<=180))q.push(cliSend(o.c.tel,'llegando',cliPLleg(o,Math.min(e.s,180))).then(function(){cliMark(o.k,'l');cliUnwatch(o.k)}));
+   else if(!s.s&&C.wa.sal&&st.d0-d>300)q.push(cliSend(o.c.tel,'salida',cliPSal(o,e.s)).then(function(){cliMark(o.k,'s')}));
+   return Promise.all(q)}).catch(function(){}).then(function(){st.busy=0;if(TAB=='cli')renderCliAg()})},function(){},{enableHighAccuracy:true,maximumAge:10000})}
+function cliUnwatch(k){var st=CLIWT[k];if(st&&st.id!=null)navigator.geolocation.clearWatch(st.id);delete CLIWT[k]}
+// App Android: le deja la agenda de 14 días; ella calcula la salida, avisa y manda los WhatsApp con la app cerrada.
+function cliAndSync(){if(!AND||!AND.setClients)return;var C=cliEns(),now=Date.now(),L=cliOcc(now-30*60000,now+14*864e5).filter(function(o){return o.t.av!==0&&o.t.o&&o.t.o.la!=null}).map(function(o){return {k:o.k,t:o.ts,n:o.c.n,f:cliFirst(o.c.n),tel:cliTel(o.c.tel),o:{t:cliPlace(o),la:o.t.o.la,lo:o.t.o.lo}}});
+ var cn=cliCobNext(),ct=C.cob.on&&cn?cliCobTxt():'',j=JSON.stringify({wa:{url:(C.wa.url||'').trim().replace(/\/+$/,''),key:C.wa.key||'',me:cliTel(C.wa.me),yo:!!C.wa.yo,sal:!!C.wa.sal,lleg:!!C.wa.lleg},mg:C.mg||0,list:L,cob:ct?{k:cn.k,t:cn.t,txt:'Te deben: '+ct}:null});if(j!=CLIAL){CLIAL=j;try{AND.setClients(j)}catch(e){}}}
+function cliAndSent(){if(!AND||!AND.cliSent)return;try{var o=JSON.parse(AND.cliSent()||'{}'),C=cliEns(),ch=0;for(var k in o){C.sent[k]=C.sent[k]||{};['y','s','l'].forEach(function(f){if(o[k][f]&&!C.sent[k][f]){C.sent[k][f]=o[k][f];ch=1}})}if(ch)save()}catch(e){}}
+
+// --- Buscar direcciones: Mapbox (si hay token) y, si no encuentra, OpenStreetMap. Solo República Dominicana.
+async function cliGeo(f){var q=$(f).value.trim(),out=$(f+'_r');if(q.length<3){out.innerHTML='<small>Escribe al menos 3 letras.</small>';return}out.innerHTML='<small>Buscando…</small>';
+ try{var L=await cliGeoFind(q);CLIGEO[f+'_L']=L;out.innerHTML=L.length?L.map(function(x,i){return '<button type="button" class="chip" onclick="cliGeoPick(\''+f+'\','+i+')">'+esc(cliShort(x.t))+'</button>'}).join(''):'<small>No encontré ese lugar. Prueba con el sector o un lugar conocido cerca (ej. «Ágora Mall»).</small>'}
+ catch(e){out.innerHTML='<small>No se pudo buscar (¿sin internet?).</small>'}}
+async function cliGeoFind(q){var L=[];if(ZCFG.mb){try{var r=await fetch('https://api.mapbox.com/search/geocode/v6/forward?q='+encodeURIComponent(q)+'&country=do&language=es&limit=5&proximity=-69.93,18.48&access_token='+encodeURIComponent(ZCFG.mb)),j=await r.json();
+  L=(j.features||[]).map(function(x){return {t:x.properties.full_address||x.properties.name,la:x.geometry.coordinates[1],lo:x.geometry.coordinates[0]}})}catch(e){}}
+ if(!L.length){var r2=await fetch('https://nominatim.openstreetmap.org/search?format=json&countrycodes=do&limit=5&accept-language=es&q='+encodeURIComponent(q));L=(await r2.json()).map(function(x){return {t:x.display_name,la:+x.lat,lo:+x.lon}})}
+ return L}
+function cliShort(t){return String(t||'').split(',').slice(0,3).join(',').trim()}
+function cliGeoPick(f,i){var x=CLIGEO[f+'_L'][i];CLIGEO[f]={t:cliShort(x.t),la:x.la,lo:x.lo};$(f).value=CLIGEO[f].t;$(f+'_r').innerHTML='<small>'+ic('check','ok')+' Ubicación guardada</small>'}
+async function cliGeoHere(f){var out=$(f+'_r');out.innerHTML='<small>Leyendo tu ubicación…</small>';var h=await cliHere();if(!h){out.innerHTML='<small>No pude leer tu ubicación. Revisa el permiso de ubicación.</small>';return}
+ if(!$(f).value.trim())$(f).value='Mi ubicación';CLIGEO[f]={t:$(f).value.trim(),la:h.la,lo:h.lo};out.innerHTML='<small>'+ic('check','ok')+' Guardé el punto donde estás ahora</small>'}
+// Punto de un campo: el elegido de la lista o, si solo escribiste, el primer resultado de la búsqueda.
+async function cliPoint(f){var v=$(f).value.trim();if(!v)return null;if(CLIGEO[f]&&CLIGEO[f].la!=null)return {t:v,la:CLIGEO[f].la,lo:CLIGEO[f].lo};
+ try{var L=await cliGeoFind(v);if(L[0]){var q={t:v,la:L[0].la,lo:L[0].lo,f:cliShort(L[0].t)};if(gHav({la:18.48,lo:-69.93},q)>60000)q.far=1;return q}}catch(e){}return {t:v}}
+// --- Precio sugerido: lo que Uber le cobraría al pasajero por ese viaje (no lo que te llega a ti).
+// Lo que Uber te paga sale de tus últimos 90 días (bruto por km pagado y por hora); sin historial, de tus metas del asistente.
+function cliRates(){var t0=new Date(today()+'T00:00'),K={g:0,k:0},H={g:0,h:0};S.logs.forEach(function(x){if(x.off||!(x.g>0))return;var age=(t0-new Date(x.d+'T00:00'))/864e5;if(age>90||age<0)return;var w=Math.pow(0.5,age/42),km=+x.kmp||+x.km||0;if(km>0){K.g+=x.g*w;K.k+=km*w}if(+x.h>0){H.g+=x.g*w;H.h+=x.h*w}});
+ var n=andNums(),cpk=n.cpk||0;return {gpk:K.k>=100?K.g/K.k:n.kmGood+cpk,gph:H.h>=15?H.g/H.h:n.hrGood+cpk*18,cpk:cpk,hist:K.k>=100&&H.h>=15}}
+// Uber paga por distancia y por tiempo: se toma lo mayor (en tranque cuenta el tiempo). pas = lo que paga el pasajero = drv ÷ (1 − comisión).
+function cliPriceOf(km,min,r,com){var drv=Math.max(r.gpk*km,r.gph*min/60),pas=drv/(1-com),pr=Math.ceil(pas/10)*10,cost=r.cpk*km;return {drv:drv,pas:pas,pr:pr,cost:cost,net:pr-cost}}
+async function cliPriceUI(b){var out=$('clVpr');b.disabled=true;out.innerHTML='<small>Calculando la ruta…</small>';
+ try{var o=await cliPoint('clVo'),ds=await cliPoint('clVd');if(o&&o.la!=null)CLIGEO.clVo=o;if(ds&&ds.la!=null)CLIGEO.clVd=ds;
+  if(!o||o.la==null||!ds||ds.la==null){out.innerHTML='<small>Busca y elige la recogida y el destino para calcular el precio.</small>';return}
+  var ts=new Date(($('clVf').value||today())+'T'+($('clVh').value||'08:00')).getTime(),e=await cliEta(o,ds,ts),com=cliEns().com/100,r=cliRates(),q=cliPriceOf(e.km,e.s/60,r,com);
+  out.innerHTML='<div class="warn" style="background:var(--ac2);color:var(--tx)"><b>Precio sugerido: '+rd(q.pr)+'</b><br><small>'+e.km.toFixed(1)+' km, unos '+Math.round(e.s/60)+' min ('+e.src+'). Por este viaje Uber te pagaría unos '+rd(q.drv)+' y al pasajero le cobraría unos '+rd(q.pas)+', porque se queda el '+Math.round(com*100)+'%. Combustible y mantenimiento: '+rd(q.cost)+'; te quedan '+rd(q.net)+'.'+(r.hist?'':' Tienes poco historial: lo calculé con tus metas del asistente.')+'</small><div class="row"><button type="button" onclick="$(\'clVm\').value='+q.pr+'">Usar '+rd(q.pr)+'</button></div></div>'}
+ catch(x){out.innerHTML='<small>No pude calcular la ruta.</small>'}finally{b.disabled=false}}
+// Estado de cuenta por WhatsApp (desde tu número: no hace falta plantilla).
+function cliStmt(id){var c=cliById(id);if(!c)return;var o=cliOwed(id);cliOpenWa(c.tel,'Hola '+cliFirst(c.n)+', este es tu estado de cuenta de los viajes: '+o.n+' viajes realizados por '+rd(o.due)+'. Pagado: '+rd(o.paid)+'. '+(o.bal>0?'Pendiente: '+rd(o.bal)+'.':o.bal<0?'Tienes a favor '+rd(-o.bal)+'.':'Estás al día.')+' ¡Gracias por tu confianza!')}
+// Esta semana y este mes: lo que hiciste con clientes (precio completo) frente a lo que te llegó de Uber.
+function cliVsUber(){var C=cliEns(),now=new Date(),ws=new Date(now);ws.setHours(0,0,0,0);ws.setDate(ws.getDate()-((ws.getDay()+6)%7));var ms=new Date(now.getFullYear(),now.getMonth(),1);
+ var row=function(lb,from){var f=cliDs(from),cob=C.p.filter(function(x){return x.d>=f}).reduce(function(a,x){return a+x.m},0),L=cliOcc(from.getTime(),Date.now()),val=L.reduce(function(a,o){return a+(o.t.m||0)},0),ub=S.logs.filter(function(l){return l.d>=f&&!l.off}).reduce(function(a,l){return a+(+l.g||0)},0);
+  return '<div class="leg"><span>'+lb+'<br><small>Clientes: '+L.length+' viajes por '+rd(val)+' · cobrado '+rd(cob)+'</small></span><span><small>Uber </small><b>'+rd(ub)+'</b></span></div>'};
+ return row('Esta semana',ws)+row('Este mes',ms)+'<small>Uber: lo que te llegó (ya sin su '+C.com+'%). Clientes: el precio completo, sin comisión.</small>'}
+// Recordatorio de cobro: el día y la hora elegidos, con los clientes que deben.
+function cliCobTxt(){return cliEns().c.map(function(c){return [c,cliOwed(c.id).bal]}).filter(function(x){return x[1]>0}).map(function(x){return x[0].n+' '+rd(x[1])}).join(', ')}
+function cliCobNext(){var C=cliEns(),d=new Date();d.setHours(0,0,0,0);for(var i=0;i<8;i++,d.setDate(d.getDate()+1)){var ds=cliDs(d),t=new Date(ds+'T'+(C.cob.h||'18:00')).getTime();if(d.getDay()==C.cob.dia&&!(C.sent['cob-'+ds]||{}).y&&(i>0||Date.now()<t+12*3600000))return {k:'cob-'+ds,t:t}}return null}
+function cliCobBanner(){var C=cliEns(),tx=C.cob.on&&new Date().getDay()==C.cob.dia?cliCobTxt():'';return tx?'<div class="warn">'+ic('cash','wn')+' <b>Hoy es día de cobro.</b> Te deben: '+esc(tx)+'. <button type="button" class="lnk" onclick="setTab(\'cli\',\'cpag\')">Ver pagos</button></div>':''}
+
+// --- Pantallas
+function cliOpts(sel){var A=cliEns().c.filter(function(c){return !c.arch||c.id==sel});return A.length?A.map(function(c){return '<option value="'+c.id+'"'+(c.id==sel?' selected':'')+'>'+esc(c.n)+'</option>'}).join(''):'<option value="">Primero agrega un cliente</option>'}
+function cliBuild(){var a=$('cli_c');if(!a||a.dataset.b)return;a.dataset.b=1;
+ a.innerHTML='<h2>Clientes</h2><p class="sub">Clientes que te contratan por fuera de Uber. Con su WhatsApp, el bot les avisa cuando vas en camino y cuando estás llegando.</p>'+
+  '<details id="cli_cf"><summary>Agregar cliente</summary><div class="row"><label class="vl">Nombre<input id="clN" autocomplete="off"></label><label class="vl">WhatsApp<input id="clT" type="tel" inputmode="tel" autocomplete="off" placeholder="809 555 1234"></label></div>'+
+  '<div class="row"><label class="vl" style="flex:1 1 100%">Dirección habitual de recogida (opcional)<input id="clD" autocomplete="off" oninput="delete CLIGEO.clD" placeholder="Ej. Residencial Los Prados"></label></div>'+
+  '<div class="row"><button type="button" onclick="cliGeo(\'clD\')">Buscar</button><button type="button" onclick="cliGeoHere(\'clD\')">Estoy aquí</button></div><div id="clD_r" class="geo" aria-live="polite"></div>'+
+  '<div class="row"><label class="vl" style="flex:1 1 100%">Nota (opcional)<input id="clO" autocomplete="off"></label></div>'+
+  '<div class="row"><button class="pri" id="clSave" onclick="cliSaveC(this)">Guardar cliente</button><button type="button" onclick="cliEditC(0)">Cancelar</button></div></details><div id="cli_cl"></div>';
+ $('cli_v').innerHTML='<h2>Agenda de viajes</h2><p class="sub">Viajes con tus clientes. La app calcula a qué hora salir según dónde estás y el tráfico, y te avisa para llegar a la hora acordada.</p>'+
+  '<details id="cli_nv"><summary>Nuevo viaje</summary><div class="row"><label class="vl">Cliente<select id="clVc" onchange="cliPrefill()"></select></label><label class="vl">Precio del viaje (RD$)<input id="clVm" type="number" inputmode="decimal" min="0"></label></div>'+
+  '<div class="row"><label class="vl" style="flex:1 1 100%">Punto de recogida<input id="clVo" autocomplete="off" oninput="delete CLIGEO.clVo" placeholder="Ej. Residencial Los Prados"></label></div>'+
+  '<div class="row"><button type="button" onclick="cliGeo(\'clVo\')">Buscar</button><button type="button" onclick="cliGeoHere(\'clVo\')">Estoy aquí</button></div><div id="clVo_r" class="geo" aria-live="polite"></div>'+
+  '<div class="row"><label class="vl" style="flex:1 1 100%">Destino<input id="clVd" autocomplete="off" oninput="delete CLIGEO.clVd" placeholder="Ej. Torre Empresarial, Piantini"></label></div>'+
+  '<div class="row"><button type="button" onclick="cliGeo(\'clVd\')">Buscar</button></div><div id="clVd_r" class="geo" aria-live="polite"></div>'+
+  '<div class="row"><button type="button" onclick="cliPriceUI(this)">Calcular precio sugerido</button></div><div id="clVpr" aria-live="polite"></div>'+
+  '<div class="row"><label class="vl">Fecha (o desde cuándo)<input id="clVf" type="date"></label><label class="vl">Hora de recogida<input id="clVh" type="time" value="07:30"></label></div>'+
+  '<fieldset class="cli-fs"><legend>¿El viaje se repite?</legend><label><input type="radio" name="clVr" value="0" checked onchange="cliRecUI()"> Único</label><label><input type="radio" name="clVr" value="1" onchange="cliRecUI()"> Recurrente</label></fieldset>'+
+  '<div id="clVrb" hidden><p class="sub" id="clDl">Días que lo llevas</p><div id="clDias" class="cli-dias" role="group" aria-labelledby="clDl"></div><div class="row"><label class="vl">Hasta (opcional)<input id="clVu" type="date"></label></div></div>'+
+  '<div id="clVbr"><div class="row"><label class="vl">Hora de regreso (opcional)<input id="clVb" type="time"></label></div><small>Con hora de regreso se crea también el viaje de vuelta, del destino a la recogida.</small></div>'+
+  '<label class="cli-ck"><input type="checkbox" id="clVa" checked> Avisos automáticos para este viaje</label>'+
+  '<div class="row"><button class="pri" id="clVsave" onclick="cliSaveV(this)">Guardar viaje</button><button type="button" id="clVcancel" hidden onclick="cliVReset();$(\'cli_nv\').open=false">Cancelar</button></div></details><div id="cli_msg" aria-live="polite"></div>'+
+  '<h3>Próximos 7 días</h3><div id="cli_vl"></div><h3>Viajes guardados</h3><div id="cli_vt"></div>';
+ $('cli_p').innerHTML='<h2>Pagos de clientes</h2><p class="sub">Lo que te deben por los viajes hechos y lo que ya te pagaron. El saldo cuenta cada viaje cuya hora ya pasó, menos los que marcaste «No se hizo».</p>'+
+  '<div class="row"><label class="vl">Cliente<select id="clPc"></select></label><label class="vl">Monto (RD$)<input id="clPm" type="number" inputmode="decimal" min="0"></label></div>'+
+  '<div class="row"><label class="vl">Fecha<input id="clPf" type="date"></label><label class="vl">Nota (opcional)<input id="clPn" autocomplete="off"></label></div>'+
+  '<label class="cli-ck"><input type="checkbox" id="clPx" checked> Sumarlo a los ingresos del día</label><div class="row"><button class="pri" onclick="cliSaveP()">Registrar pago</button></div><div id="cli_pmsg" aria-live="polite"></div>'+
+  '<h3>Saldos</h3><div id="cli_pb"></div><h3>Clientes y Uber</h3><div id="cli_pr"></div><h3>Últimos pagos</h3><div id="cli_pl"></div>';
+ $('cli_w').innerHTML='<h2>Bot de WhatsApp</h2><p class="sub">El bot manda los avisos solo, aunque vayas manejando. Se configura una vez con la guía <b>whatsapp-bot/GUIA.md</b> (Meta y Cloudflare) y aquí pegas sus datos.</p>'+
+  '<div class="row"><label class="vl" style="flex:1 1 100%">Dirección del bot<input id="clWu" type="url" autocomplete="off" placeholder="https://mis-finanzas-bot.tu-usuario.workers.dev"></label></div>'+
+  '<div class="row"><label class="vl">Clave del bot (APP_KEY)<input id="clWk" type="password" autocomplete="off"></label><label class="vl">Tu WhatsApp<input id="clWm" type="tel" inputmode="tel" autocomplete="off" placeholder="809 555 1234"></label></div>'+
+  '<label class="cli-ck"><input type="checkbox" id="clWy"> Avisarme a mí cuándo salir</label><label class="cli-ck"><input type="checkbox" id="clWs"> Avisar al cliente cuando voy en camino</label><label class="cli-ck"><input type="checkbox" id="clWl"> Avisar al cliente cuando estoy llegando</label>'+
+  '<div class="row"><label class="vl">Margen extra al salir (minutos)<input id="clWg" type="number" inputmode="numeric" min="0" max="30"></label></div>'+
+  (AND?'':'<label class="cli-ck"><input type="checkbox" id="clWa"> Este aparato manda los avisos automáticos</label><small>Déjalo apagado si usas la app en el teléfono: si no, esta computadora calcularía la salida con su propia ubicación y repetiría los avisos.</small>')+
+  '<h3>Precios y cobros</h3><div class="row"><label class="vl">Comisión que te quita Uber (%)<input id="clWc" type="number" inputmode="numeric" min="0" max="60"></label></div>'+
+  '<small>El precio sugerido es lo que Uber le cobraría al pasajero por ese viaje: lo que Uber te pagaría a ti ÷ (1 − comisión). Con 25%, si Uber te pagaría RD$300, el cliente paga RD$400.</small>'+
+  '<label class="cli-ck"><input type="checkbox" id="clWr"> Recordarme cobrar a los clientes que deben</label><div class="row"><label class="vl">Día<select id="clWd">'+[1,2,3,4,5,6,0].map(function(i){return '<option value="'+i+'">'+CLIWN[i]+'</option>'}).join('')+'</select></label><label class="vl">Hora<input id="clWh" type="time"></label></div>'+
+  '<div class="row"><button class="pri" onclick="cliSaveW()">Guardar</button><button onclick="cliTestW(this)">Probar el bot</button></div><div id="cli_wmsg" aria-live="polite"></div><div id="cli_wst"></div>';
+ cliEditC(0);cliDiasUI();cliWFill();$('clVf').value=today();$('clPf').value=today()}
+function renderCli(){if(!$('cli_c'))return;cliEns();cliBuild();var vc=$('clVc'),pc=$('clPc');if(vc&&document.activeElement!=vc)vc.innerHTML=cliOpts(vc.value);if(pc&&document.activeElement!=pc)pc.innerHTML=cliOpts(pc.value);
+ renderCliC();renderCliAg();renderCliP();cliWSt();cliAndSync()}
+function renderCliC(){var C=cliEns(),el=$('cli_cl');if(!el)return;var A=C.c.filter(function(c){return !c.arch}),X=C.c.filter(function(c){return c.arch}),nx0=cliOcc(Date.now(),Date.now()+15*864e5);
+ var h=A.length?'':'<p class="sub">Todavía no tienes clientes. Toca <b>Agregar cliente</b>.</p>';
+ h+=A.map(function(c){var o=cliOwed(c.id),nx=nx0.filter(function(x){return x.c.id==c.id})[0],tel=cliTel(c.tel);
+  return '<div class="leg"><span><b>'+esc(c.n)+'</b><br><small>'+(tel?'+'+tel:'Sin WhatsApp')+(nx?' · próximo: '+cliDayLbl(nx.ds).toLowerCase()+' '+hm12(nx.ts):'')+(o.bal>0?' · <b style="color:var(--rd)">te debe '+rd(o.bal)+'</b>':o.bal<0?' · a favor '+rd(-o.bal):'')+(c.nota?'<br>'+esc(c.nota):'')+'</small></span>'+
+   '<span class="cli-act">'+(tel?'<a class="lnk" href="tel:+'+tel+'">Llamar</a><a class="lnk" href="https://wa.me/'+tel+'" target="_blank" rel="noopener">WhatsApp</a>':'')+'<button onclick="cliNewTrip('+c.id+')">Viaje</button><button onclick="cliEditC('+c.id+')">Editar</button><button onclick="cliArch(this,'+c.id+',1)">Archivar</button></span></div>'}).join('');
+ if(X.length)h+='<details class="cli-arch"><summary>Archivados ('+X.length+')</summary>'+X.map(function(c){var o=cliOwed(c.id);return '<div class="leg"><span>'+esc(c.n)+(o.bal>0?' <small style="color:var(--rd)">debe '+rd(o.bal)+'</small>':'')+'</span><span class="cli-act"><button onclick="cliArch(this,'+c.id+',0)">Restaurar</button><button class="x" aria-label="Borrar a '+esc(c.n)+' para siempre" onclick="cliDelC(this,'+c.id+')">✕</button></span></div>'}).join('')+'<small>Borrar un cliente borra también sus viajes, sus pagos y lo que debía.</small></details>';
+ el.innerHTML=h}
+// Archivar: el cliente y sus viajes salen de la agenda y de los avisos, pero se guardan su historial y lo que debe.
+function cliArch(b,id,on){var go=function(){var c=cliById(id);if(!c)return;if(on)c.arch=1;else delete c.arch;save();renderCli()};if(on)tap2(b,'¿Archivar?',go);else go()}
+function cliDayLbl(ds){var dd=dayDiff(today(),ds);return dd==0?'Hoy':dd==1?'Mañana':dd==-1?'Ayer':fdate(ds)}
+function cliStat(o){var s=cliEns().sent[o.k]||{},p=CLIP[o.k];
+ if(s.l)return ic('check','ok')+' Avisado que estás llegando ('+hm12(s.l)+')';if(s.s)return ic('check','ok')+' Avisado que vas en camino ('+hm12(s.s)+')';if(s.y)return ic('alert','wn')+' Te avisé que salieras ('+hm12(s.y)+')';
+ if(p&&p.err)return '<small>'+esc(p.err)+'</small>';if(p&&p.leave)return ic('clock')+' Sal a las <b>'+hm12(p.leave)+'</b> · '+Math.round(p.eta/60)+' min, '+p.km.toFixed(1)+' km ('+p.src+')';return ''}
+function renderCliAg(){var C=cliEns(),el=$('cli_vl');if(!el)return;var now=Date.now(),t0=new Date();t0.setHours(0,0,0,0);var L=cliOcc(t0.getTime(),now+7*864e5),h='',last='';
+ h=cliCobBanner();if(!L.length)h+='<p class="sub">No hay viajes en los próximos 7 días.</p>';
+ L.forEach(function(o){if(o.ds!=last){last=o.ds;h+='<p class="cli-day">'+cliDayLbl(o.ds)+'</p>'}var past=o.ts<now-20*60000,soon=!past&&o.ts-now<3*3600000,paid=C.p.some(function(p){return p.ok==o.k});
+  if(soon&&!CLIP[o.k]&&TAB=='cli'&&subOf('cli')=='cvia')cliPlan(o).then(function(){if(TAB=='cli')renderCliAg()});
+  h+='<div class="cli-occ"><div class="ct"><span><b>'+hm12(o.ts)+'</b> · '+esc(o.c.n)+'</span><span>'+(o.t.m>0?rd(o.t.m):'')+'</span></div><small>'+esc(cliPlace(o))+(o.t.ds&&o.t.ds.t?' → '+esc(o.t.ds.t):'')+'</small>'+
+   (cliStat(o)?'<div><small>'+cliStat(o)+'</small></div>':'')+(!past&&!cliBot()&&o.ts-now<3*3600000?'<div><small>Los botones abren WhatsApp con el mensaje listo.</small></div>':'')+'<div class="row">'+
+   (past?(o.t.m>0&&!paid?'<button onclick="cliPaid(\''+o.k+'\')">Cobrado</button>':paid?'<small>'+ic('check','ok')+' Cobrado</small>':''):'<button onclick="cliGo(\''+o.k+'\',\'s\',this)">Ya salí</button><button onclick="cliGo(\''+o.k+'\',\'l\',this)">Llegando</button>')+
+   '<button onclick="cliSkip(this,\''+o.k+'\')">No se hizo</button></div></div>'});
+ el.innerHTML=h;
+ var T=$('cli_vt');if(T)T.innerHTML=C.v.length?C.v.map(function(t){var c=cliById(t.cid),ended=t.rec&&t.hasta&&t.hasta<today();
+  return '<div class="leg"><span><b>'+(c?esc(c.n):'(cliente borrado)')+'</b> · '+(t.rec?cliDiasTxt(t.dias):fdate(t.d))+' '+hm12(cliTs(t,today()))+'<br><small>'+esc((t.o&&t.o.t)||'')+(t.ds&&t.ds.t?' → '+esc(t.ds.t):'')+(t.m>0?' · '+rd(t.m):'')+(t.rec?' · desde '+fdate(t.d)+(t.hasta?' hasta '+fdate(t.hasta):''):'')+(ended?' · terminado':'')+(t.o&&t.o.la==null?' · <b>sin ubicación</b>':'')+(t.av===0?' · sin avisos':'')+'</small></span>'+
+   '<span class="cli-act"><button onclick="cliEditV('+t.id+')">Editar</button>'+(t.rec&&!ended?'<button onclick="cliEndV(this,'+t.id+')">Terminar</button>':'')+'<button class="x" aria-label="Borrar viaje" onclick="cliDelV(this,'+t.id+')">✕</button></span></div>'}).join(''):'<p class="sub">Sin viajes guardados.</p>'}
+function cliDiasTxt(d){d=(d||[]).slice().sort();var s=d.join('');if(s=='12345')return 'Lun a vie';if(s=='123456')return 'Lun a sáb';if(s=='0123456')return 'Todos los días';return d.map(function(i){return CLIWN[i].slice(0,3)}).join(', ')}
+function renderCliP(){var C=cliEns(),el=$('cli_pb');if(!el)return;var tot=0;
+ el.innerHTML=C.c.length?C.c.map(function(c){var o=cliOwed(c.id);if(c.arch&&!o.bal)return '';tot+=Math.max(0,o.bal);return '<div class="leg"><span>'+esc(c.n)+'<br><small>'+o.n+' viajes · '+rd(o.due)+' · pagado '+rd(o.paid)+'</small></span><span class="cli-act"><b'+(o.bal>0?' style="color:var(--rd)"':'')+'>'+(o.bal>0?'Debe '+rd(o.bal):o.bal<0?'A favor '+rd(-o.bal):'Al día')+'</b>'+(cliTel(c.tel).length>=11&&o.n?'<button onclick="cliStmt('+c.id+')">Enviar estado</button>':'')+'</span></div>'}).join('')+(tot>0?'<p><b>Total por cobrar: '+rd(tot)+'</b></p>':''):'<p class="sub">Sin clientes.</p>';
+ var P=C.p.slice().sort(function(a,b){return a.d<b.d?1:-1}).slice(0,30);
+ var R=$('cli_pr');if(R)R.innerHTML=cliVsUber();
+ $('cli_pl').innerHTML=P.length?P.map(function(p){var c=cliById(p.cid);return '<div class="leg"><span>'+(c?esc(c.n):'(cliente borrado)')+' <small>'+fdate(p.d)+(p.n?' · '+esc(p.n):'')+(p.inc?' · en ingresos':'')+'</small></span><span>'+rd(p.m)+' <button class="x" aria-label="Borrar pago" onclick="cliDelP(this,'+p.id+')">✕</button></span></div>'}).join(''):'<p class="sub">Sin pagos registrados.</p>'}
+
+// --- Acciones
+function cliEditC(id){var c=id?cliById(id):null;CLIED=c?c.id:0;$('clN').value=c?c.n:'';$('clT').value=c?c.tel||'':'';$('clD').value=c&&c.dir?c.dir.t:'';$('clO').value=c?c.nota||'':'';delete CLIGEO.clD;if(c&&c.dir&&c.dir.la!=null)CLIGEO.clD=c.dir;$('clD_r').innerHTML='';
+ $('clSave').textContent=c?'Guardar cambios':'Guardar cliente';var d=$('cli_cf');if(c){d.open=true;$('clN').focus()}else if(id===0&&d.open&&!$('clN').value)d.open=false}
+async function cliSaveC(b){var C=cliEns(),n=$('clN').value.trim(),tel=$('clT').value.trim();if(!n){$('clN').focus();return}
+ if(tel&&cliTel(tel).length<11){$('clD_r').innerHTML='<small>El WhatsApp debe tener 10 dígitos (ej. 809 555 1234).</small>';$('clT').focus();return}
+ b.disabled=true;var dir=await cliPoint('clD');b.disabled=false;var c=CLIED?cliById(CLIED):null;if(!c){c={id:C.nid++};C.c.push(c)}c.n=n;c.tel=tel;c.dir=dir;c.nota=$('clO').value.trim();
+ save();cliEditC(0);$('cli_cf').open=false;renderCli()}
+function cliDelC(b,id){tap2(b,'¿Borrar?',function(){var C=cliEns();C.c=C.c.filter(function(c){return c.id!=id});C.v=C.v.filter(function(t){return t.cid!=id});C.p=C.p.filter(function(x){return x.cid!=id});save();renderCli()})}
+function cliNewTrip(id){setTab('cli','cvia');cliVReset();var d=$('cli_nv');d.open=true;$('clVc').value=id;cliPrefill();$('clVm').focus()}
+function cliPrefill(){var c=cliById(+$('clVc').value);if(c&&c.dir&&!$('clVo').value.trim()){$('clVo').value=c.dir.t;if(c.dir.la!=null)CLIGEO.clVo=c.dir}}
+function cliRecUI(){var r=document.querySelector('input[name=clVr]:checked');$('clVrb').hidden=!(r&&r.value=='1')}
+function cliDiasUI(){$('clDias').innerHTML=[1,2,3,4,5,6,0].map(function(i){var on=CLIDIAS.indexOf(i)>=0;return '<button type="button" aria-pressed="'+on+'" aria-label="'+CLIWN[i]+'" onclick="cliDia('+i+')">'+CLIWD[i]+'</button>'}).join('')}
+function cliDia(i){var k=CLIDIAS.indexOf(i);if(k>=0)CLIDIAS.splice(k,1);else CLIDIAS.push(i);cliDiasUI()}
+var CLIVED=0;
+async function cliSaveV(b){var C=cliEns(),cid=+$('clVc').value,rec=document.querySelector('input[name=clVr]:checked').value=='1',d=$('clVf').value||today(),h=$('clVh').value;
+ if(!cliById(cid)){cliSay('Primero agrega el cliente en la pestaña Clientes.');return}if(!$('clVo').value.trim()){$('clVo').focus();return}if(!h){$('clVh').focus();return}if(rec&&!CLIDIAS.length){cliSay('Elige al menos un día.');return}
+ b.disabled=true;b.textContent='Buscando las direcciones…';var o=await cliPoint('clVo'),ds=await cliPoint('clVd');b.disabled=false;
+ var base={cid:cid,d:d,h:h,m:+$('clVm').value||0,rec:rec?1:0,dias:rec?CLIDIAS.slice():[],hasta:rec?$('clVu').value:'',av:$('clVa').checked?1:0},ed=CLIVED,back=ed?'':$('clVb').value;
+ if(ed){var t=C.v.filter(function(x){return x.id==ed})[0];if(t)Object.assign(t,base,{o:o,ds:ds});for(var kk in CLIP)if(kk.indexOf(ed+'-')==0)delete CLIP[kk]}
+ else{C.v.push(Object.assign({id:C.nid++,o:o,ds:ds,off:[]},base));if(back)C.v.push(Object.assign({id:C.nid++,o:ds||{t:''},ds:o,off:[]},base,{h:back}))}
+ save();cliVReset();$('cli_nv').open=false;
+ var miss=o&&o.la==null,far=o&&o.far;
+ cliSay(ic('check','ok')+(ed?' Viaje actualizado':' Viaje guardado'+(back?' (con regreso)':''))+(miss?'. <b>No encontré el punto de recogida en el mapa</b>: sin él no puedo calcular la hora de salida. Toca Editar y luego Buscar.':'.')+
+  (o&&o.f?'<br><small>Recogida ubicada en: '+esc(o.f)+(far?' — <b>queda lejos de Santo Domingo: revisa que sea el lugar correcto</b>':'')+'</small>':''),!miss&&!far);renderCli()}
+function cliEditV(id){var t=cliEns().v.filter(function(x){return x.id==id})[0];if(!t)return;CLIVED=id;var d=$('cli_nv');d.open=true;$('clVc').innerHTML=cliOpts(t.cid);$('clVc').value=t.cid;$('clVm').value=t.m||'';
+ $('clVo').value=(t.o&&t.o.t)||'';delete CLIGEO.clVo;if(t.o&&t.o.la!=null)CLIGEO.clVo=t.o;$('clVd').value=(t.ds&&t.ds.t)||'';delete CLIGEO.clVd;if(t.ds&&t.ds.la!=null)CLIGEO.clVd=t.ds;
+ $('clVf').value=t.d;$('clVh').value=t.h;document.querySelector('input[name=clVr][value="'+(t.rec?1:0)+'"]').checked=true;cliRecUI();CLIDIAS=(t.dias&&t.dias.length?t.dias:[1,2,3,4,5]).slice();cliDiasUI();$('clVu').value=t.hasta||'';$('clVa').checked=t.av!==0;
+ $('clVbr').hidden=true;$('clVpr').innerHTML='';$('clVsave').textContent='Guardar cambios';$('clVcancel').hidden=false;d.scrollIntoView({block:'start'})}
+function cliVReset(){CLIVED=0;if(!$('clVo'))return;['clVo','clVd','clVm','clVb','clVu'].forEach(function(f){$(f).value='';delete CLIGEO[f];var r=$(f+'_r');if(r)r.innerHTML=''});$('clVpr').innerHTML='';$('clVbr').hidden=false;$('clVsave').textContent='Guardar viaje';$('clVcancel').hidden=true;$('clVf').value=today()}
+function cliEndV(b,id){tap2(b,'¿Terminar?',function(){var t=cliEns().v.filter(function(x){return x.id==id})[0];if(!t)return;var y=new Date();if(cliTs(t,today())>Date.now())y.setDate(y.getDate()-1);t.hasta=cliDs(y);save();renderCli()})}
+function cliDelV(b,id){tap2(b,'¿Borrar?',function(){var C=cliEns();C.v=C.v.filter(function(t){return t.id!=id});save();renderCli()})}
+function cliSkip(b,k){tap2(b,'¿Seguro?',function(){var id=+k.split('-')[0],ds=k.slice(String(id).length+1),t=cliEns().v.filter(function(x){return x.id==id})[0];if(!t)return;t.off=t.off||[];if(t.off.indexOf(ds)<0)t.off.push(ds);save();renderCli()})}
+function cliPayAdd(cid,m,d,n,inc,ok){var C=cliEns(),c=cliById(cid),lbl='Cliente: '+(c?c.n:'');C.p.push({id:C.nid++,cid:cid,m:m,d:d,n:n||'',inc:inc?1:0,lbl:inc?lbl:'',ok:ok||''});if(inc)cliInc(d,lbl,m);save();all()}
+// El cobro va a los extras del día ya registrado; si ese día no hay registro, se crea uno «sin Uber» que se une
+// al registro de Uber cuando lo guardes (addLog).
+function cliInc(d,c,m){var L=S.logs.filter(function(l){return l.d==d}),lg=L.filter(function(l){return !l.off}).pop()||L.pop();
+ if(!lg){lg={d:d,g:0,e:{glp:0,comida:0,hormiga:0,otros:0},x:[],h:0,off:true,n:'Clientes'};S.logs.push(lg);S.logs.sort(function(a,b){return a.d<b.d?-1:1})}lg.x=lg.x||[];lg.x.push({c:c,v:m})}
+function cliPaid(k){var o=cliFind(k);if(!o)return;cliPayAdd(o.c.id,o.t.m,o.ds,'Viaje '+hm12(o.ts),true,k);cliSay(ic('check','ok')+' Cobro de '+rd(o.t.m)+' a '+esc(o.c.n)+' registrado y sumado a los ingresos de '+cliDayLbl(o.ds).toLowerCase()+'.',1)}
+function cliSaveP(){var cid=+$('clPc').value,m=+$('clPm').value,d=$('clPf').value||today();if(!cliById(cid)){$('cli_pmsg').innerHTML='<div class="warn">Primero agrega un cliente.</div>';return}if(!(m>0)){$('clPm').focus();return}
+ cliPayAdd(cid,m,d,$('clPn').value.trim(),$('clPx').checked);$('clPm').value='';$('clPn').value='';$('cli_pmsg').innerHTML='<div class="warn" style="background:var(--ac2);color:var(--ac)">Pago de '+rd(m)+' registrado.</div>'}
+function cliDelP(b,id){tap2(b,'¿Borrar?',function(){var C=cliEns(),p=C.p.filter(function(x){return x.id==id})[0];if(!p)return;C.p=C.p.filter(function(x){return x.id!=id});
+ if(p.inc){var c=cliById(p.cid),nm=p.lbl||('Cliente: '+(c?c.n:''));S.logs.some(function(lg){var i=lg.d==p.d&&lg.x?lg.x.findIndex(function(x){return x.c==nm&&x.v==p.m}):-1;if(i>=0)lg.x.splice(i,1);return i>=0});
+ S.logs=S.logs.filter(function(l){return !(l.n=='Clientes'&&l.off&&!(l.x||[]).length&&!l.g)})}save();all()})}
+function cliWFill(){var C=cliEns(),w=C.wa;$('clWu').value=w.url||'';$('clWk').value=w.key||'';$('clWm').value=w.me||'';$('clWy').checked=!!w.yo;$('clWs').checked=!!w.sal;$('clWl').checked=!!w.lleg;$('clWg').value=C.mg;
+ $('clWc').value=C.com;$('clWr').checked=!!C.cob.on;$('clWd').value=C.cob.dia;$('clWh').value=C.cob.h||'18:00';if($('clWa'))$('clWa').checked=cliAuto()}
+function cliSaveW(){var C=cliEns(),u=$('clWu').value.trim();if(u&&!/^https:\/\//.test(u)){$('cli_wmsg').innerHTML='<div class="warn">La dirección del bot debe empezar con https://</div>';return}
+ C.wa={url:u,key:$('clWk').value.trim(),me:$('clWm').value.trim(),yo:$('clWy').checked,sal:$('clWs').checked,lleg:$('clWl').checked};C.mg=Math.max(0,Math.min(30,+$('clWg').value||0));
+ C.com=Math.max(0,Math.min(60,+$('clWc').value||0));C.cob={on:$('clWr').checked?1:0,dia:+$('clWd').value,h:$('clWh').value||'18:00'};
+ if($('clWa'))try{localStorage.setItem('mf-cli-auto',$('clWa').checked?'1':'0')}catch(e){}
+ save();cliAndSync();cliWSt();renderCliAg();$('cli_wmsg').innerHTML='<div class="warn" style="background:var(--ac2);color:var(--ac)">Guardado.</div>'}
+async function cliTestW(b){cliSaveW();var w=cliEns().wa,m=$('cli_wmsg');if(!w.url||!w.key||!w.me){m.innerHTML='<div class="warn">Pon la dirección, la clave y tu WhatsApp.</div>';return}b.disabled=true;m.innerHTML='<small>Probando…</small>';
+ try{var r=await fetch(w.url.replace(/\/+$/,'')+'/'),j=await r.json();if(!j.configurado)throw new Error('el bot responde, pero le faltan WA_TOKEN, WA_PHONE_ID o APP_KEY en Cloudflare');
+  await cliSend(w.me,'prueba',[]);m.innerHTML='<div class="warn" style="background:var(--ac2);color:var(--ac)">'+ic('check','ok')+' Listo: te llegó un WhatsApp de prueba («Hello World») del bot.</div>'}
+ catch(e){m.innerHTML='<div class="warn">No funcionó: '+esc(cliErr(e))+'.</div>'}b.disabled=false}
+function cliWSt(){var el=$('cli_wst');if(!el)return;var w=cliEns().wa;el.innerHTML=(cliBot()?'':'<div class="warn">'+ic('alert','wn')+' <b>Modo sin bot:</b> los botones «Ya salí» y «Llegando» abren WhatsApp con el mensaje escrito para el cliente y tú tocas Enviar. El aviso de cuándo salir funciona igual. Cuando el bot esté listo, pega sus datos arriba y los avisos saldrán solos.</div>')+'<p class="sub">'+(AND&&AND.setClients?ic('check','ok')+' La app Android revisa tus viajes aunque esté cerrada y avisa a la hora justa.':AND?ic('alert','wn')+' Instala la versión 2.8 de la app para que los avisos funcionen con la app cerrada.':cliAuto()?ic('check','ok')+' Este aparato manda los avisos automáticos, pero solo con la página abierta.':ic('alert','wn')+' En este navegador los avisos automáticos están apagados (los hace tu teléfono). Los botones de la agenda sí funcionan.')+
+  (ZCFG.mb?'':'<br>'+ic('alert','wn')+' Sin token de Mapbox, el tiempo hasta el cliente se estima por distancia y hora pico. Ponlo en Más → Zona y Uber → Ajustes para usar el tráfico real.')+'</p>'}
+setTimeout(cliTick,5000);setInterval(cliTick,60000);
+
+// ===== Cuenta y nube (Firebase): inicio de sesión con correo y copia de todos tus datos en tu cuenta.
+// Usa la API REST de Firebase (sin librerías): Authentication (correo y contraseña) y Firestore. Cada usuario solo puede
+// leer y escribir su documento users/{uid} (reglas en firebase/firestore.rules). Los datos van en trozos de 300 KB.
+var FBCFG={apiKey:'',projectId:''};
+function fbCfg(){var o={apiKey:FBCFG.apiKey,projectId:FBCFG.projectId};try{var s=JSON.parse(localStorage.getItem('mf-fb')||'{}');if(s.apiKey&&s.projectId)o=s}catch(e){}return o.apiKey&&o.projectId?o:null}
+function fbAuth(){try{return JSON.parse(localStorage.getItem('mf-auth')||'null')}catch(e){return null}}
+function fbSetAuth(a){try{if(a)localStorage.setItem('mf-auth',JSON.stringify(a));else localStorage.removeItem('mf-auth')}catch(e){}}
+function fbSync(){try{return JSON.parse(localStorage.getItem('mf-sync')||'{}')||{}}catch(e){return {}}}
+function fbSetSync(o){try{localStorage.setItem('mf-sync',JSON.stringify(o))}catch(e){}}
+var FBERR={EMAIL_EXISTS:'Ya hay una cuenta con ese correo. Toca «Entrar».',INVALID_LOGIN_CREDENTIALS:'Correo o contraseña incorrectos.',INVALID_PASSWORD:'Contraseña incorrecta.',EMAIL_NOT_FOUND:'No hay ninguna cuenta con ese correo.',INVALID_EMAIL:'Ese correo no es válido.',WEAK_PASSWORD:'La contraseña debe tener al menos 6 caracteres.',MISSING_PASSWORD:'Escribe la contraseña.',TOO_MANY_ATTEMPTS_TRY_LATER:'Demasiados intentos. Espera unos minutos.',USER_DISABLED:'Esta cuenta está desactivada.',OPERATION_NOT_ALLOWED:'Falta activar «Correo electrónico/contraseña» en Firebase → Authentication.',CONFIGURATION_NOT_FOUND:'Falta activar Authentication en tu proyecto de Firebase.',PERMISSION_DENIED:'Firebase rechazó el acceso: revisa las reglas de Firestore.',NOT_FOUND:'Falta crear la base de datos Firestore en Firebase.',TOKEN_EXPIRED:'La sesión venció. Entra otra vez.',INVALID_REFRESH_TOKEN:'La sesión venció. Entra otra vez.'};
+function fbMsg(e){var m=String(e&&e.message||e||''),k=m.split(/[ :]/)[0];return FBERR[k]||(/API key/i.test(m)?'La clave de Firebase (apiKey) no es válida.':/fetch|network/i.test(m)?'Sin conexión a internet.':m||'Error desconocido')}
+async function fbPost(url,body,form){var r=await fetch(url,{method:'POST',headers:{'Content-Type':form?'application/x-www-form-urlencoded':'application/json'},body:form?body:JSON.stringify(body)}),j={};try{j=await r.json()}catch(e){}
+ if(!r.ok)throw new Error((j.error&&(j.error.message||j.error.status))||('HTTP '+r.status));return j}
+async function fbLogin(email,pw,create){var c=fbCfg();if(!c)throw new Error('La nube no está configurada.');
+ var j=await fbPost('https://identitytoolkit.googleapis.com/v1/accounts:'+(create?'signUp':'signInWithPassword')+'?key='+c.apiKey,{email:email,password:pw,returnSecureToken:true});
+ var a={e:j.email||email,uid:j.localId,it:j.idToken,rt:j.refreshToken,exp:Date.now()+(+j.expiresIn||3600)*1000-60000};fbSetAuth(a);return a}
+async function fbToken(){var a=fbAuth(),c=fbCfg();if(!a||!c)throw new Error('Sin sesión.');if(Date.now()<a.exp)return a;
+ var j=await fbPost('https://securetoken.googleapis.com/v1/token?key='+c.apiKey,'grant_type=refresh_token&refresh_token='+encodeURIComponent(a.rt),true);
+ a.it=j.id_token;a.rt=j.refresh_token;a.exp=Date.now()+(+j.expires_in||3600)*1000-60000;fbSetAuth(a);return a}
+function fbDoc(c,a,i){return 'projects/'+c.projectId+'/databases/(default)/documents/users/'+a.uid+(i!=null?'/parts/p'+i:'')}
+async function fbFetch(path,opt){var a=await fbToken();opt=opt||{};opt.headers={'Authorization':'Bearer '+a.it,'Content-Type':'application/json'};var r=await fetch('https://firestore.googleapis.com/v1/'+path,opt);if(r.status==404)return null;var j={};try{j=await r.json()}catch(e){}
+ if(!r.ok)throw new Error((j.error&&(j.error.status||j.error.message))||('HTTP '+r.status));return j}
+// Además de S, viajan los ajustes que viven aparte (zona, asistente, IA, avisos, tema).
+var FBLS=['fin-zcfg','fin-and','fin-ai','fin-mem','fin-ntf','fin-theme'],FBCH=300000,FB={busy:0,t:null,msg:'',applying:0};
+async function fbPush(){var a=fbAuth(),c=fbCfg();if(!a||!c||FB.busy)return;FB.busy=1;
+ try{a=await fbToken();var ls={};FBLS.forEach(function(k){try{var v=localStorage.getItem(k);if(v!=null)ls[k]=v}catch(e){}});
+  var upd=Date.now(),body=JSON.stringify({S:S,ls:ls}),n=Math.max(1,Math.ceil(body.length/FBCH)),sy=fbSync(),W=[];
+  for(var i=0;i<n;i++)W.push({update:{name:fbDoc(c,a,i),fields:{d:{stringValue:body.slice(i*FBCH,(i+1)*FBCH)}}}});
+  for(var k=n;k<(sy.uid==a.uid?sy.n||0:0);k++)W.push({delete:fbDoc(c,a,k)});
+  W.push({update:{name:fbDoc(c,a),fields:{upd:{integerValue:String(upd)},n:{integerValue:String(n)},dev:{stringValue:(AND?'App Android':'Navegador')+' · '+PAGEV},email:{stringValue:a.e}}}});
+  await fbFetch('projects/'+c.projectId+'/databases/(default)/documents:commit',{method:'POST',body:JSON.stringify({writes:W})});
+  fbSetSync({uid:a.uid,upd:upd,n:n,dirty:0,at:Date.now()});FB.msg=''}
+ catch(e){FB.msg=fbMsg(e);var s2=fbSync();s2.dirty=1;fbSetSync(s2)}finally{FB.busy=0;renderNube()}}
+async function fbMeta(){var c=fbCfg(),a=fbAuth(),j=await fbFetch(fbDoc(c,a));if(!j||!j.fields)return null;var f=j.fields;return {upd:+(f.upd&&f.upd.integerValue)||0,n:+(f.n&&f.n.integerValue)||0,dev:f.dev?f.dev.stringValue:''}}
+async function fbPull(m){var c=fbCfg(),a=fbAuth(),P=[];for(var i=0;i<m.n;i++)P.push(fbFetch(fbDoc(c,a,i)));var R=await Promise.all(P);
+ return JSON.parse(R.map(function(x){return x&&x.fields&&x.fields.d?x.fields.d.stringValue:''}).join(''))}
+// Reemplaza los datos del teléfono por los de la cuenta (los de antes quedan como punto de restauración) y recarga.
+async function fbApply(m){var o=await fbPull(m);if(!o||!validState(o.S))throw new Error('Los datos de la cuenta no son válidos.');FB.applying=1;
+ try{if(o.ls)Object.keys(o.ls).forEach(function(k){if(FBLS.indexOf(k)>=0)try{localStorage.setItem(k,o.ls[k])}catch(e){}});await applyState(o.S)}finally{FB.applying=0}
+ fbSetSync({uid:fbAuth().uid,upd:m.upd,n:m.n,dirty:0,at:Date.now()});location.reload()}
+function fbQ(){if(FB.applying||!fbAuth())return;var s=fbSync();s.dirty=1;s.lt=Date.now();fbSetSync(s);clearTimeout(FB.t);FB.t=setTimeout(fbPush,8000)}
+// Al abrir: si otro teléfono guardó algo más nuevo, se baja; si hay cambios de los dos lados, gana el más reciente.
+async function fbOpen(){var a=fbAuth();if(!a||!fbCfg())return;try{var m=await fbMeta(),sy=fbSync();if(sy.uid!=a.uid){loginShow('in');return}
+ if(!m){await fbPush();return}if(m.upd>(sy.upd||0)&&(!sy.dirty||m.upd>(sy.lt||0))){await fbApply(m);return}if(sy.dirty)await fbPush()}catch(e){FB.msg=fbMsg(e);renderNube()}}
+document.addEventListener('visibilitychange',function(){if(document.visibilityState=='hidden'&&fbAuth()&&fbSync().dirty){clearTimeout(FB.t);fbPush()}});
+// --- Ventana de inicio de sesión (la primera vez que abres la app; luego desde Más → Respaldo).
+var LG={mode:'in',msg:'',busy:0,meta:null};
+function loginShow(m){var d=$('login');if(!d){d=document.createElement('div');d.id='login';d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');d.setAttribute('aria-labelledby','lgt');document.body.appendChild(d)}LG.mode=m||'in';LG.msg='';loginDraw();setTimeout(function(){var i=d.querySelector('input');if(i)i.focus()},50)}
+function loginClose(skip){if(skip)try{localStorage.setItem('mf-login-skip','1')}catch(e){}var d=$('login');if(d)d.remove();renderNube()}
+function loginDraw(){var d=$('login');if(!d)return;var c=fbCfg(),m=LG.mode,h='<div class="lgbox"><div class="lgb"><i aria-hidden="true">MF</i><div><h2 id="lgt">Mis Finanzas</h2><small>Tus datos guardados en tu cuenta y en cualquier teléfono.</small></div></div>';
+ if(m=='pick'){var dt=new Date(LG.meta.upd).toLocaleString('es-DO',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'});
+  h+='<p>Tu cuenta ya tiene datos (guardados el '+dt+(LG.meta.dev?' desde '+esc(LG.meta.dev):'')+') y este teléfono también tiene los suyos ('+S.logs.length+' días registrados). ¿Cuáles uso?</p><button class="pri" onclick="loginPick(1,this)">Usar los de mi cuenta</button><button style="width:100%;margin-top:8px" onclick="loginPick(0,this)">Usar los de este teléfono y subirlos</button><small>Los datos que no elijas quedan guardados como punto de restauración en Más → Respaldo.</small>'}
+ else if(m=='cfg'){var o=c||{apiKey:'',projectId:''};h+='<p class="sub">Pega los datos de tu proyecto de Firebase (Configuración del proyecto → Tus apps → Web). Guía: <b>firebase/GUIA.md</b>.</p><form onsubmit="return loginCfg(event)"><label>apiKey<input id="lgk" autocomplete="off" value="'+esc(o.apiKey)+'" required></label><label>projectId<input id="lgp" autocomplete="off" value="'+esc(o.projectId)+'" required></label><button class="pri">Guardar</button></form><button class="lnk" style="margin-top:10px" onclick="loginShow(\'in\')">Volver</button>'}
+ else if(!c)h+='<p>La nube todavía no está configurada en esta app. Puedes usarla sin cuenta: tus datos quedan solo en este teléfono y podrás crear tu cuenta más adelante en <b>Más → Respaldo</b>.</p><button class="pri" onclick="loginClose(1)">Usar sin cuenta</button><button class="lnk" style="margin-top:12px" onclick="loginShow(\'cfg\')">Configurar Firebase</button>';
+ else{var up=m=='up';h+='<div class="lgtab" role="group" aria-label="Elegir"><button type="button" aria-pressed="'+!up+'" onclick="loginShow(\'in\')">Entrar</button><button type="button" aria-pressed="'+up+'" onclick="loginShow(\'up\')">Crear cuenta</button></div>'+
+  '<form onsubmit="return loginGo(event)"><label>Correo<input id="lge" type="email" autocomplete="email" inputmode="email" required></label><label>Contraseña<input id="lgw" type="password" autocomplete="'+(up?'new-password':'current-password')+'" minlength="6" required></label>'+
+  (up?'<label>Repite la contraseña<input id="lgw2" type="password" autocomplete="new-password" minlength="6" required></label>':'')+'<button class="pri"'+(LG.busy?' disabled':'')+'>'+(LG.busy?'Un momento…':up?'Crear mi cuenta':'Entrar')+'</button></form>'+
+  (up?'':'<button class="lnk" style="margin-top:12px" onclick="loginReset()">Olvidé mi contraseña</button>')+'<button class="lnk" style="margin-top:12px;display:block" onclick="loginClose(1)">Usar sin cuenta (solo en este teléfono)</button>'}
+ h+=(LG.msg?'<div class="warn" role="alert">'+LG.msg+'</div>':'')+'</div>';d.innerHTML=h}
+function loginCfg(e){e.preventDefault();var k=$('lgk').value.trim(),p=$('lgp').value.trim();try{localStorage.setItem('mf-fb',JSON.stringify({apiKey:k,projectId:p}))}catch(x){}loginShow('in');return false}
+async function loginGo(e){e.preventDefault();var em=$('lge').value.trim(),pw=$('lgw').value,up=LG.mode=='up';if(up&&pw!=$('lgw2').value){LG.msg='Las contraseñas no coinciden.';loginDraw();return false}
+ LG.busy=1;LG.msg='';loginDraw();
+ try{await fbLogin(em,pw,up);var m=await fbMeta(),local=S.logs.length>0||cliEns().c.length>0;
+  if(!m){await fbPush();loginClose()}else if(!local)await fbApply(m);else{LG.meta=m;LG.busy=0;LG.mode='pick';loginDraw()}}
+ catch(x){fbSetAuth(null);LG.msg=esc(fbMsg(x));LG.busy=0;loginDraw();var i=$('lge');if(i)i.value=em}
+ LG.busy=0;return false}
+async function loginPick(cloud,b){b.disabled=true;try{if(cloud)await fbApply(LG.meta);else{await addPoint('pre');await fbPush();loginClose()}}catch(x){LG.msg=esc(fbMsg(x));loginDraw()}}
+async function loginReset(){var em=($('lge')||{}).value;if(!em){LG.msg='Escribe tu correo y toca otra vez «Olvidé mi contraseña».';loginDraw();return}
+ try{await fbPost('https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key='+fbCfg().apiKey,{requestType:'PASSWORD_RESET',email:em});LG.msg='Te envié un correo a '+esc(em)+' para cambiar la contraseña.'}catch(x){LG.msg=esc(fbMsg(x))}loginDraw();var i=$('lge');if(i)i.value=em}
+// Cerrar sesión: sube lo pendiente y borra los datos de este teléfono (siguen en tu cuenta), para que otra persona pueda entrar con la suya.
+function fbLogout(b){tap2(b,'¿Seguro? Toca otra vez',async function(){if(fbSync().dirty){await fbPush();if(fbSync().dirty){FB.msg='No pude subir tus últimos cambios ('+FB.msg+'). Conéctate a internet antes de cerrar la sesión.';renderNube();return}}
+ fbSetAuth(null);fbSetSync({});try{if(AND&&AND.setClients)AND.setClients('{}')}catch(e){}try{Object.keys(localStorage).forEach(function(k){if(k==KEY||k.indexOf('fin-')==0||k.indexOf(KEY+'-bak')==0||k=='mf-login-skip')localStorage.removeItem(k)})}catch(e){}
+ try{await IDB.put('main','');var B=await IDB.listB();await Promise.all(B.map(function(x){return IDB.delB(x.id)}))}catch(e){}location.reload()})}
+function renderNube(){var el=$('nube');if(!el)return;var c=fbCfg(),a=fbAuth(),sy=fbSync(),h='<h2>Cuenta y nube</h2>';
+ if(!c)h+='<p class="sub">Guarda tus datos en tu cuenta de Firebase (gratis) para no perderlos y usarlos en otro teléfono. Primero crea el proyecto con la guía <b>firebase/GUIA.md</b>.</p><button class="pri" onclick="loginShow(\'cfg\')">Configurar Firebase</button>';
+ else if(!a)h+='<p class="sub">Entra con tu cuenta para guardar tus datos en la nube y usarlos en cualquier teléfono. Cada persona ve solo los suyos.</p><button class="pri" onclick="loginShow(\'in\')">Entrar o crear cuenta</button>';
+ else h+='<p>'+ic('check','ok')+' Sesión iniciada: <b>'+esc(a.e)+'</b></p><p class="sub">'+(FB.busy?'Guardando en la nube…':sy.dirty?'Hay cambios por subir (se suben solos en unos segundos).':sy.at?'Todo guardado en la nube · '+new Date(sy.at).toLocaleString('es-DO',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):'')+'</p>'+
+  '<div class="row"><button onclick="fbPush()">Guardar ahora</button><button onclick="fbLogout(this)">Cerrar sesión</button></div><small>Al cerrar la sesión, los datos se borran de este teléfono y quedan en tu cuenta.</small>';
+ if(FB.msg)h+='<div class="warn" role="alert">'+esc(FB.msg)+'</div>';el.innerHTML=h}
+
 // App instalable (PWA): service worker, instalación y avisos de vencimientos.
 // El SW no puede leer localStorage, así que la página le deja la lista de vencimientos en Cache Storage.
 var PWA={ok:location.protocol=='https:'||/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname),reg:null,ev:null,t:null};
@@ -3141,6 +3507,8 @@ HNAV=true;
 addEventListener("hashchange",function(){var h=location.hash.slice(1).split("/");if(h[0]&&SUBS[h[0]]&&(h[0]!=TAB||(h[1]&&h[1]!=subOf(TAB))))setTab(h[0],h[1])});
 $("fecha").value=today();all();
 renderVT();idbRecover();renderPwa();fiBoot();
+// Primera vez: ventana para entrar o crear la cuenta (o seguir sin cuenta). Con sesión: trae lo último de la nube.
+try{if(fbAuth())fbOpen();else if(!localStorage.getItem('mf-login-skip'))loginShow('in')}catch(e){}
 </script>
 </body>
 </html>
