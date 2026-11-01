@@ -522,7 +522,7 @@ items:[
 {id:9,name:"Ahorro mínimo diario",amt:100,freq:"d",total:0,prio:3,sv:1}],
 split:[{k:"res",n:"Fondo para días malos (hasta su meta)",p:12.5},{k:"extra",n:"Abono extra a deudas (tarjeta primero)",p:42.5},{k:"ahorro",n:"Ahorro",p:15},{k:"super",n:"Supermercado de la casa",p:20},{k:"pers",n:"Personal / ocio",p:10}],
 logs:[]}}
-var SCHEMA=6,_sm=null,_nosnap=false;
+var SCHEMA=6,_sm=null,_nosnap=false,PAGEV='mf-v36';
 var S;
 try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 function upgrade(){if(S&&S.items&&(S.v||0)<SCHEMA){try{localStorage.setItem(KEY+'-bak-'+(S.v||0)+'-'+Date.now(),JSON.stringify(S));pruneBak()}catch(e){}}
@@ -2544,7 +2544,7 @@ function renderAndCf(){var el=$('and_cf');if(!el)return;var N=andNums(),I=AND?an
   '<p class="sub" style="margin:0 0 8px">Guarda el texto que el lector ve en Uber Driver (las últimas 15 lecturas, solo en tu teléfono). Recibe 2 o 3 ofertas, toca «Copiar» y envíamelo para ajustar el lector a tu pantalla. Apágalo al terminar: puede incluir el nombre del pasajero.</p>'+
   '<div class="row"><button onclick="AND.setDiag('+(!I.diag)+');renderAndCf()">'+(I.diag?'Apagar y borrar':'Activar diagnóstico')+'</button>'+(D.length?'<button onclick="andCopyDiag(this)">Copiar</button>':'')+'</div>'+
   D.slice().reverse().map(function(x){return '<div class="arow"><small>'+new Date(x.t).toLocaleTimeString('es-DO')+' · '+(x.ok?'✅ oferta reconocida':'sin oferta')+'</small><div style="font-size:12px;word-break:break-word;margin-top:4px">'+esc(x.x)+'</div></div>'}).join(''));
-  h+='<p style="margin-top:10px"><small>App Android versión '+esc(I.v||'')+'.</small></p>'}
+  h+='<p style="margin-top:10px"><small>App Android versión '+esc(I.v||'')+' · página '+PAGEV+'.</small></p>'}
  el.innerHTML=h}
 function andJorLine(J){var st=andJ('tripStatus')||{},I=andJ('info')||{},T=andOffers(today()).filter(function(o){return o.t>=J.start}),ok=T.filter(function(o){return o.v==2}).length,V=andTrips(J.start);
  return (V.length?'<div class="fi-l"><span>🚗</span><span><b>'+V.length+(V.length==1?' viaje':' viajes')+'</b> captados · <b>'+rd(V.reduce(function(a,t){return a+t.fare},0))+'</b> de bruto</span></div>':'')+(J.auto?'<div class="fi-l"><span>⚡</span><span>Jornada iniciada al conectarte a Uber.</span></div>':'')+'<div class="fi-l"><span>📍</span><span>'+(st.on?'GPS grabando · <b>'+(st.km||0)+' km</b> · '+(st.n||0)+' puntos':'El GPS no está grabando. <a href="#" onclick="AND.startTrip();S.shift.and=1;save();return false">Reanudar GPS</a>')+'</span></div>'+
