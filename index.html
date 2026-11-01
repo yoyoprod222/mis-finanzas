@@ -156,6 +156,20 @@ details summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--ac)}
 .dot2{margin-left:7px;background:var(--rd);color:#fff;border-radius:99px;font-style:normal;font-size:11px;padding:1px 6px}
 .hero{transition:padding .2s}.hero.compact{padding:14px 18px;margin-bottom:10px;border-radius:20px}
 .hero.compact .hero-sub,.hero.compact .eyebrow{display:none}.hero.compact h1{font-size:21px}.hero.compact #th{top:10px;right:12px;width:34px;height:34px}
+main>.card:empty{display:none}
+.gch{display:block;width:100%;height:auto;margin:6px 0}
+.gst{position:relative;height:30px;margin:8px 0 2px}.gst i{position:absolute;top:0;bottom:0;border-radius:4px;min-width:2px}
+.gsx{position:relative;height:16px;font-size:11px;color:var(--mu)}.gsx span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.gdot{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:8px;vertical-align:-1px}
+.gsh{display:flex;gap:2px;height:22px;margin:8px 0 4px}.gsh i{display:block;height:100%;border-radius:4px;min-width:3px}
+.dv{position:fixed;inset:0;z-index:90;background:var(--bg);color:var(--tx);display:flex;flex-direction:column;gap:14px;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(18px + env(safe-area-inset-bottom,0px));overflow:auto}
+.dv-top{display:flex;justify-content:space-between;align-items:center;font-size:17px;font-weight:600}.dv-top button{width:auto;padding:10px 18px}
+.dv-main{display:flex;flex-direction:column;gap:6px;margin-top:8px}.dv-l{font-size:18px;color:var(--mu)}.dv-n{font-size:clamp(52px,17vw,84px);font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.dv-bar{height:12px;border-radius:8px;background:var(--bd);overflow:hidden}.dv-bar i{display:block;height:100%;background:var(--ac);border-radius:8px}
+.dv-g{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.dv-t{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:14px 10px;display:flex;flex-direction:column;gap:2px;text-align:center}
+.dv-t b{font-size:clamp(20px,6.5vw,28px);font-variant-numeric:tabular-nums}.dv-t span{font-size:13px;color:var(--mu)}
+.dv-i{font-size:16px;line-height:1.7;color:var(--tx)}.dv-b{margin-top:auto;display:flex;flex-direction:column;gap:10px}.dv-b button{min-height:58px;font-size:18px;font-weight:700}
+.obs{display:flex;gap:10px;align-items:center;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--bd);border-radius:0;padding:12px 2px;min-height:48px;color:var(--tx);font-size:15px}.obs span{width:22px;color:var(--ac);font-weight:700}.obs.ok{color:var(--mu);text-decoration:line-through;opacity:.8}
 #fab{position:fixed;right:16px;bottom:calc(92px + env(safe-area-inset-bottom,0px));z-index:40;width:56px;height:56px;border-radius:50%;padding:0;display:grid;place-items:center;background:var(--ac);color:var(--onac);border:0;box-shadow:0 14px 30px -8px rgba(10,30,22,.65)}
 #fab svg,.mic svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 #sheet{position:fixed;inset:0;z-index:60;background:rgba(5,15,12,.55);display:flex;align-items:flex-end;justify-content:center}
@@ -383,6 +397,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px color-mix(in srgb,v
 <div id="srl" class="sr" aria-live="polite" role="status"></div>
 <div id="recov"></div>
 <div id="subnav"></div><div id="subseg"></div>
+<div class="card" id="obk"></div>
 <div class="card" id="zona"></div>
 <div class="card" id="jor"></div>
 
@@ -1200,7 +1215,7 @@ function renderSup(){var T=totals(S.logs),asg=T.ssuper||0,sp=0,est=0;S.sp.forEac
  if(S.list.length)h+='<p style="margin:8px 0 0">Tu lista cuesta aprox. <b>'+rd(est)+'</b>. '+(av>=est?'Con lo disponible ya te alcanza.':'Te faltan '+rd(est-Math.max(0,av))+' para cubrirla completa.')+'</p>';
  $("sup").innerHTML=h}
 function ens3(){if(!S.pay)S.pay=[];if(!S.npay)S.npay=S.pay.reduce(function(m,p){return Math.max(m,p.id)},0)+1;S.items.forEach(function(i){if(i.apr==null)i.apr=/tarjeta|cr[e\u00e9]dito/i.test(i.name)&&i.total>0?60:0;if(i.apr>0&&!i.start)i.start=today()});if(!S.acc){S.acc=[{id:1,type:'cash',name:'Efectivo',entity:'',num:'',bal0:0}];S.nacc=2}if(!S.mov)S.mov=[];if(!S.nmov)S.nmov=1;if(!S.nacc)S.nacc=S.acc.reduce(function(m,a){return Math.max(m,a.id)},0)+1}
-function ens2(){ens3();if(!S.lim)S.lim={comida:400,hormiga:200};if(!S.cal)S.cal=[];if(!S.cob)S.cob=[];if(S.apr==null)S.apr=60;if(S.cut==null)S.cut=0;if(!S.zp||typeof S.zp!='object')S.zp={};if(!Array.isArray(S.dz))S.dz=dzDef();if(!Array.isArray(S.dzn))S.dzn=[19,6];gpsPrune()}
+function ens2(){ens3();if(!S.lim)S.lim={comida:400,hormiga:200};if(!S.cal)S.cal=[];if(!S.cob)S.cob=[];if(S.apr==null)S.apr=60;if(S.cut==null)S.cut=0;if(!S.zp||typeof S.zp!='object')S.zp={};if(!Array.isArray(S.dz))S.dz=dzDef();dzMig();if(!Array.isArray(S.dzn))S.dzn=[19,6];gpsPrune()}
 function svPaid(T){var t=0;S.items.forEach(function(i){if(i.sv)t+=T["i"+i.id]||0});return t}
 function itOf(k){var f=function(a){return a.filter(function(i){return 'i'+i.id==k})[0]},r=f(S.items),c=S.cfg||[];if(r)return r;for(var j=c.length-1;j>=0;j--){r=f(c[j].c.i);if(r)return r}}
 function oldRows(T){var cur={};rowsOf(0).forEach(function(c){cur[c.key]=1});return Object.keys(T).filter(function(k){return k[0]=='i'&&!cur[k]&&T[k]>0.005}).map(function(k,i){var it=itOf(k);return{key:k,name:(it?it.name:'Obligaci\u00f3n anterior')+' (anterior)',v:T[k]}}).map(grpCol)}
@@ -1415,11 +1430,14 @@ function weeksOf(ym){var s={};S.logs.forEach(function(x){var k=wkMon(x.d);if(k.s
 function wkLabel(k){var n=Math.ceil(+k.slice(8)/7),e=new Date(k+'T00:00'),m=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];e.setDate(e.getDate()+6);return 'Semana '+n+' ('+(+k.slice(8))+' '+m[+k.slice(5,7)-1]+' al '+e.getDate()+' '+m[e.getMonth()]+')'}
 function fillWeeks(){var w=weeksOf($('pdm').value),sel=$('pdw');sel.innerHTML=w.length?w.map(function(k){return '<option value="'+k+'">'+wkLabel(k)+'</option>'}).join(''):'<option value="">Sin semanas registradas</option>';sel.selectedIndex=Math.max(0,w.length-1)}
 function renderPdf(){var ms=weekMonths();$('pdfc').innerHTML='<h2>Reporte semanal en PDF</h2><p class="sub">Elige el mes y la semana (de lunes a domingo; la semana 1 es la que empieza en el primer lunes del mes). El informe incluye resumen, reparto del dinero, gastos e ingresos extras, análisis día por día, estado de deudas y ahorro, y retroalimentación para la semana siguiente.</p><div class="row"><label>Mes<select id="pdm" onchange="fillWeeks()">'+ms.map(function(m){return '<option value="'+m+'">'+mname(m)+'</option>'}).join('')+'</select></label><label>Semana<select id="pdw"></select></label><button class="pri" onclick="makePdf()">Descargar reporte PDF</button></div><div id="pdmsg"></div>';fillWeeks()}
-function all(){ens();ens2();try{andShiftSync()}catch(e){}$("dpw").value=S.dpw;$("cush").value=cush();kpis();renderWk();tb();renderGoals();renderSup();split();esc2();hist();draw();prev();rPend();renderCal();renderSim();renderCob();renderRend();renderMes();renderPdf();renderResp();renderAcc();renderMov();renderOst();renderPay();renderOdet();renderPred();renderSubnav();fiSummary();p2All();heroUpd();try{andSync();renderAnd()}catch(e){}if(TAB=='ia'&&['cop','st','wi','af'].indexOf(subOf('ia'))<0)renderFI()}
+// Pantallas pesadas que no se ven (gráficos de Análisis, el Asistente con su mapa): se dibujan al abrirlas, no en cada cambio.
+var LZ={},LZF={ana:function(){renderRend();renderMes();renderPdf();renderResp()},and:function(){renderAndAll()}};
+function lazy(t){if(TAB==t){LZ[t]=0;try{LZF[t]()}catch(e){}}else LZ[t]=1}
+function all(){ens();ens2();try{andShiftSync()}catch(e){}$("dpw").value=S.dpw;$("cush").value=cush();kpis();renderWk();tb();renderGoals();renderSup();split();esc2();hist();draw();prev();rPend();renderCal();renderSim();renderCob();lazy('ana');renderAcc();renderMov();renderOst();renderPay();renderOdet();renderPred();renderSubnav();renderOb();fiSummary();p2All();heroUpd();try{andSync()}catch(e){}lazy('and');if(TAB=='ia'&&['cop','st','wi','af'].indexOf(subOf('ia'))<0)renderFI();try{driveAuto();if($('drive'))driveDraw()}catch(e){}}
 var TABS=[["inicio",'<svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-5h4v5"/></svg>',"Inicio"],["ia",'<svg viewBox="0 0 24 24"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M18.5 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>',"IA"],["reg",'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>',"Registrar"],["cta",'<svg viewBox="0 0 24 24"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3"/><path d="M4 7.5V17a2 2 0 0 0 2 2h13a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1H6.5A2.5 2.5 0 0 1 4 7.5Z"/><circle cx="16.5" cy="13.5" r="1.1"/></svg>',"Cuentas"],["deu",'<svg viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h4"/></svg>',"Deudas"],["hog",'<svg viewBox="0 0 24 24"><path d="M5 9h14l-1.4 9.2a2 2 0 0 1-2 1.8H8.4a2 2 0 0 1-2-1.8L5 9Z"/><path d="M9 9l3-5 3 5"/></svg>',"Hogar"],["ana",'<svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M21 20H3"/></svg>',"Análisis"]];
 var SUBS={inicio:[['res','Resumen'],['hoy','Hoy y semana'],['pred','Predicci\u00f3n']],ia:[['zona','Zona del día'],['cop','Copiloto'],['diag','Diagn\u00f3stico'],['fc','Pron\u00f3stico'],['au','Autopsia'],['ub','Uber'],['ob','Objetivos'],['ad','Auditor'],['me','Memoria'],['cfg','Ajustes IA']],reg:[['dia','Registrar'],['dist','Distribuci\u00f3n'],['hist','Historial'],['imp','Importar Uber'],['veh','Veh\u00edculo']],cta:[['cue','Cuentas'],['mov','Movimientos'],['cierre','Cierre semanal']],deu:[['est','Estado'],['pag','Pagos'],['obl','Obligaciones'],['meta','Metas'],['sim','Simulador']],hog:[['sup','S\u00faper'],['pres','Presupuesto'],['cob','Por cobrar'],['rep','Reparto']],ana:[['tend','Tendencias'],['pdf','Reporte PDF'],['resp','Respaldo'],['mas','App y avisos']],mas:[['menu','Todo']]},SUB={},TAB='inicio';
 TABS.push(['mas','','M\u00e1s']);TABS.push(['and','','Asistente']);SUBS.and=[['aest','Estado'],['aof','Ofertas'],['azon','Zonas de cuidado'],['amap','Mapa'],['acfg','Ajustes']];
-function tabs(){var map=[['#kpis','inicio','res'],['#zona','inicio','res'],['#jor','inicio','res'],['#veh','reg','veh'],['#impu','reg','imp'],['#pres','hog','pres'],['#cierre','cta','cierre'],['#sugp','deu','pag'],['#fisum','inicio','res'],['#fi_zona','ia','zona'],['#fi_cop','ia','cop'],['#fi_diag','ia','diag'],['#fi_wi','ia','cop'],['#fi_af','ia','cop'],['#fi_st','ia','cop'],['#fi_fc','ia','fc'],['#fi_au','ia','au'],['#fi_ub','ia','ub'],['#fi_ob','ia','ob'],['#fi_ad','ia','ad'],['#fi_me','ia','me'],['#fi_cfg','ia','cfg'],['#hoy','inicio','hoy'],['#wk','inicio','hoy'],['#pred','inicio','pred'],['#fecha','reg','dia'],['#pie','reg','dist'],['#hist','reg','hist'],['#accs','cta','cue'],['#movc','cta','mov'],['#ost','deu','est'],['#cal','deu','est'],['#payc','deu','pag'],['#tb','deu','obl'],['#odet','deu','obl'],['#goals','deu','meta'],['#simd','deu','sim'],['#sup','hog','sup'],['#cob','hog','cob'],['#split','hog','rep'],['#esc','hog','rep'],['#rend','ana','tend'],['#mes','ana','tend'],['#pdfc','ana','pdf'],['#resp','ana','resp'],['#vt','ana','mas'],['#and_est','and','aest'],['#and_of','and','aof'],['#and_zn','and','azon'],['#and_map','and','amap'],['#and_cf','and','acfg'],['#masm','mas','menu']];
+function tabs(){var map=[['#kpis','inicio','res'],['#obk','inicio','res'],['#zona','inicio','res'],['#jor','inicio','res'],['#veh','reg','veh'],['#impu','reg','imp'],['#pres','hog','pres'],['#cierre','cta','cierre'],['#sugp','deu','pag'],['#fisum','inicio','res'],['#fi_zona','ia','zona'],['#fi_cop','ia','cop'],['#fi_diag','ia','diag'],['#fi_wi','ia','cop'],['#fi_af','ia','cop'],['#fi_st','ia','cop'],['#fi_fc','ia','fc'],['#fi_au','ia','au'],['#fi_ub','ia','ub'],['#fi_ob','ia','ob'],['#fi_ad','ia','ad'],['#fi_me','ia','me'],['#fi_cfg','ia','cfg'],['#hoy','inicio','hoy'],['#wk','inicio','hoy'],['#pred','inicio','pred'],['#fecha','reg','dia'],['#pie','reg','dist'],['#hist','reg','hist'],['#accs','cta','cue'],['#movc','cta','mov'],['#ost','deu','est'],['#cal','deu','est'],['#payc','deu','pag'],['#tb','deu','obl'],['#odet','deu','obl'],['#goals','deu','meta'],['#simd','deu','sim'],['#sup','hog','sup'],['#cob','hog','cob'],['#split','hog','rep'],['#esc','hog','rep'],['#rend','ana','tend'],['#mes','ana','tend'],['#pdfc','ana','pdf'],['#resp','ana','resp'],['#vt','ana','mas'],['#and_est','and','aest'],['#and_of','and','aof'],['#and_zn','and','azon'],['#and_map','and','amap'],['#and_cf','and','acfg'],['#masm','mas','menu']];
  document.querySelectorAll('main > .card, main > .grid > .card').forEach(function(e){var t='ana',s='mas';map.forEach(function(p){if(e.id==p[0].slice(1)||e.querySelector(p[0])){t=p[1];s=p[2]}});e.dataset.tab=t;e.dataset.sub=s});
  document.querySelectorAll('main > .grid').forEach(function(g){g.style.display='block'})}
 // ===== Menos a la vista =====
@@ -1484,35 +1502,40 @@ var FQ=0;function foldAll(){FQ=0;tblFit();document.querySelectorAll('main [data-
  document.querySelectorAll('details.fold[data-f]:not([data-i])').forEach(function(d){d.dataset.i=1;if(FOLD[d.dataset.f])d.open=true;if(!d.hasAttribute('ontoggle'))d.addEventListener('toggle',function(){foldMem(d)})})}
 function foldWatch(){foldAll();new MutationObserver(function(){if(!FQ)FQ=requestAnimationFrame(foldAll)}).observe(document.querySelector('main'),{childList:true,subtree:true})}
 // IA: 4 apartados en vez de 13 botones; dentro de cada uno, sus secciones en una segunda fila.
-var IAG=[['Zona del día',['zona']],['Copiloto',['cop']],['Análisis',['diag','fc','au','ub']],['Ajustes',['ob','ad','me','cfg']]];
+var IAG=[['Copiloto',['cop']],['Zona y Uber',['zona','ub']],['Salud',['diag','fc','au','ad']],['Metas y ajustes',['ob','me','cfg']]];
+// Dinero: 3 apartados (Cuentas, Deudas, Hogar) y, dentro de cada uno, sus secciones en una segunda fila.
+var DING=[['cta','Cuentas'],['deu','Deudas'],['hog','Hogar']];
 function subOf(t){var s=SUB[t];return SUBS[t].some(function(x){return x[0]==s})?s:SUBS[t][0][0]}
-// Barra de abajo con 5 pestañas. Las secciones internas (TABS/SUBS) no cambian: "Dinero" agrupa Cuentas y Hogar,
-// y "Más" abre un menú con IA y Análisis. Así todos los setTab('ia',…) y enlaces existentes siguen funcionando.
-var NAVT=[['inicio',TABS[0][1],'Hoy',['inicio']],['reg',TABS[2][1],'Registrar',['reg']],['and','<svg viewBox="0 0 24 24"><path d="M5 16.5V12l1.8-4.6A2 2 0 0 1 8.7 6h6.6a2 2 0 0 1 1.9 1.4L19 12v4.5"/><path d="M3.5 12h17v4.5h-17z"/><circle cx="7.5" cy="16.5" r="1.6"/><circle cx="16.5" cy="16.5" r="1.6"/></svg>','Viajes',['and']],['din',TABS[3][1],'Dinero',['cta','hog']],['deu',TABS[4][1],'Deudas',['deu']],['ia',TABS[1][1],'IA',['ia']],
- ['mas','<svg viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18.5" cy="12" r="1.6"/></svg>','Más',['mas','ana']]];
+// Barra de abajo con 5 pestañas (Hoy, Registrar, Viajes, Dinero, Más) de al menos 56 px. Las secciones internas
+// (TABS/SUBS) no cambian: "Dinero" agrupa Cuentas, Deudas y Hogar, y "Más" abre un menú con la IA y Análisis. Así todos los setTab('ia',…) y enlaces existentes siguen funcionando.
+var NAVT=[['inicio',TABS[0][1],'Hoy',['inicio']],['reg',TABS[2][1],'Registrar',['reg']],['and','<svg viewBox="0 0 24 24"><path d="M5 16.5V12l1.8-4.6A2 2 0 0 1 8.7 6h6.6a2 2 0 0 1 1.9 1.4L19 12v4.5"/><path d="M3.5 12h17v4.5h-17z"/><circle cx="7.5" cy="16.5" r="1.6"/><circle cx="16.5" cy="16.5" r="1.6"/></svg>','Viajes',['and']],['din',TABS[3][1],'Dinero',['cta','deu','hog']],
+ ['mas','<svg viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18.5" cy="12" r="1.6"/></svg>','Más',['mas','ana','ia']]];
 function navOf(t){return NAVT.filter(function(x){return x[3].indexOf(t)>=0})[0]||NAVT[0]}
-function navGo(k){if(k=='din')setTab(TAB=='cta'||TAB=='hog'?TAB:(localStorage.getItem('fin-din')||'cta'));else setTab(k)}
+function navGo(k){var d;try{d=localStorage.getItem('fin-din')}catch(e){}if(k=='din')setTab(['cta','deu','hog'].indexOf(TAB)>=0?TAB:(d||'cta'));else setTab(k)}
 function vencN(){var n=0;try{sorted().forEach(function(i){if(!i.sv&&i.freq!='d'&&oblStatus(i).st=='Vencida')n++})}catch(e){}return n}
 function renderSubnav(){var t=TAB,el=$('subnav'),g=navOf(t),L=[],sg=$('subseg');sg.innerHTML='';
  if(t=='mas'){el.innerHTML='';el.hidden=true;return}el.hidden=false;
+ var seg=function(tt){return SUBS[tt].map(function(x){var on=x[0]==subOf(tt),n=tt=='deu'&&x[0]=='est'?vencN():0;return '<button class="'+(on?'on':'')+'" aria-pressed="'+on+'" data-t="'+tt+'" data-s="'+x[0]+'" onclick="setTab(this.dataset.t,this.dataset.s)">'+x[1]+(n?'<i class="dot2" aria-label="'+n+' vencidas">'+n+'</i>':'')+'</button>'}).join('')};
+ if(g[0]=='din'){el.innerHTML=DING.map(function(q){var on=q[0]==t,n=q[0]=='deu'?vencN():0;return '<button class="'+(on?'on':'')+'" aria-pressed="'+on+'" onclick="setTab(\''+q[0]+'\')">'+q[1]+(n?'<i class="dot2" aria-label="'+n+' vencidas">'+n+'</i>':'')+'</button>'}).join('');sg.innerHTML=seg(t);var so=sg.querySelector('.on');if(so)sg.scrollLeft=Math.max(0,so.offsetLeft-(sg.clientWidth-so.offsetWidth)/2);return}
  if(t=='ia'){var cur=subOf('ia'),gi=0,lb={};SUBS.ia.forEach(function(x){lb[x[0]]=x[1]});IAG.forEach(function(q,i){if(q[1].indexOf(cur)>=0)gi=i});
-  el.innerHTML=IAG.map(function(q,i){var on=i==gi;return '<button class="'+(on?'on':'')+'" aria-pressed="'+on+'" onclick="setTab(\'ia\',\''+(on?cur:q[1][0])+'\')">'+q[0]+'</button>'}).join('');
+  el.innerHTML='<button class="back" onclick="setTab(\'mas\')" aria-label="Volver al menú Más">‹ Más</button>'+IAG.map(function(q,i){var on=i==gi;return '<button class="'+(on?'on':'')+'" aria-pressed="'+on+'" onclick="setTab(\'ia\',\''+(on?cur:q[1][0])+'\')">'+q[0]+'</button>'}).join('');
   if(cur!='cop'&&IAG[gi][1].length>1)sg.innerHTML=IAG[gi][1].map(function(k){var on=k==cur;return '<button class="'+(on?'on':'')+'" aria-pressed="'+on+'" onclick="setTab(\'ia\',\''+k+'\')">'+lb[k]+'</button>'}).join('');var ao=el.querySelector('.on');if(ao)el.scrollLeft=Math.max(0,ao.offsetLeft-(el.clientWidth-ao.offsetWidth)/2);return}
- (g[0]=='din'?['cta','hog']:[t]).forEach(function(tt){SUBS[tt].forEach(function(x){L.push([tt,x[0],x[1]])})});
+ [t].forEach(function(tt){SUBS[tt].forEach(function(x){L.push([tt,x[0],x[1]])})});
  var back=t=='ana'?'<button class="back" onclick="setTab(\'mas\')" aria-label="Volver al menú Más">‹ Más</button>':'';
  el.innerHTML=back+L.map(function(x){var on=x[0]==t&&x[1]==subOf(t),n=x[0]=='deu'&&x[1]=='est'?vencN():0;
   return '<button class="'+(on?'on':'')+'" aria-pressed="'+on+'" data-t="'+x[0]+'" data-s="'+x[1]+'" onclick="setTab(this.dataset.t,this.dataset.s)">'+x[2]+(n?'<i class="dot2" aria-label="'+n+' vencidas">'+n+'</i>':'')+'</button>'}).join('');
  var a=el.querySelector('.on');if(a)el.scrollLeft=Math.max(0,a.offsetLeft-(el.clientWidth-a.offsetWidth)/2)}
-function setTab(t,s){if(!SUBS[t])t='inicio';if(t=='ia'&&(s=='wi'||s=='af'||s=='st'))s='cop';TAB=t;if(s)SUB[t]=s;var sb=subOf(t);try{localStorage.setItem('fin-tab',t);localStorage.setItem('fin-subs',JSON.stringify(SUB));if(t=='cta'||t=='hog')localStorage.setItem('fin-din',t)}catch(e){}
+function setTab(t,s){if(!SUBS[t])t='inicio';if(t=='ia'&&(s=='wi'||s=='af'||s=='st'))s='cop';TAB=t;if(s)SUB[t]=s;var sb=subOf(t);try{localStorage.setItem('fin-tab',t);localStorage.setItem('fin-subs',JSON.stringify(SUB));if(t=='cta'||t=='hog'||t=='deu')localStorage.setItem('fin-din',t)}catch(e){}
  document.querySelectorAll('[data-tab]').forEach(function(e){e.hidden=!(e.dataset.tab==t&&e.dataset.sub==sb)});
  var g=navOf(t)[0];
- $('nav').innerHTML='<div class="brand"><i>MF</i><b>Mis Finanzas</b><small>Panel personal</small></div><div class="in">'+NAVT.map(function(x){var on=x[0]==g,n=x[0]=='deu'?vencN():0;return '<button class="'+(on?'on':'')+'"'+(on?' aria-current="page"':'')+' data-t="'+x[0]+'" onclick="navGo(this.dataset.t)"><b aria-hidden="true">'+x[1]+'</b>'+x[2]+(n?'<span class="sr"> ('+n+' vencidas)</span>':'')+'</button>'}).join('')+'</div>';
- renderSubnav();var h=document.querySelector('.hero');if(h)h.classList.toggle('compact',t!='inicio');if(t=='ia')renderFI();if(t=='mas')renderMas();heroUpd();if(t=='and')renderAndAll();foldAll();window.scrollTo(0,0)}
+ $('nav').innerHTML='<div class="brand"><i>MF</i><b>Mis Finanzas</b><small>Panel personal</small></div><div class="in">'+NAVT.map(function(x){var on=x[0]==g,n=x[0]=='din'?vencN():0;return '<button class="'+(on?'on':'')+'"'+(on?' aria-current="page"':'')+' data-t="'+x[0]+'" onclick="navGo(this.dataset.t)"><b aria-hidden="true">'+x[1]+'</b>'+x[2]+(n?'<span class="sr"> ('+n+' vencidas)</span>':'')+'</button>'}).join('')+'</div>';
+ renderSubnav();var h=document.querySelector('.hero');if(h)h.classList.toggle('compact',t!='inicio');if(t=='ia')renderFI();if(t=='mas')renderMas();heroUpd();if(t=='and')renderAndAll();else if(LZ[t])lazy(t);foldAll();window.scrollTo(0,0)}
 function setSub(s){SUB[TAB]=s;setTab(TAB)}
 // Menú "Más": todas las secciones de IA y Análisis en una cuadrícula, con una línea que dice para qué sirve cada una.
 var MASD={amap:'El recorrido del GPS en el mapa',aest:'Encender o apagar el lector y el GPS',aof:'Ofertas que evaluó el lector',azon:'Sectores donde ir con cuidado',acfg:'Tus límites y el diagnóstico',zona:'Dónde y si conviene trabajar hoy',cop:'Pregúntale a la IA sobre tu dinero',diag:'Tu salud financiera de 0 a 100',wi:'Qué pasa si cambias algo',af:'Antes de comprar algo',st:'Registrar con texto o voz',fc:'Cómo vas a cerrar el mes',au:'Qué pasó en un mes',ub:'Rendimiento por hora y km',ob:'Tus metas y su avance',ad:'Revisa errores y duplicados',me:'Lo que la IA recuerda de ti',cfg:'Clave y límites de la IA',tend:'Cómo te ha ido por semana y mes',pdf:'Reporte semanal para guardar',resp:'Copia de seguridad e importar',mas:'Instalar la app y avisos'};
-function renderMas(){var el=$('masm');if(!el)return;var b=function(t,x){return '<button data-t="'+t+'" data-s="'+x[0]+'" onclick="setTab(this.dataset.t,this.dataset.s)"><span>'+x[1]+'</span><small>'+(MASD[x[0]]||'')+'</small></button>'};
- el.innerHTML='<h2>Más</h2><p class="mhead">Análisis y respaldo</p><div class="mgrid">'+SUBS.ana.map(function(x){return b('ana',x)}).join('')+'</div>'}
+function renderMas(){var el=$('masm');if(!el)return;var b=function(t,x){return '<button data-t="'+t+'" data-s="'+x[0]+'" onclick="setTab(this.dataset.t,this.dataset.s)"><span>'+x[1]+'</span><small>'+(MASD[x[0]]||'')+'</small></button>'},lb={};SUBS.ia.forEach(function(x){lb[x[0]]=x[1]});
+ el.innerHTML='<h2>Más</h2><p class="mhead">Inteligencia</p><div class="mgrid">'+IAG.map(function(q){return b('ia',[q[1][0],q[0]]).replace('</small>',q[1].length>1?' · '+q[1].map(function(k){return lb[k]}).join(', ')+'</small>':'</small>')}).join('')+'</div>'+
+  '<p class="mhead">Análisis y respaldo</p><div class="mgrid">'+SUBS.ana.map(function(x){return b('ana',x)}).join('')+'</div>'}
 // Letrero de "Hoy": cuánto falta para cubrir el día y la zona recomendada. Lo más importante, arriba y grande.
 function heroUpd(){var el=$('hday');if(!el)return;if(TAB!='inicio'){el.innerHTML='';return}
  try{var n=jNeed(),f=Math.max(0,n.need-n.hoy),z=zGet(),zl='';
@@ -2371,16 +2394,21 @@ function zIdxAdj(z,k){var H=z.H,h=H.Z[k]||{},A=H.A||{},o=z.Z[k],s=0,why=[];
 // Dentro de la app Android (window.MFAndroid) la página puede: grabar el GPS en segundo plano durante la jornada,
 // usar el lector de ofertas de Uber (accesibilidad) y guardar archivos en Descargas. En el navegador nada de esto existe
 // y la página funciona igual que siempre.
-var AND=window.MFAndroid||null,ANDCFG={on:true,lvl:'n',mk:'',mh:'',tton:true,tt:null,cap:true,shift:'off',kw_on:'',kw_off:'',kw_acc:'',kw_end:''},ANDLAST='';
+var AND=window.MFAndroid||null,ANDCFG={on:true,tts:false,drive:true,lvl:'n',mk:'',mh:'',cpk:'',tton:true,tt:null,cap:true,shift:'off',kw_on:'',kw_off:'',kw_acc:'',kw_end:''},ANDLAST='';
 try{var ac0=JSON.parse(localStorage.getItem('fin-and')||'{}');for(var ak0 in ac0)if(ak0 in ANDCFG)ANDCFG[ak0]=ac0[ak0]}catch(e){}ANDCFG.shift='off';
 function andJ(f){try{return JSON.parse(AND[f]()||'null')}catch(e){return null}}
 // Límites del lector. Una oferta no incluye la espera ni los km vacíos que vienen después, así que para mantener
 // tu promedio tiene que rendir más que él: por km, 115% (conviene) y 90% (mínimo); por hora, 130% y 100%.
-// «Exigencia» los mueve ±10%. Si escribes tu mínimo, ese es la raya: desde ahí conviene y por debajo no (sin «justo»).
-function andNums(){var H=zHist(),A=H.A||{},cpk=(A.fpk||ZCFG.glpkm)+zMpk(),f={s:0.9,n:1,e:1.1}[ANDCFG.lvl]||1,
-  kG=A.npk?A.npk*1.15*f:15,kM=A.npk?A.npk*0.9*f:10,hG=A.nph?A.nph*1.3*f:350,hM=A.nph?A.nph*f:250;
+// «Exigencia» los mueve ±20%. «Dinámico» manda los límites de Normal y el lector los ajusta en cada oferta (±20%) según
+// la hora pico, el tránsito de Mapbox cerca de ti y el ritmo de la ruta que muestra Uber.
+// Si escribes tu mínimo, ese es la raya: desde ahí conviene y por debajo no (sin «justo»), y la exigencia no lo mueve.
+// El costo por km se calcula con tu GLP y tu mantenimiento, salvo que escribas el tuyo.
+function andCpkAuto(){var A=zHist().A||{};return (A.fpk||ZCFG.glpkm)+zMpk()}
+function andNums(){var H=zHist(),A=H.A||{},cpk=+ANDCFG.cpk>0?+ANDCFG.cpk:andCpkAuto(),f={s:0.8,n:1,e:1.2}[ANDCFG.lvl]||1,
+  kG=A.npk?A.npk*1.15*f:15*f,kM=A.npk?A.npk*0.9*f:10*f,hG=A.nph?A.nph*1.3*f:350*f,hM=A.nph?A.nph*f:250*f;
  if(+ANDCFG.mk>0)kG=kM=+ANDCFG.mk;if(+ANDCFG.mh>0)hG=hM=+ANDCFG.mh;
- var o={cpk:+cpk.toFixed(2),kmGood:Math.round(kG),kmMin:Math.round(kM),hrGood:Math.round(hG),hrMin:Math.round(hM),on:!!ANDCFG.on,base:!!(A.npk&&A.nph)},T=ANDCFG.tton?andTTRows():[];
+ var o={cpk:+cpk.toFixed(2),kmGood:Math.round(kG),kmMin:Math.round(kM),hrGood:Math.round(hG),hrMin:Math.round(hM),on:!!ANDCFG.on,base:!!(A.npk&&A.nph),
+  dyn:ANDCFG.lvl=='d'?1:0,fixK:+ANDCFG.mk>0?1:0,fixH:+ANDCFG.mh>0?1:0},T=ANDCFG.tton?andTTRows():[];
  o.tN=T.length;T.forEach(function(r,i){o['tm'+i]=r[0];o['ta'+i]=r[1];o['tb'+i]=r[2];o['tc'+i]=r[3]});return o}
 // Tabla de tráfico: lo que debe pagar 1 km (bruto) según los minutos por km, con km y minutos totales (búsqueda + viaje).
 // Si el pago no llega al «mínimo» de la tabla, el lector avisa «tiempo mal pagado» y la oferta no conviene.
@@ -2397,9 +2425,17 @@ function andTTHtml(){var T=ANDCFG.tt||ANDTT0,q=andTT(43/17);
   [1,2,3].map(function(j){return '<td><input type="number" step="0.1" min="0" value="'+r[j]+'" style="width:100%" onchange="andTTSet('+i+','+j+',this.value)"></td>'}).join('')+'</tr>'}).join('')+'</table>'+
  '<small>RD$ por km, contando km y minutos totales (hasta el pasajero + viaje). Ej.: 17 km en 43 min → '+(q?'menos de '+rd(Math.round(q[0]*17))+' no conviene · medio '+rd(Math.round(q[1]*17))+' · bueno '+rd(Math.round(q[2]*17)):'tabla vacía')+'.</small>'+
  (ANDCFG.tt?' <a href="#" onclick="ANDCFG.tt=null;andSave();return false"><small>Restaurar la tabla</small></a>':'')}
-var ANDZL='',ANDAL='';function andSync(){if(!AND)return;try{var o=andNums(),j;delete o.base;j=JSON.stringify(o);if(j!=ANDLAST){ANDLAST=j;AND.setNumbers(j)}
- var au=JSON.stringify({shiftMode:ANDCFG.shift,capture:!!ANDCFG.cap,kw_on:ANDCFG.kw_on,kw_off:ANDCFG.kw_off,kw_acc:ANDCFG.kw_acc,kw_end:ANDCFG.kw_end});if(au!=ANDAL&&AND.setAuto){ANDAL=au;AND.setAuto(au)}
- var z=JSON.stringify({night:S.dzn||[19,6],list:(S.dz||[]).map(function(x){return{n:x.n,lv:x.lv,nota:x.nota||''}})});if(z!=ANDZL&&AND.setZones){ANDZL=z;AND.setZones(z)}}catch(e){}}
+var ANDZL='',ANDAL='';function andSync(){if(!AND)return;try{var o=andNums(),j,J0=andGoal();delete o.base;j=JSON.stringify(o);if(j!=ANDLAST){ANDLAST=j;AND.setNumbers(j)}
+ var au=JSON.stringify({tts:!!ANDCFG.tts,goal:Math.round(J0.goal),jStart:J0.start,w:andWidget(),mb:ZCFG.mb||'',shiftMode:ANDCFG.shift,capture:!!ANDCFG.cap,kw_on:ANDCFG.kw_on,kw_off:ANDCFG.kw_off,kw_acc:ANDCFG.kw_acc,kw_end:ANDCFG.kw_end});if(au!=ANDAL&&AND.setAuto){ANDAL=au;AND.setAuto(au)}
+ var z=JSON.stringify({night:S.dzn||[19,6],list:(S.dz||[]).filter(function(x){return x.lv!='s'||andVer()>=2.1}).map(function(x){return{n:x.n,lv:x.lv,nota:x.nota||''}})});if(z!=ANDZL&&AND.setZones){ANDZL=z;AND.setZones(z)}}catch(e){}}
+// Antes de la 2.1 la app trataba «segura» como precaución: a esas versiones no se les manda la lista blanca.
+function andVer(){var I=andJ('info')||{};return parseFloat(I.v)||0}
+// Meta bruta de la jornada para la notificación: lo neto que falta hoy + los gastos típicos de un día.
+function andGoal(){var J=S.shift&&!S.shift.end?S.shift:null;if(!J)return{goal:0,start:0};var n=jNeed(),P=fiProfile();return{goal:Math.max(0,n.need-n.hoy)+(P.ex||0),start:J.start}}
+// Widget de Android: lo que falta hoy (o la meta cubierta) y lo próximo que vence.
+function andWidget(){try{var n=jNeed(),f=Math.max(0,n.need-n.hoy),u=fiUpcoming(15).filter(function(x){return x.dias!=null})[0],
+  nx=u?(u.venc?'Vencido: ':'Próximo: ')+u.n+' '+rd(u.m)+(u.venc?'':u.dias==0?' hoy':u.dias==1?' mañana':' en '+u.dias+' días'):'Nada vence en 15 días';
+ return n.need>0&&f>0?{l:'Te faltan hoy',b:rd(f),s:nx}:{l:n.need>0?'Cuota de hoy cubierta':'Hoy llevas',b:rd(n.hoy),s:nx}}catch(e){return{l:'Mis Finanzas',b:'—',s:''}}}
 function andKeep(){try{localStorage.setItem('fin-and',JSON.stringify(ANDCFG))}catch(e){}}
 // Envía los límites al lector y comprueba (app 1.7 o más) que los tiene.
 function andPushMsg(){if(!AND)return '<small>Se envían al lector cuando abres la app Android.</small>';var I=andJ('info')||{},n=I.nums,N=andNums();if(!n)return '<small>Enviado. Actualiza la app Android a la 1.7 para ver aquí lo que tiene el lector.</small>';
@@ -2432,7 +2468,7 @@ function renderAndEst(){var el=$('and_est');if(!el)return;if(!AND){andNoApp(el,'
  var z1=(S.dz||[]).filter(function(x){return x.lv!='x'})[0];
  h+='<div class="row" style="margin-top:12px"><button onclick="if(!AND.testBubble())alert(\'Primero da el permiso de accesibilidad.\')">Probar el aviso</button>'+(z1&&AND.testBubbleZone?'<button onclick="AND.testBubbleZone(\''+esc(z1.n).replace(/'/g,'')+'\')">Probar con zona de cuidado</button>':'')+(I.batt?'':'<button onclick="AND.openBattery()">Que Android no lo cierre</button>')+'</div>';
  el.innerHTML=h}
-function andStartShift(){if(S.shift)return;var z=zGet(),P=fiProfile();S.shift={start:Date.now(),d:today(),z:z&&z.rec&&z.rec.k&&z.d==today()?z.rec.k:'',km0:0,plan:Math.round(P.h||9),and:AND?1:0};if(AND){try{AND.startTrip()}catch(e){}}save();all();renderAndAll()}
+function andStartShift(){if(S.shift)return;var z=zGet(),P=fiProfile();S.shift={start:Date.now(),d:today(),z:z&&z.rec&&z.rec.k&&z.d==today()?z.rec.k:'',km0:0,plan:Math.round(P.h||9),and:AND?1:0};if(AND){try{AND.startTrip()}catch(e){}}save();all();renderAndAll();driveAuto()}
 function andEndShift(){if(!S.shift)return;if(S.shift.end){jFill();return}renderJor();jEnd()}
 function andGps(){if(!AND)return;var st=andJ('tripStatus')||{},J=S.shift&&!S.shift.end?S.shift:null;
  if(st.on){if(J)AND.pauseTrip();else{try{var g=gAnalyze(gpxParse(AND.stopTrip()));AND.clearTrip();setTab('reg','dia');gpsApply(g,'Recorrido GPS')}catch(e){alert('No se pudo usar el recorrido: '+(e.message||e))}}}
@@ -2448,19 +2484,26 @@ function renderAndOf(){var el=$('and_of');if(!el)return;if(!AND){andNoApp(el,'Of
  h+=L.length?'<div style="margin-top:10px">'+L.slice().reverse().slice(0,80).map(function(o){return '<div class="leg"><span>'+new Date(o.t).toLocaleString('es-DO',{weekday:'short',hour:'numeric',minute:'2-digit'})+' · '+rd(o.fare)+' · '+(o.pkm+o.tkm).toFixed(1)+' km · '+Math.round(o.pmin+o.tmin)+' min'+(o.mx!=null?' <small>(máx '+o.mx+')</small>':'')+(o.tq&&o.fare<o.tq?' <small style="color:var(--wr)">⏱ pide '+rd(o.tq)+'</small>':'')+(o.acc?' · <b>aceptada</b>':'')+(o.risk?'<br><span class="tag w">⚠ '+esc(o.risk)+'</span>':'')+'</span><span>'+ANDV[o.v]+'<br><small>'+rd(o.npk)+'/km · '+rd(o.nph)+'/h</small></span></div>'}).join('')+'</div>':'<p><small>No hay ofertas en este período.</small></p>';
  if(all.length)h+='<button class="x" style="width:auto;padding:6px 12px;margin-top:10px" onclick="tap2(this,\'¿Borrar todas?\',function(){AND.clearOffers();renderAndAll()})">Borrar historial de ofertas</button>';
  el.innerHTML=h}
-function renderAndZn(){var el=$('and_zn');if(!el)return;var Z=S.dz||[],n=Z.filter(function(x){return x.lv!='x'}).length,nt=S.dzn||[19,6],lvs=[['p','Precaución'],['e','Evitar'],['x','No avisar']];
- var h='<h2>Zonas de cuidado</h2><p class="sub">Si una oferta menciona uno de estos sectores, el aviso lo dice. <b>Evitar</b>: no conviene nunca. <b>Precaución</b>: de noche baja un nivel y de día solo avisa. El lector solo puede verlos si Uber muestra el nombre del sector en la oferta.</p>';
+function renderAndZn(){var el=$('and_zn');if(!el)return;var Z=S.dz||[],n=Z.filter(function(x){return x.lv!='x'}).length,nt=S.dzn||[19,6],lvs=[['p','Precaución'],['e','Evitar'],['s','Segura'],['x','No avisar']];
+ var h='<h2>Zonas de cuidado</h2><p class="sub">Si una oferta menciona uno de estos sectores, el aviso lo dice. <b>Evitar</b>: no conviene a ninguna hora. <b>Precaución</b>: solo de noche (baja un nivel); de día no aparece. <b>Segura</b> (lista blanca): si está en la misma dirección, anula la precaución. El lector solo puede verlos si Uber muestra el nombre del sector en la oferta.</p>';
  h+='<div class="row"><label>La noche empieza a las<select onchange="S.dzn[0]=+this.value;save();renderAndZn()">'+[17,18,19,20,21,22].map(function(x){return '<option value="'+x+'"'+(nt[0]==x?' selected':'')+'>'+zH(x)+'</option>'}).join('')+'</select></label><label>y termina a las<select onchange="S.dzn[1]=+this.value;save();renderAndZn()">'+[4,5,6,7].map(function(x){return '<option value="'+x+'"'+(nt[1]==x?' selected':'')+'>'+zH(x)+'</option>'}).join('')+'</select></label></div>';
  Object.keys(DZG).forEach(function(g){var L=Z.map(function(x,i){return{x:x,i:i}}).filter(function(o){return o.x.z==g});if(!L.length)return;
-  h+=foldHtml('dz-'+g,DZG[g],L.length+' sectores · '+L.filter(function(o){return o.x.lv=='e'}).length+' para evitar',L.map(function(o){var x=o.x;return '<div class="dzr"><div><b>'+esc(x.n)+'</b><small>'+esc(x.nota||'')+'</small></div><select aria-label="Nivel de '+esc(x.n)+'" onchange="S.dz['+o.i+'].lv=this.value;save();renderAndZn()">'+lvs.map(function(v){return '<option value="'+v[0]+'"'+(x.lv==v[0]?' selected':'')+'>'+v[1]+'</option>'}).join('')+'</select><button class="x" aria-label="Quitar '+esc(x.n)+'" onclick="S.dz.splice('+o.i+',1);save();renderAndZn()">✕</button></div>'}).join(''))});
- h+=foldHtml('dz-add','Agregar un sector','Escribe el nombre tal como aparece en Uber','<div class="row"><label>Sector<input id="dzn" placeholder="Ej.: Los Alcarrizos"></label><label>Zona<select id="dzz">'+Object.keys(DZG).map(function(g){return '<option value="'+g+'">'+DZG[g]+'</option>'}).join('')+'</select></label><label>Qué evaluar<input id="dznt" placeholder="Opcional"></label><label>Nivel<select id="dzl">'+lvs.slice(0,2).map(function(v){return '<option value="'+v[0]+'">'+v[1]+'</option>'}).join('')+'</select></label><button class="pri" onclick="dzAdd()">Agregar</button></div>');
+  h+=foldHtml('dz-'+g,DZG[g],L.length+(g=='seg'?' lugares':' sectores · '+L.filter(function(o){return o.x.lv=='e'}).length+' para evitar'),L.map(function(o){var x=o.x;return '<div class="dzr"><div><b>'+esc(x.n)+'</b><small>'+esc(x.nota||'')+'</small></div><select aria-label="Nivel de '+esc(x.n)+'" onchange="S.dz['+o.i+'].lv=this.value;save();renderAndZn()">'+lvs.map(function(v){return '<option value="'+v[0]+'"'+(x.lv==v[0]?' selected':'')+'>'+v[1]+'</option>'}).join('')+'</select><button class="x" aria-label="Quitar '+esc(x.n)+'" onclick="S.dz.splice('+o.i+',1);save();renderAndZn()">✕</button></div>'}).join(''))});
+ h+=foldHtml('dz-add','Agregar un sector','Escribe el nombre tal como aparece en Uber','<div class="row"><label>Sector<input id="dzn" placeholder="Ej.: Los Alcarrizos"></label><label>Zona<select id="dzz">'+Object.keys(DZG).map(function(g){return '<option value="'+g+'">'+DZG[g]+'</option>'}).join('')+'</select></label><label>Qué evaluar<input id="dznt" placeholder="Opcional"></label><label>Nivel<select id="dzl">'+lvs.slice(0,3).map(function(v){return '<option value="'+v[0]+'">'+v[1]+'</option>'}).join('')+'</select></label><button class="pri" onclick="dzAdd()">Agregar</button></div>');
  h+='<p style="margin-top:12px"><small>'+n+' sectores activos.</small> <button class="x" style="width:auto;padding:6px 12px" onclick="tap2(this,\'¿Restaurar?\',function(){S.dz=dzDef();save();renderAndZn()})">Restaurar la lista original</button></p>';
  el.innerHTML=h}
 function dzAdd(){var n=$('dzn').value.trim();if(!n)return;S.dz.push({n:n,z:$('dzz').value,nota:$('dznt').value.trim(),lv:$('dzl').value});save();renderAndZn()}
 function renderAndCf(){var el=$('and_cf');if(!el)return;var N=andNums(),I=AND?andJ('info')||{}:{};
  var h='<h2>Ajustes del asistente</h2>'+(AND?'':'<p class="sub">Puedes prepararlos aquí; se usan en la app Android.</p>');
- h+='<div class="leg"><span>Costo del carro por km (GLP + mantenimiento)</span><span>RD$'+N.cpk.toFixed(1)+'</span></div>'+
-  '<div class="row" style="margin-top:10px"><label>Exigencia<select onchange="ANDCFG.lvl=this.value;andSave()">'+[['s','Suave'],['n','Normal'],['e','Exigente']].map(function(o){return '<option value="'+o[0]+'"'+(ANDCFG.lvl==o[0]?' selected':'')+'>'+o[1]+'</option>'}).join('')+'</select></label></div>'+
+ var ca=andCpkAuto(),D=I.dyn;
+ h+='<div class="row"><label>Costo del carro por km (RD$)<input type="number" step="0.1" min="0" value="'+esc(ANDCFG.cpk)+'" placeholder="Automático: '+ca.toFixed(1)+'" oninput="ANDCFG.cpk=this.value;andKeep()" onchange="andSave()"></label>'+
+  '<label>Exigencia<select onchange="ANDCFG.lvl=this.value;andSave()">'+[['s','Suave (−20%)'],['n','Normal'],['e','Exigente (+20%)'],['d','Dinámico (según hora y tránsito)']].map(function(o){return '<option value="'+o[0]+'"'+(ANDCFG.lvl==o[0]?' selected':'')+'>'+o[1]+'</option>'}).join('')+'</select></label></div>'+
+  '<small>'+(+ANDCFG.cpk>0?'Usas tu propio costo. Bórralo para volver al automático (RD$'+ca.toFixed(1)+': GLP + mantenimiento de tu historial).':'Vacío = automático con tu GLP y mantenimiento. Escribe el tuyo si no te cuadra.')+'</small>'+
+  (ANDCFG.lvl=='d'?'<div class="warn ok" style="margin-top:8px"><small>En cada oferta el lector sube la exigencia hasta +20% en hora pico (lun–vie 6–9 a. m. y 4–8 p. m.), con tránsito pesado cerca de ti (Mapbox) o si la ruta va lenta según Uber; la baja hasta −20% de noche y con calles despejadas. No hace consultas al llegar la oferta: el tránsito se actualiza solo cada 5 min, así que el aviso sale igual de rápido.'+
+   (!ZCFG.mb?' <b>Sin token de Mapbox</b> usa solo la hora y el ritmo de la ruta (ponlo en Zonas → Ajustes).':'')+
+   (D?'<br>Ahora: <b>×'+D.f.toFixed(2)+'</b> · '+esc(D.why)+'.':(AND?'<br>Actualiza la app Android a la 2.0 para usar el modo dinámico.':''))+'</small></div>':'')+
+  '<label style="flex-direction:row;align-items:center;gap:8px;margin-top:12px"><input type="checkbox" style="width:auto"'+(ANDCFG.tts?' checked':'')+' onchange="ANDCFG.tts=this.checked;andSave()"> <b>Aviso por voz</b>: dice «Conviene, 24 por kilómetro, tráfico fluido» para no tener que leer</label>'+(AND&&AND.testVoice?'<button style="margin-top:6px" onclick="AND.testVoice()">Probar la voz</button>':'')+
+  '<label style="flex-direction:row;align-items:center;gap:8px;margin-top:8px"><input type="checkbox" style="width:auto"'+(ANDCFG.drive?' checked':'')+' onchange="ANDCFG.drive=this.checked;andKeep()"> <b>Modo conducción</b> al empezar la jornada (pantalla grande y simple)</label>'+
   '<b style="display:block;margin-top:10px">Tu mínimo</b><div class="row"><label>RD$ por km<input type="number" min="0" value="'+esc(ANDCFG.mk)+'" placeholder="Automático" oninput="ANDCFG.mk=this.value;andKeep()" onchange="andSave()"></label><label>RD$ por hora<input type="number" min="0" value="'+esc(ANDCFG.mh)+'" placeholder="Automático" oninput="ANDCFG.mh=this.value;andKeep()" onchange="andSave()"></label></div>'+
   '<small>Desde tu mínimo hacia arriba: ✅ conviene. Por debajo: ❌ no conviene. Si dejas uno vacío, ese se calcula solo con tu promedio (con un tramo ⚠️ justo).</small>'+
 '<div class="row" style="margin-top:10px;align-items:center"><button class="pri" style="flex:none" onclick="andPush(this)">Guardar y enviar al lector</button><span id="andpm" style="flex:1;min-width:160px">'+andPushMsg()+'</span></div>'+
@@ -2490,37 +2533,106 @@ function andShiftSync(){if(!AND)return;var I=andJ('info')||{},ch=0;
 // Avisos que manda Android: GPS sin permiso, volver a la app.
 function mfAndroidEvent(k,v){if(k=='resume'){try{andShiftSync()}catch(e){}}if(k=='trip'&&v=='denied'){alert('Sin permiso de ubicación no puedo grabar el recorrido. Puedes darlo en Ajustes → Apps → Mis Finanzas → Permisos.')}try{renderJor();renderAnd()}catch(e){}}
 // Zonas de cuidado: sectores que nombraste; si una oferta los menciona, el aviso lo dice.
-// «Evitar» = no conviene siempre; «Precaución» = de noche baja un nivel y de día solo avisa.
-var DZG={dn:'Distrito Nacional',sde:'Santo Domingo Este',sdo:'Santo Domingo Oeste',sdn:'Santo Domingo Norte',otra:'Otra zona'};
+// «Evitar» = no conviene a ninguna hora; «Precaución» = solo de noche (baja un nivel), de día no se muestra;
+// «Segura» = lista blanca: en la misma dirección anula la precaución y el aviso lo dice en una línea.
+// Fuentes: Cadseci 2024 (Capotillo, Villa Mella, María Auxiliadora, Sabana Perdida, Guaricanos), Diario Libre 2025 (Los Mina Sur),
+// Listín Diario 2025 (El Almirante, Valiente) y guías de seguridad e inmobiliarias para la lista blanca.
+var DZG={dn:'Distrito Nacional',sde:'Santo Domingo Este',sdo:'Santo Domingo Oeste',sdn:'Santo Domingo Norte',seg:'Lista blanca: lugares seguros',otra:'Otra zona'};
 function dzDef(){var L={dn:[['Capotillo','Calles interiores y recogidas nocturnas'],['Gualey','Accesibilidad y calles interiores'],['La Ciénaga','Accesos y destinos específicos'],['Los Guandules','Recogidas alejadas de vías principales'],['Guachupita','Horarios y calles de destino'],['Villa Juana','Calles interiores y zonas comerciales'],['Villa Consuelo','Actividad nocturna y accesibilidad'],['Cristo Rey','Diferencias entre avenidas y calles interiores'],['Ensanche Luperón','Recogidas en calles secundarias'],['24 de Abril','Accesos y horarios']],
  sde:[['Los Mina','Calles interiores y horarios nocturnos'],['Katanga','Recogidas y destinos específicos'],['Vietnam','Accesibilidad y condiciones del entorno'],['Mendoza','Calles interiores y horarios'],['Cancino','Distancia hasta avenidas principales'],['Invivienda','Recogidas en zonas residenciales interiores'],['El Almirante','Accesibilidad y distancia de retorno'],['San Luis','Distancia, iluminación y retorno'],['La Ureña','Destinos alejados y retorno']],
  sdo:[['Buenos Aires de Herrera','Calles interiores'],['Herrera','Áreas industriales y calles secundarias'],['El Café de Herrera','Recogidas nocturnas'],['Hato Nuevo','Distancia y retorno'],['Manoguayabo','Calles interiores'],['Engombe','Accesibilidad'],['Palavé','Distancia y conectividad'],['Bayona','Condiciones de las calles y horarios']],
  sdn:[['Sabana Perdida','Calles interiores'],['La Victoria','Distancia y retorno'],['Guaricano','Recogidas nocturnas'],['Los Guaricanos','Accesibilidad'],['Villa Mella','Diferencias entre avenidas y calles secundarias'],['El Higüero','Distancia y conectividad']]},o=[];
- Object.keys(L).forEach(function(z){L[z].forEach(function(x){o.push({n:x[0],z:z,nota:x[1],lv:'p'})})});return o}
+ // Agregados en la revisión de 2026 (v2).
+ L.dn=L.dn.concat([['María Auxiliadora','Entre los más violentos 2024 (Cadseci)'],['Ensanche Simón Bolívar','Calles interiores (no la avenida)'],['La Zurza','Calles interiores y cañadas'],['Villas Agrícolas','Calles interiores de noche'],['Domingo Savio','Junto a Los Guandules'],['Barrio 27 de Febrero','Calles interiores (no la avenida)'],['La Puya','Calles interiores']]);
+ L.sde=L.sde.concat([['Los Mina Sur','Más robos y homicidios del municipio (2025)'],['Valiente','Atracos reportados por residentes (2025)'],['Los Tres Brazos','Accesos y orilla del río'],['La Barquita','Accesos y retorno'],['Hainamosa','Calles interiores'],['Villa Duarte','Calles interiores de noche']]);
+ L.sdo=L.sdo.concat([['Los Alcarrizos','Calles interiores y retorno'],['Pantoja','Calles interiores'],['Las Caobas','Calles interiores'],['Barrio Enriquillo','Herrera: calles interiores']]);
+ L.sdn=L.sdn.concat([['La Agustinita','Calles interiores'],['Los Casabes','Distancia y retorno'],['Ciudad Modelo','Distancia y retorno']]);
+ Object.keys(L).forEach(function(z){L[z].forEach(function(x){o.push({n:x[0],z:z,nota:x[1],lv:'p'})})});
+ dzSafe().forEach(function(n){o.push({n:n,z:'seg',nota:'',lv:'s'})});return o}
+// Lista blanca: sectores con vigilancia y movimiento, plazas, hoteles, universidades, hospitales y puntos de llegada.
+// Nombres completos a propósito («Urbanización Fernández», no «Fernández») para que no choquen con calles de otros barrios.
+function dzSafe(){return ['Piantini','Ensanche Piantini','Naco','Ensanche Naco','Serrallés','Ensanche Serrallés','Ensanche Paraíso','Evaristo Morales','La Esperilla','Ensanche Quisqueya','Gazcue','Zona Colonial','Ciudad Colonial','Bella Vista','Mirador Sur','Mirador Norte','Los Cacicazgos','El Millón','Renacimiento','Julieta Morales','Arroyo Hondo','Altos de Arroyo Hondo','Viejo Arroyo Hondo','Los Prados','La Julia','Urbanización Fernández','Urbanización Real','Cuesta Hermosa','La Castellana','Los Restauradores','El Vergel','Los Jardines del Norte','Ensanche La Fe','Atala','Alma Rosa','Ensanche Ozama','Lucerna','San Isidro',
+ 'Ágora Mall','Blue Mall','Acrópolis','Galería 360','Sambil','Downtown Center','Plaza Central','Bella Vista Mall','Megacentro','Novo-Centro','Unicentro','Silver Sun','Plaza Las Américas','Colinas Mall','Plaza de la Salud','CEDIMAT','Hospital General Plaza de la Salud','Centro Médico Moderno','Centro de Diagnóstico Medicina Avanzada',
+ 'PUCMM','INTEC','UNIBE','UNPHU','UNAPEC','Universidad APEC','Estadio Quisqueya','Parque Mirador Sur','Jardín Botánico','Parque Iberoamericano','Malecón Center','Hotel Jaragua','JW Marriott','Hotel Embajador','Renaissance Santo Domingo','Sheraton Santo Domingo','Aeropuerto Las Américas','Aeropuerto Internacional Las Américas','Aeropuerto El Higüero','Aeropuerto Joaquín Balaguer','Puerto Don Diego','Sans Souci']}
+// Agrega a la lista guardada los sectores nuevos de cada revisión sin tocar los que ya ajustaste.
+function dzMig(){if((S.dzv||0)>=2)return;var have={};S.dz.forEach(function(x){have[x.n.toLowerCase()]=1});dzDef().forEach(function(x){if(!have[x.n.toLowerCase()])S.dz.push(x)});S.dzv=2}
 // ===== Mapa del recorrido =====
 // Calles de OpenStreetMap (se descargan solo las imágenes del mapa de la zona que miras; el recorrido no sale del teléfono).
 // «En vivo» muestra lo que el GPS lleva grabado y se actualiza cada 20 s; los días guardados usan el trazado del registro.
 var AMAP={sel:'',map:null,lay:null,tm:0,ll:0,key:''};
-function leaflet(cb){if(window.L&&L.map)return cb(true);if(AMAP.ll){setTimeout(function(){leaflet(cb)},300);return}AMAP.ll=1;
+// No se llama «leaflet»: la librería, al cargarse, crea window.leaflet y pisaría la función.
+function lfLoad(cb){if(window.L&&L.map)return cb(true);if(AMAP.ll){setTimeout(function(){lfLoad(cb)},300);return}AMAP.ll=1;
  var c=document.createElement('link');c.rel='stylesheet';c.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';document.head.appendChild(c);
  var j=document.createElement('script');j.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';j.onload=function(){cb(true)};j.onerror=function(){AMAP.ll=0;cb(false)};document.head.appendChild(j)}
 function amapLive(){if(!AND||!AND.tripPoints)return null;var P=(andJ('tripPoints')||[]).map(function(q){return{la:q[0],lo:q[1],t:q[2]}});if(P.length<2)return null;try{return gAnalyze(P)}catch(e){return null}}
 function amapDays(){return S.logs.filter(function(x){return x.gps&&x.gps.pts&&x.gps.pts.length>1}).slice().reverse()}
+// Puntos crudos del GPS en vivo (con su hora), para la línea de tiempo.
+function amapPts(){if(!AND||!AND.tripPoints)return [];return (andJ('tripPoints')||[]).map(function(q){return{la:q[0],lo:q[1],t:q[2]}})}
+// Línea de tiempo de la jornada: cada tramo es «en viaje» (dentro de un viaje captado), «buscando» (moviéndote sin
+// pasajero), «detenido» o «sin señal». Usa las mismas reglas que gAnalyze; los viajes captados mandan sobre el GPS.
+var GTS=[['trip','En viaje','var(--c3)'],['mov','Buscando (en movimiento)','var(--c1)'],['stop','Detenido','var(--c2)'],['gap','Sin señal','color-mix(in srgb,var(--mu) 45%,transparent)']];
+function gTimeline(P,V,t0,t1){var S0=[],inT=function(t){return V.some(function(v){return t>=v.t0&&t<=v.t1})},add=function(a,b,k){if(b<=a)return;var l=S0[S0.length-1];if(l&&l.k==k&&Math.abs(l.b-a)<1000)l.b=b;else S0.push({a:a,b:b,k:k})};
+ var C=[];P.forEach(function(p){var q=C[C.length-1];if(q){var dt=(p.t-q.t)/1000;if(dt<=0||gHav(q,p)/dt>44)return}C.push(p)});
+ if(C.length<2){V.forEach(function(v){add(Math.max(t0,v.t0),Math.min(t1,v.t1),'trip')});return S0.sort(function(x,y){return x.a-y.a})}
+ if(C[0].t>t0)add(t0,C[0].t,inT(t0)?'trip':'gap');
+ for(var i=1;i<C.length;i++){var a=C[i-1],b=C[i],dt=(b.t-a.t)/1000,dm=gHav(a,b),k=dt>GGAP&&dm>=150?'gap':dt>GGAP||dm/dt<GMOV?'stop':'mov';
+  // Un tramo largo se parte por los viajes captados que caen dentro.
+  var cuts=[a.t];V.forEach(function(v){[v.t0,v.t1].forEach(function(t){if(t>a.t&&t<b.t)cuts.push(t)})});cuts.push(b.t);cuts.sort(function(x,y){return x-y});
+  for(var j=1;j<cuts.length;j++){var m=(cuts[j-1]+cuts[j])/2;add(cuts[j-1],cuts[j],inT(m)?'trip':k)}}
+ var last=C[C.length-1].t;if(t1-last>GGAP*1000)add(last,t1,inT(t1)?'trip':'stop');return S0}
+function gTot(T){var o={trip:0,mov:0,stop:0,gap:0};T.forEach(function(s){o[s.k]+=(s.b-s.a)/60000});return o}
+// Gráficos SVG: tiras de color con un hueco de 2 px entre tramos; el detalle va en el título (toque largo o pasar el dedo).
+function gTip(s){return gHr(s.a)+'–'+gHr(s.b)+' · '+GTS.filter(function(g){return g[0]==s.k})[0][1]+' · '+gHM((s.b-s.a)/60000)}
+function gStrip(T,t0,t1){var span=Math.max(1,t1-t0),col={},h='<div class="gst" role="img" aria-label="Línea de tiempo de la jornada">';GTS.forEach(function(g){col[g[0]]=g[2]});
+ T.forEach(function(s){h+='<i style="left:'+((s.a-t0)/span*100).toFixed(2)+'%;width:calc('+((s.b-s.a)/span*100).toFixed(2)+'% - 2px);background:'+col[s.k]+'" title="'+gTip(s)+'"></i>'});h+='</div><div class="gsx">';
+ var hr=new Date(t0);hr.setMinutes(0,0,0);for(var t=hr.getTime()+36e5;t<t1;t+=36e5){var x=(t-t0)/span*100;if(x>4&&x<96)h+='<span style="left:'+x.toFixed(1)+'%">'+new Date(t).toLocaleTimeString('es-DO',{hour:'numeric'})+'</span>'}
+ return h+'<span style="left:0;transform:none">'+gHr(t0)+'</span><span style="right:0;left:auto;transform:none">ahora</span></div>'}
+function gShare(o){var tot=Math.max(1,o.trip+o.mov+o.stop+o.gap),h='<div class="gsh" role="img" aria-label="Reparto del tiempo">';
+ GTS.forEach(function(g){var p=o[g[0]]/tot*100;if(p<0.5)return;h+='<i style="width:'+p.toFixed(1)+'%;background:'+g[2]+'" title="'+g[1]+' · '+gHM(o[g[0]])+'"></i>'});h+='</div>';
+ return h+GTS.filter(function(g){return o[g[0]]>=0.5}).map(function(g){return '<div class="leg"><span><i class="gdot" style="background:'+g[2]+'"></i>'+g[1]+'</span><span><b>'+gHM(o[g[0]])+'</b> · '+Math.round(o[g[0]]/tot*100)+'%</span></div>'}).join('')}
+// Barras por hora: minutos de cada estado en cada hora (apiladas, máximo 60).
+function gHours(T,t0,t1){var H={},hr=new Date(t0);hr.setMinutes(0,0,0);var hs=[];for(var t=hr.getTime();t<t1;t+=36e5){hs.push(t);H[t]={trip:0,mov:0,stop:0,gap:0}}
+ T.forEach(function(s){hs.forEach(function(t){var a=Math.max(s.a,t),b=Math.min(s.b,t+36e5);if(b>a)H[t][s.k]+=(b-a)/60000})});
+ var n=hs.length,bw=Math.max(22,Math.min(56,290/Math.max(1,n)-8)),W=Math.max(320,n*(bw+8)+30),Ht=150,h='<div class="scroll"><svg class="gch" viewBox="0 0 '+W+' '+(Ht+22)+'" style="min-width:'+(n>9?W:0)+'px" role="img" aria-label="Minutos por hora">';
+ [0,30,60].forEach(function(v){var y=Ht-v/60*(Ht-10);h+='<line x1="26" x2="'+W+'" y1="'+y+'" y2="'+y+'" style="stroke:var(--bd)"/><text x="22" y="'+(y+4)+'" text-anchor="end" style="fill:var(--mu);font-size:11px">'+v+'</text>'});
+ hs.forEach(function(t,i){var x=30+i*(bw+8),y=Ht,o=H[t];GTS.forEach(function(g){var m=o[g[0]];if(m<0.3)return;var hh=m/60*(Ht-10);y-=hh;h+='<rect x="'+x+'" y="'+(y+1).toFixed(1)+'" width="'+bw+'" height="'+Math.max(1,hh-2).toFixed(1)+'" rx="3" style="fill:'+g[2]+'"><title>'+new Date(t).toLocaleTimeString('es-DO',{hour:'numeric'})+' · '+g[1]+' '+Math.round(m)+' min</title></rect>'});
+  h+='<text x="'+(x+bw/2)+'" y="'+(Ht+16)+'" text-anchor="middle" style="fill:var(--mu);font-size:11px">'+new Date(t).toLocaleTimeString('es-DO',{hour:'numeric'})+'</text>'});
+ return h+'</svg></div>'}
+// Espera entre viajes: una barra por espera (de terminar un viaje a aceptar el siguiente), con el promedio marcado.
+function gGaps(V){if(V.length<2)return '<p><small>Con 2 viajes captados verás aquí cuánto esperas entre uno y otro.</small></p>';
+ var G=[];for(var i=1;i<V.length;i++)G.push({n:i+1,m:Math.max(0,(V[i].t0-V[i-1].t1)/60000),t:V[i].t0});var mx=Math.max(10,Math.max.apply(null,G.map(function(g){return g.m}))),av=G.reduce(function(a,g){return a+g.m},0)/G.length;
+ var bw=Math.max(18,Math.min(40,280/G.length-8)),W=Math.max(320,G.length*(bw+8)+40),Ht=130,h='<div class="scroll"><svg class="gch" viewBox="0 0 '+W+' '+(Ht+22)+'" style="min-width:'+(G.length>11?W:0)+'px" role="img" aria-label="Minutos entre viajes">',ya=Ht-av/mx*(Ht-14);
+ G.forEach(function(g,i){var x=34+i*(bw+8),hh=Math.max(2,g.m/mx*(Ht-14));h+='<rect x="'+x+'" y="'+(Ht-hh)+'" width="'+bw+'" height="'+hh+'" rx="4" style="fill:'+(g.m>av*1.5&&g.m>10?'var(--c2)':'var(--c1)')+'"><title>Antes del viaje '+g.n+' ('+gHr(g.t)+'): '+Math.round(g.m)+' min</title></rect>'+
+  (G.length<=12?'<text x="'+(x+bw/2)+'" y="'+(Ht-hh-4)+'" text-anchor="middle" style="fill:var(--tx);font-size:11px">'+Math.round(g.m)+'</text>':'')+'<text x="'+(x+bw/2)+'" y="'+(Ht+16)+'" text-anchor="middle" style="fill:var(--mu);font-size:11px">'+g.n+'</text>'});
+ h+='<line x1="30" x2="'+W+'" y1="'+ya+'" y2="'+ya+'" style="stroke:var(--tx);stroke-dasharray:4 4;opacity:.6"/>';
+ return h+'</svg></div><small>Línea punteada: tu promedio, <b>'+Math.round(av)+' min</b>. Número de abajo = viaje. En naranja, esperas de más de 1.5 veces el promedio.</small>'}
+// Panel en vivo de la jornada: cifras, línea de tiempo, reparto, por hora y esperas.
+function amapStats(g){var J=S.shift&&!S.shift.end?S.shift:null,P=amapPts(),t0=J?J.start:P.length?P[0].t:0;if(!t0)return '';var t1=Date.now(),V=andTrips(t0).slice().sort(function(a,b){return a.t0-b.t0});
+ var T=gTimeline(P.filter(function(p){return p.t>=t0}),V,t0,t1),o=gTot(T),tot=Math.max(1,o.trip+o.mov+o.stop+o.gap),K=function(b,s){return '<div class="kpi"><b>'+b+'</b><span>'+s+'</span></div>'},
+  G=[];for(var i=1;i<V.length;i++)G.push((V[i].t0-V[i-1].t1)/60000);
+ return '<h3 style="margin:16px 0 6px">En vivo · '+gHM((t1-t0)/60000)+'</h3><div class="kpis">'+K((g&&g.km||0)+' km','Distancia')+K(gHM(o.mov+o.trip),'En movimiento')+K(gHM(o.stop),'Detenido')+K(V.length?Math.round(o.trip/tot*100)+'%':'—','Tiempo con pasajero')+K(G.length?gHM(G.reduce(function(a,b){return a+b},0)/G.length):'—','Promedio entre viajes')+K(g&&g.vavg?g.vavg+' km/h':'—','Velocidad en movimiento')+'</div>'+
+  '<b style="display:block;margin-top:14px">Línea de tiempo</b>'+gStrip(T,t0,t1)+
+  '<b style="display:block;margin-top:14px">Cómo se va tu tiempo</b>'+gShare(o)+
+  '<b style="display:block;margin-top:14px">Minutos por hora</b>'+gHours(T,t0,t1)+
+  '<b style="display:block;margin-top:14px">Espera entre viajes</b>'+gGaps(V)+
+  '<p><small>Se actualiza cada 20 s. «En viaje» sale de los viajes que captó el lector; lo demás, del GPS (detenido = casi sin moverte).</small></p>'}
+var SDC=[18.4861,-69.9312];
 function renderAndMap(){var el=$('and_map');if(!el)return;clearInterval(AMAP.tm);if(TAB!='and'||subOf('and')!='amap'){if(AMAP.map){AMAP.map.remove();AMAP.map=null}AMAP.key='';return}
- var st=AND?andJ('tripStatus')||{}:{},live=AND&&(st.on||st.n>1),D=amapDays(),opts=[];
- if(live)opts.push(['live','En vivo · jornada de hoy'+(st.on?'':' (en pausa)')]);D.forEach(function(x,i){opts.push(['d'+S.logs.indexOf(x),fdate(x.d)+' · '+x.gps.km+' km'])});
- if(!opts.length){el.innerHTML='<h2>Mapa del recorrido</h2><p class="sub">Todavía no hay recorridos. '+(AND?'Enciende el GPS en Viajes → Estado o empieza una jornada.':'Los recorridos se graban con la app Android.')+'</p>';return}
+ var st=AND?andJ('tripStatus')||{}:{},J=S.shift&&!S.shift.end,live=AND&&(st.on||st.n>1||J),D=amapDays(),opts=[];
+ opts.push(['live',live?'En vivo · jornada de hoy'+(st.on?'':' (GPS en pausa)'):'Ahora (sin jornada)']);D.forEach(function(x){opts.push(['d'+S.logs.indexOf(x),fdate(x.d)+' · '+x.gps.km+' km'])});
  if(!opts.some(function(o){return o[0]==AMAP.sel}))AMAP.sel=opts[0][0];
- var g=AMAP.sel=='live'?amapLive():(S.logs[+AMAP.sel.slice(1)]||{}).gps;
- // Solo se vuelve a dibujar si cambió el día elegido o la cantidad de puntos: así el mapa no salta mientras lo miras.
- var key=AMAP.sel+'|'+(g?g.n+'|'+g.km:'');if(key==AMAP.key&&AMAP.map&&$('amapv')){amapTick();return}AMAP.key=key;
+ var g=AMAP.sel=='live'?amapLive():(S.logs[+AMAP.sel.slice(1)]||{}).gps,stats=AMAP.sel=='live'&&AND?amapStats(g):'';
+ // Solo se vuelve a dibujar el mapa si cambió el día o la cantidad de puntos; las cifras y gráficos se renuevan siempre.
+ var key=AMAP.sel+'|'+(g?g.n+'|'+g.km:'0');if(key==AMAP.key&&AMAP.map&&$('amapv')){var sx=$('amaps');if(sx)sx.innerHTML=stats;amapTick();return}AMAP.key=key;
  if(AMAP.map){AMAP.map.remove();AMAP.map=null}
  el.innerHTML='<h2>Mapa del recorrido</h2><label>Recorrido<select onchange="AMAP.sel=this.value;AMAP.key=\'\';renderAndMap()">'+opts.map(function(o){return '<option value="'+o[0]+'"'+(o[0]==AMAP.sel?' selected':'')+'>'+esc(o[1])+'</option>'}).join('')+'</select></label>'+
-  '<div id="amapv" class="amapv" role="img" aria-label="Mapa del recorrido"></div>'+(g?gSum(g,true):'<p><small>El GPS todavía no tiene suficientes puntos.</small></p>')+'<p><small>Mapa: © colaboradores de OpenStreetMap. Verde: inicio · oscuro: dónde terminaste o estás · ámbar: paradas de 5 min o más (tócalas).</small></p>';
- if(!g)return;
- leaflet(function(ok){var box=$('amapv');if(!box)return;if(!ok){box.outerHTML=gMap(g);return}
+  '<div id="amapv" class="amapv" role="img" aria-label="Mapa del recorrido"></div>'+'<div id="amaps">'+stats+'</div>'+(g?gSum(g,true,!!stats):'<p><small>'+(AND?(live?'El GPS todavía no tiene suficientes puntos para el trazado.':'Sin recorrido todavía: empieza la jornada o enciende el GPS en Viajes → Estado.'):'Los recorridos se graban con la app Android.')+'</small></p>')+
+  '<p><small>Mapa: © colaboradores de OpenStreetMap. Verde: inicio · oscuro: dónde terminaste o estás · ámbar: paradas de 5 min o más (tócalas).</small></p>';
+ lfLoad(function(ok){var box=$('amapv');if(!box)return;if(!ok){if(g)box.outerHTML=gMap(g);else box.innerHTML='<p style="padding:16px"><small>No se pudo cargar el mapa (sin internet).</small></p>';return}
   var cs=getComputedStyle(document.documentElement),ac=cs.getPropertyValue('--ac').trim()||'#137a43',wr=cs.getPropertyValue('--wr').trim()||'#8a5a00',tx=cs.getPropertyValue('--tx').trim()||'#111';
   var m=AMAP.map=L.map(box,{zoomControl:true,attributionControl:false});L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(m);
+  // Sin recorrido: Santo Domingo y, si el teléfono da la ubicación, dónde estás.
+  if(!g){var hz=null;try{hz=AND&&AND.here?JSON.parse(AND.here()||'null'):null}catch(e){}if(hz){m.setView(hz,14);L.circleMarker(hz,{radius:8,color:'#fff',weight:3,fillColor:tx,fillOpacity:1}).addTo(m).bindPopup('Aquí estás');setTimeout(function(){m.invalidateSize()},150);return}m.setView(SDC,12);try{navigator.geolocation.getCurrentPosition(function(p){if(AMAP.map!==m)return;var ll=[p.coords.latitude,p.coords.longitude];m.setView(ll,14);L.circleMarker(ll,{radius:8,color:'#fff',weight:3,fillColor:tx,fillOpacity:1}).addTo(m).bindPopup('Aquí estás')},function(){},{timeout:8000,maximumAge:120000})}catch(e){}setTimeout(function(){m.invalidateSize()},150);return}
   var pts=g.pts.map(function(p){return[p[0],p[1]]}),line=L.polyline(pts,{color:ac,weight:5,opacity:.9}).addTo(m);
   (g.stops||[]).forEach(function(q){L.circleMarker([q.la,q.lo],{radius:Math.min(13,5+q.m/10),color:'#fff',weight:2,fillColor:wr,fillOpacity:.9}).addTo(m).bindPopup('Parada de '+gHM(q.m)+'<br>desde las '+gHr(q.t))});
   L.circleMarker(pts[0],{radius:8,color:ac,weight:4,fillColor:'#fff',fillOpacity:1}).addTo(m).bindPopup('Inicio · '+gHr(g.t0));
@@ -2578,9 +2690,9 @@ function gMap(g){if(!g||!g.pts||g.pts.length<2)return '<p><small>El trazado ya n
  var mPx=k/111320,sk=[1,2,5,10,20,50].filter(function(v){return v*1000*mPx<=W*0.35}).pop()||1,sl=sk*1000*mPx;s+='<line x1="'+pd+'" x2="'+(pd+sl).toFixed(1)+'" y1="'+(H-8)+'" y2="'+(H-8)+'" stroke="var(--mu)" stroke-width="2"/><text x="'+pd+'" y="'+(H-13)+'" font-size="11" fill="var(--mu)">'+sk+' km</text>';
  return '<div class="chw gmap"><svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Mapa del recorrido: '+g.km+' km con '+(g.stops||[]).length+' paradas largas">'+s+'</svg>'+
   '<div class="cleg"><span><i style="background:var(--card);border:3px solid var(--ac);border-radius:50%;width:12px;height:12px"></i>Inicio</span><span><i style="background:var(--tx);border-radius:50%;width:12px;height:12px"></i>Fin</span><span><i style="background:var(--wr);border-radius:50%;width:12px;height:12px"></i>Parada de 5 min o más</span></div><div class="ctip" aria-live="polite"></div></div>'}
-function gSum(g,noMap){var tot=(g.mov+g.stop)||1,K=function(b,s){return '<div class="kpi"><b>'+b+'</b><span>'+s+'</span></div>'},ls=(g.stops||[]).reduce(function(a,p){return a+p.m},0);
- var h='<div class="kpis">'+K(g.km+' km','Distancia recorrida')+K(gHM(g.mov),'En movimiento ('+Math.round(g.mov/tot*100)+'%)')+K(gHM(g.stop),'Detenido ('+Math.round(g.stop/tot*100)+'%)')+K(g.vavg+' km/h','Velocidad promedio en movimiento')+'</div>';
- h+='<p class="sub" style="margin:10px 0 0">'+gHr(g.t0)+' a '+gHr(g.t1)+' · '+gHM((g.t1-g.t0)/60000)+' en total'+(g.gap?' · <b>'+gHM(g.gap)+' sin señal</b> ('+g.gkm+' km estimados en línea recta)':'')+'</p>';
+function gSum(g,noMap,noK){var tot=(g.mov+g.stop)||1,K=function(b,s){return '<div class="kpi"><b>'+b+'</b><span>'+s+'</span></div>'},ls=(g.stops||[]).reduce(function(a,p){return a+p.m},0);
+ var h=noK?'':'<div class="kpis">'+K(g.km+' km','Distancia recorrida')+K(gHM(g.mov),'En movimiento ('+Math.round(g.mov/tot*100)+'%)')+K(gHM(g.stop),'Detenido ('+Math.round(g.stop/tot*100)+'%)')+K(g.vavg+' km/h','Velocidad promedio en movimiento')+'</div>';
+ if(!noK)h+='<p class="sub" style="margin:10px 0 0">'+gHr(g.t0)+' a '+gHr(g.t1)+' · '+gHM((g.t1-g.t0)/60000)+' en total'+(g.gap?' · <b>'+gHM(g.gap)+' sin señal</b> ('+g.gkm+' km estimados en línea recta)':'')+'</p>';
  if(!noMap)h+=gMap(g);
  var zk=Object.keys(g.zt||{});if(zk.length)h+=foldHtml('gps-zt','Tiempo por zona',zk.map(function(k){return(ZONAS[k]?ZONAS[k].c:'Otra')+' '+gHM(g.zt[k])}).join(' · '),zk.map(function(k){var m=g.zt[k];return '<div class="dl"><i class="dot" style="background:var(--ac)"></i><span>'+(ZONAS[k]?ZONAS[k].n:'Fuera de las zonas')+'</span><span>'+gHM(m)+' <small>'+Math.round(m/tot*100)+'%</small></span><span class="tk"><i style="width:'+Math.round(m/tot*100)+'%;background:var(--ac)"></i></span></div>'}).join('')+'<small>Aproximado: cada punto se asigna a la zona cuyo centro está más cerca.</small>');
  if(g.stops&&g.stops.length)h+=foldHtml('gps-st','Paradas largas',g.stops.length+' paradas · '+gHM(ls)+' en total',g.stops.slice(0,10).map(function(p){var z=gZone(p);return '<div class="leg"><span>'+gHr(p.t)+(ZONAS[z]?' · '+ZONAS[z].c:'')+'</span><span>'+gHM(p.m)+'</span></div>'}).join('')+'<small>Una parada es un tramo de 5 minutos o más casi sin moverte (esperando viaje, comiendo, echando GLP…).</small>');
@@ -2698,9 +2810,37 @@ function renderJor(){var el=$('jor');if(!el)return;clearInterval(JT);var J=S.shi
   (falta<=0.5?'<div class="warn ok" style="margin-top:10px">¡Cuota de hoy cubierta! Lo que ganes ahora va a tus metas.</div>':'<div class="verd" style="margin-top:10px"><span class="big">'+rd(ph)+' netos por hora</span><small>es lo que necesitas en las '+left.toFixed(1)+' h que te quedan para cubrir los '+rd(falta)+' que faltan hoy (unos '+rd(bph)+' brutos por hora contando gastos).</small></div>')+
   '<div class="row" style="margin-top:10px"><label>Bruto hasta ahora<input type="number" id="jg" min="0" value="'+(J.g||'')+'" onchange="jUpd()"></label><label>Gastos hasta ahora<input type="number" id="jx" min="0" value="'+(J.ex||'')+'" onchange="jUpd()"></label><label>Odómetro al llegar<input type="number" id="jk1" min="0" placeholder="'+(J.km0?'Más de '+J.km0:'Opcional')+'"></label></div>'+
   (AND?andJorLine(J):'')+
-  '<div class="row" style="margin-top:8px"><button class="pri" onclick="jEnd()">Terminar jornada</button><button class="x" style="flex:none" onclick="jCancel(this)">Cancelar</button></div><div id="jm"></div>';
+  '<div class="row" style="margin-top:8px"><button class="pri" onclick="jEnd()">Terminar jornada</button><button style="flex:none" onclick="driveOpen()">Modo conducción</button><button class="x" style="flex:none" onclick="jCancel(this)">Cancelar</button></div><div id="jm"></div>';
  JT=setInterval(function(){var s=$('jtime');if(s)s.textContent=hmin(Date.now()-S.shift.start);else clearInterval(JT)},30000)}
-function jStart(){var k0=+$('jk0').value||0;S.shift={start:Date.now(),d:today(),z:$('jz').value,km0:k0,plan:Math.min(18,Math.max(1,+$('jpl').value||9))};if(k0>0)vehSetOdo(k0);if(AND){S.shift.and=1;try{AND.startTrip()}catch(e){}}save();all()}
+// ===== Modo conducción =====
+// Con la jornada en curso: una sola pantalla con letra grande (lo que falta, el avance, lo necesario por hora,
+// viajes y cobrado) y dos botones. Se abre solo al empezar la jornada (se puede apagar en Viajes → Ajustes)
+// y se cierra con «Salir»; no vuelve a abrirse solo en esa jornada.
+var DRT=0;
+function driveOpen(){var J=S.shift;if(!J||J.end)return;var d=$('drive');if(!d){d=document.createElement('div');d.id='drive';d.setAttribute('role','dialog');d.setAttribute('aria-label','Modo conducción');document.body.appendChild(d)}
+ driveDraw();clearInterval(DRT);DRT=setInterval(function(){if(!$('drive')||!S.shift||S.shift.end){driveClose();return}driveDraw()},30000)}
+function driveClose(){clearInterval(DRT);var d=$('drive');if(d)d.remove();if(S.shift&&!S.shift.dx){S.shift.dx=1;save()}}
+function driveDraw(){var d=$('drive'),J=S.shift;if(!d||!J)return;var n=jNeed(),P=fiProfile(),V=AND?andTrips(J.start):[],got=+J.g||V.reduce(function(a,t){return a+t.fare},0),
+  net=Math.max(0,got-(+J.ex||0)),falta=Math.max(0,n.need-n.hoy-net),hrs=(Date.now()-J.start)/36e5,left=Math.max(0.25,(+J.plan||9)-hrs),pct=n.need>0?Math.min(100,(n.hoy+net)/n.need*100):100,
+  st=AND?andJ('tripStatus')||{}:{},vd=vehDue().filter(function(x){return x.st!='ok'})[0],z=zGet(),zt=z&&z.d==today()&&z.rec?(z.rec.tipo=='descanso'?'Hoy conviene descansar':z.rec.k&&ZONAS[z.rec.k]?'Zona del día: '+ZONAS[z.rec.k].n:''):'';
+ var T=function(v,l){return '<div class="dv-t"><b>'+v+'</b><span>'+l+'</span></div>'};
+ d.innerHTML='<div class="dv"><div class="dv-top"><span>Jornada · '+hmin(Date.now()-J.start)+'</span><button onclick="driveClose()">Salir</button></div>'+
+  '<div class="dv-main"><span class="dv-l">'+(falta>0.5?'Te faltan hoy':'Meta de hoy cubierta')+'</span><span class="dv-n">'+rd(falta>0.5?falta:n.hoy+net)+'</span>'+
+  '<div class="dv-bar"><i style="width:'+pct.toFixed(0)+'%"></i></div></div>'+
+  '<div class="dv-g">'+T(falta>0.5?rd(falta/left):'—','netos por hora')+T(V.length,V.length==1?'viaje':'viajes')+T(rd(got),'cobrado')+'</div>'+
+  (zt||vd||st.km?'<div class="dv-i">'+[st.km?'📍 '+st.km+' km'+(st.on?'':' (GPS en pausa)'):'',zt?'🧭 '+esc(zt):'',vd?'🔧 '+esc(vd.n)+(vd.st=='vencido'?' vencido':' pronto'):''].filter(Boolean).join('<br>')+'</div>':'')+
+  '<div class="dv-b">'+(AND?'<button onclick="andGps();setTimeout(driveDraw,800)">'+(st.on?'Pausar GPS':'Reanudar GPS')+'</button>':'')+'<button class="pri" onclick="driveClose();setTab(\'inicio\');jEnd()">Terminar jornada</button></div></div>'}
+function driveAuto(){if(ANDCFG.drive&&S.shift&&!S.shift.end&&!S.shift.dx&&!$('drive'))driveOpen()}
+// ===== Primeros pasos =====
+// Lista en Hoy hasta que estén los datos que la app necesita para calcular bien; desaparece sola al completarla.
+function renderOb(){var el=$('obk');if(!el)return;if(S.obOff){el.innerHTML='';return}
+ var st=[[S.acc.some(function(a){return accBal(a.id)!=0}),'Pon cuánto tienes en tus cuentas','cta','cue'],[(S.items||[]).some(function(i){return i.amt>0}),'Anota tus obligaciones (alquiler, deudas)','deu','obl'],
+  [(S.items||[]).some(function(i){return i.due}),'Di qué día vence cada una','deu','obl'],[!!(S.veh&&S.veh.odo),'Pon el odómetro del carro','reg','veh'],[S.logs.length>0,'Registra tu primer día','reg','dia']],ok=st.filter(function(x){return x[0]}).length;
+ if(ok==st.length){el.innerHTML='';return}
+ el.innerHTML='<div class="row" style="align-items:center"><div style="flex:1"><span class="fi-ey">Primeros pasos · '+ok+' de '+st.length+'</span><h2 style="margin:0">Termina de configurar la app</h2></div><button class="x" style="flex:none;width:auto;padding:6px 12px" onclick="S.obOff=1;save();renderOb()">Ocultar</button></div>'+
+  '<div class="dv-bar" style="margin:10px 0"><i style="width:'+(ok/st.length*100)+'%"></i></div>'+
+  st.map(function(x){return '<button class="obs'+(x[0]?' ok':'')+'" '+(x[0]?'disabled':'onclick="setTab(\''+x[2]+'\',\''+x[3]+'\')"')+'><span>'+(x[0]?'✓':'○')+'</span>'+x[1]+(x[0]?'':' ›')+'</button>'}).join('')}
+function jStart(){var k0=+$('jk0').value||0;S.shift={start:Date.now(),d:today(),z:$('jz').value,km0:k0,plan:Math.min(18,Math.max(1,+$('jpl').value||9))};if(k0>0)vehSetOdo(k0);if(AND){S.shift.and=1;try{AND.startTrip()}catch(e){}}save();all();driveAuto()}
 function jUpd(){if(!S.shift)return;S.shift.g=Math.max(0,+$('jg').value||0);S.shift.ex=Math.max(0,+$('jx').value||0);save();renderJor()}
 function jEnd(){var J=S.shift;if(!J)return;var k1=+$('jk1').value||0;if(k1&&J.km0&&k1<J.km0){$('jm').innerHTML='<div class="warn">El odómetro al llegar debe ser mayor que al salir ('+J.km0+').</div>';return}
  J.g=Math.max(0,+$('jg').value||J.g||0);J.ex=Math.max(0,+$('jx').value||J.ex||0);J.end=Date.now();if(k1){J.km1=k1;vehSetOdo(k1)}
