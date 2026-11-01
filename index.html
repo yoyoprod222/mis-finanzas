@@ -826,6 +826,14 @@ async function testAI(){saveSet(1);var o=$('ficfgm'),t0=Date.now();o.innerHTML=f
 function showSent(){var o=$('ficfgm');if(!o)return;o.innerHTML='<p class="sub" style="margin:10px 0 6px">Ejemplo de lo que recibe la IA al preguntar por tu liquidez (solo res\u00famenes; sin n\u00fameros de cuenta ni bancos):</p><pre style="white-space:pre-wrap;font-size:11px;max-height:280px;overflow:auto;background:var(--bg);padding:10px;border-radius:10px">'+esc(JSON.stringify(fiR({base:fiCtxBase(),Liquidez:FIA.liq.f()}),null,1))+'</pre>'}
 function useChip(b){$(AIP+'aiin').value=b.textContent;runAI()}
 function aiMsg(h){var o=$(AIP+'aiout');if(o)o.innerHTML='<div class="warn">'+h+'</div>'}
+// En la app Android el WebView no trae dictado: este SpeechRecognition usa el de Android (MFAndroid.sttStart), que
+// pide el permiso del micrófono. Imita lo que usa micToggle: start/stop, onresult, onerror y onend.
+var STTI=null;
+function AndSR(){this.lang='es-DO'}
+AndSR.prototype.start=function(){STTI=this;window.MFAndroid.sttStart(this.lang||'es-DO')};
+AndSR.prototype.stop=function(){try{window.MFAndroid.sttStop()}catch(e){}};
+function mfStt(k,t){var r=STTI;if(!r)return;if(k=='partial'||k=='final'){if(t&&r.onresult)r.onresult({results:[[{transcript:t}]]})}else if(k=='error'){if(r.onerror)r.onerror({error:t})}else if(k=='end'){STTI=null;if(r.onend)r.onend()}}
+if(!(window.SpeechRecognition||window.webkitSpeechRecognition)&&window.MFAndroid&&window.MFAndroid.sttStart)window.SpeechRecognition=AndSR;
 function micToggle(){var SR=window.SpeechRecognition||window.webkitSpeechRecognition,P=AIP;if(!SR){aiMsg('Este navegador no permite dictado dentro de la p\u00e1gina. Usa el micr\u00f3fono del teclado de tu tel\u00e9fono en el cuadro de texto.');return}
  if(RECON){REC.stop();return}AIERR=false;var base=$(P+'aiin').value;REC=new SR();REC.lang='es-DO';REC.interimResults=true;REC.continuous=false;
  REC.onresult=function(e){var t='';for(var i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;$(P+'aiin').value=(base?base+' ':'')+t};
@@ -894,7 +902,7 @@ function renderPred(){var f=forecast(),h='<h2>Predicci\u00f3n</h2>';
 function runTests(){var T=[],saved=S,near=function(a,b){return Math.abs(a-b)<0.01};
  function it(id,n,a,f,t){return{id:id,name:n,amt:a,freq:f,total:t||0,prio:id}}
  function mk(items,logs,x){var s=def();s.items=items;s.logs=logs;s.cfg=[];s.dpw=7;s.cushion=2;s.goals=[];s.sp=[];s.list=[];s.cob=[];s.cal=[];s.lim={comida:0,hormiga:0};if(x)for(var k in x)s[k]=x[k];return s}
- function run(s,f){S=s;_sm=null;try{return f()}finally{S=saved;_sm=null}}
+ function run(s,f){S=s;_sm=null;try{return f()}finally{S=saved;_sm=null;try{carApply()}catch(e){}}}
  function t(n,f){var ok=false;try{ok=!!f()}catch(e){}T.push([n,ok])}
  var A=function(){return[it(1,'Auto',700,'d'),it(2,'Casa',3000,'m')]},E={reserve:0,arr:{},pd:{}};
  t('El dinero se conserva: neto + fondo usado = total repartido',function(){return[0,500,1000,2500,5000,12000].every(function(a){return run(mk(A(),[]),function(){var r=allocDay(a,{reserve:1000,arr:{1:100},pd:{}},false);return near(r.cats.reduce(function(q,c){return q+c.v},0),a+r.draw)})})});
