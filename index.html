@@ -557,7 +557,7 @@ items:[
 {id:9,name:"Ahorro mínimo diario",amt:100,freq:"d",total:0,prio:3,sv:1}],
 split:[{k:"res",n:"Fondo para días malos (hasta su meta)",p:12.5},{k:"extra",n:"Abono extra a deudas (tarjeta primero)",p:42.5},{k:"ahorro",n:"Ahorro",p:15},{k:"super",n:"Supermercado de la casa",p:20},{k:"pers",n:"Personal / ocio",p:10}],
 logs:[]}}
-var HNAV=false,SCHEMA=6,_sm=null,_nosnap=false,PAGEV='mf-v39';
+var HNAV=false,SCHEMA=6,_sm=null,_nosnap=false,PAGEV='mf-v40';
 var S;
 try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 function upgrade(){if(S&&S.items&&(S.v||0)<SCHEMA){try{localStorage.setItem(KEY+'-bak-'+(S.v||0)+'-'+Date.now(),JSON.stringify(S));pruneBak()}catch(e){}}
@@ -948,6 +948,10 @@ function runTests(){var T=[],saved=S,near=function(a,b){return Math.abs(a-b)<0.0
  t('Clientes: un viaje único sale solo su día',function(){return run(cl({v:[Object.assign({},rv,{rec:0,dias:[],d:'2026-10-06'})]}),function(){var L=cliOcc(T0,T1);return L.length==1&&L[0].ds=='2026-10-06'})});
  t('Clientes: saldo = viajes hechos − pagos',function(){return run(cl({v:[Object.assign({},rv,{hasta:'2026-10-09',off:['2026-10-07']})],p:[{id:3,cid:1,m:700,d:'2026-10-09'}]}),function(){var o=cliOwed(1);return o.n==4&&o.due==1200&&o.bal==500})});
  t('Clientes: un cliente archivado no sale en la agenda',function(){return run(cl({c:[{id:1,n:'Ana',arch:1}],v:[rv]}),function(){return cliOcc(T0,T1).length==0})});
+ t('Mensaje al cliente: saludo según la hora y datos del viaje',function(){var v={nombre:'Ana',hora:'7:45 a. m.',lugar:'Naco',min:'12'},d=new Date('2026-10-05T07:30').getTime();
+  return cliFillT(CLIDEF.s,true,v,d)=='Buenos días Ana, tu conductor ya va en camino. Llega a las 7:45 a. m. aproximadamente a Naco. ¡Nos vemos pronto!'
+   &&cliSaludo(new Date('2026-10-05T14:00').getTime())=='Buenas tardes'&&cliSaludo(new Date('2026-10-05T21:00').getTime())=='Buenas noches'&&cliSaludo(new Date('2026-10-05T03:00').getTime())=='Buenas noches'
+   &&cliFillT('Ya voy, {nombre}',true,v,d)=='Buenos días. Ya voy, Ana'&&cliFillT('Hola {nombre}, {saludo}',true,v,d)=='Hola Ana, Buenos días'&&cliFillT('Llego en {min} min',false,v,d)=='Llego en 12 min'&&cliFillT('Llego a las {hora}.',false,v,d)=='Llego a las 7:45 a. m.'});
  t('Precio: lo que paga el pasajero en Uber (a ti te llega el 75%)',function(){var q=cliPriceOf(10,20,{gpk:25,gph:600,cpk:8},0.25);return near(q.drv,250)&&Math.abs(q.pas-333.33)<0.01&&q.pr==340&&near(q.cost,80)});
  var A=function(){return[it(1,'Auto',700,'d'),it(2,'Casa',3000,'m')]},E={reserve:0,arr:{},pd:{}};
  t('El dinero se conserva: neto + fondo usado = total repartido',function(){return[0,500,1000,2500,5000,12000].every(function(a){return run(mk(A(),[]),function(){var r=allocDay(a,{reserve:1000,arr:{1:100},pd:{}},false);return near(r.cats.reduce(function(q,c){return q+c.v},0),a+r.draw)})})});
@@ -3171,16 +3175,33 @@ async function cliSend(to,t,p){var w=cliEns().wa;if(!w.url||!w.key)throw new Err
 function cliErr(e){var m=String(e&&e.message||e);return /fetch|network|load failed/i.test(m)?'no pude conectar con el bot (revisa la dirección y tu internet)':m}
 function cliMark(k,f){var C=cliEns();C.sent[k]=C.sent[k]||{};C.sent[k][f]=Date.now();save()}
 function cliPlace(o){return (o.t.o&&o.t.o.t)||'el punto de recogida'}
-function cliPSal(o,eta){return [cliFirst(o.c.n),hm12(Date.now()+eta*1000),cliPlace(o)]}
-function cliPLleg(o,eta){return [cliFirst(o.c.n),cliPlace(o),String(Math.max(1,Math.round(eta/60)))]}
+function cliPSal(o,eta){return [cliFirst(o.c.n),hm12(Date.now()+eta*1000),cliPlace(o),String(Math.max(1,Math.round(eta/60)))]}
+function cliPLleg(o,eta){return [cliFirst(o.c.n),cliPlace(o),String(Math.max(1,Math.round(eta/60))),hm12(Date.now()+eta*1000)]}
 function cliPYo(o,p){return [cliPlace(o),o.c.n,hm12(o.ts),String(Math.round(p.eta/60))]}
-function cliBot(){var w=cliEns().wa;return !!(w.url&&w.key)}
-function cliTxt(kind,o,eta){var a=kind=='s'?cliPSal(o,eta):cliPLleg(o,eta);return kind=='s'?'Hola '+a[0]+', tu conductor ya va en camino. Llega a las '+a[1]+' aproximadamente a '+a[2]+'. ¡Nos vemos pronto!':'Hola '+a[0]+', tu conductor está llegando a '+a[1]+'. Faltan unos '+a[2]+' minutos, ve saliendo por favor.'}
+function cliMode(){var w=cliEns().wa;return w.modo||(w.url&&w.key?'bot':'man')}
+function cliBot(){var w=cliEns().wa;return cliMode()=='bot'&&!!(w.url&&w.key)}
+// Desde tu WhatsApp: la app Android abre el chat con el mensaje y el lector de ofertas toca Enviar (sin cuenta de Meta).
+function cliAutoWa(){return cliMode()=='auto'&&!!(AND&&AND.cliWa)}
+function cliWaErr(r){return r=='acc'?'Para que la app toque Enviar por ti, activa <b>Mis Finanzas: lector de ofertas</b> en Accesibilidad. <button onclick="AND.openAccessibility()">Abrir Accesibilidad</button>'
+ :r=='reinicia'?'El lector de ofertas está activado, pero Android lo detuvo. Apágalo y vuelve a encenderlo en Accesibilidad. <button onclick="AND.openAccessibility()">Abrir Accesibilidad</button>':'El número de WhatsApp no es válido.'}
+// Mensajes al cliente: los escribes en Clientes → Ajustes con {nombre}, {hora}, {lugar} y {min}. El saludo según la hora
+// («Buenos días», «Buenas tardes», «Buenas noches») va al inicio, o donde pongas {saludo}. La app Android usa lo mismo (Clients.msg).
+var CLIDEF={s:'{nombre}, tu conductor ya va en camino. Llega a las {hora} aproximadamente a {lugar}. ¡Nos vemos pronto!',l:'{nombre}, tu conductor está llegando a {lugar}. Faltan unos {min} minutos, ve saliendo por favor.'};
+function cliSaludo(t){var h=new Date(t||Date.now()).getHours();return h>=5&&h<12?'Buenos días':h>=12&&h<19?'Buenas tardes':'Buenas noches'}
+function cliFillT(t,g,v,now){t=String(t||'').trim();if(g&&!/\{saludo\}/.test(t))t=(/^\{nombre\}/.test(t)?'{saludo} ':'{saludo}. ')+t;
+ return t.replace(/\{(saludo|nombre|hora|lugar|min)\}/g,function(m,k){return k=='saludo'?cliSaludo(now):v[k]}).replace(/m\.\./g,'m.')}
+function cliTxt(kind,o,eta){var w=cliEns().wa,a=kind=='s'?cliPSal(o,eta):cliPLleg(o,eta),v=kind=='s'?{nombre:a[0],hora:a[1],lugar:a[2],min:a[3]}:{nombre:a[0],lugar:a[1],min:a[2],hora:a[3]};
+ return cliFillT((kind=='s'?w.ts:w.tl)||CLIDEF[kind],w.g!==false,v)}
 // Sin bot: abre WhatsApp con el mensaje escrito para ese cliente; desde tu número, tú tocas Enviar.
 function cliOpenWa(tel,txt){var u='https://wa.me/'+cliTel(tel)+'?text='+encodeURIComponent(txt);if(AND)location.href=u;else window.open(u,'_blank','noopener')}
 function cliSay(t,ok){var m=$('cli_msg');if(m)m.innerHTML='<div class="warn" role="status"'+(ok?' style="background:var(--ac2);color:var(--ac)"':'')+'>'+t+'</div>'}
 // Botones «Ya salí» y «Llegando»: mandan el aviso al cliente al momento.
 async function cliGo(k,kind,b){var o=cliFind(k);if(!o)return;
+ if(cliAutoWa()){if(cliTel(o.c.tel).length<11){cliSay(esc(o.c.n)+' no tiene WhatsApp guardado. Agrégalo en Clientes → Editar.');return}if(b){b.disabled=true;b.textContent='Enviando…'}
+  var e1=600;try{var p1=await cliPlan(o,true);if(p1.eta)e1=p1.eta}catch(x){}
+  var r=AND.cliWa(cliTel(o.c.tel),cliTxt(kind,o,kind=='s'?e1:Math.min(e1,300)),cliFirst(o.c.n),k,kind);
+  if(r!='ok'){cliSay(cliWaErr(r));renderCliAg();return}cliMark(k,kind);if(kind=='s'&&AND.cliArrive)AND.cliArrive(k);
+  cliSay(ic('check','ok')+' Mandando el WhatsApp a '+esc(o.c.n)+' desde tu número…',1);renderCliAg();return}
  if(!cliBot()){if(cliTel(o.c.tel).length<11){cliSay(esc(o.c.n)+' no tiene WhatsApp guardado. Agrégalo en Clientes → Editar.');return}var pl=CLIP[o.k],e0=pl&&pl.eta?pl.eta:600;if(b){b.disabled=true;b.textContent='Calculando…'}
   try{if(kind=='s'){pl=await cliPlan(o,true);if(pl.eta)e0=pl.eta}}catch(x){}cliOpenWa(o.c.tel,cliTxt(kind,o,kind=='s'?e0:Math.min(e0,300)));cliMark(k,kind);renderCliAg();return}
  if(b){b.disabled=true;b.textContent='Enviando…'}
@@ -3212,7 +3233,7 @@ function cliWatch(o){if(CLIWT[o.k]||!navigator.geolocation)return;var C=cliEns()
 function cliUnwatch(k){var st=CLIWT[k];if(st&&st.id!=null)navigator.geolocation.clearWatch(st.id);delete CLIWT[k]}
 // App Android: le deja la agenda de 14 días; ella calcula la salida, avisa y manda los WhatsApp con la app cerrada.
 function cliAndSync(){if(!AND||!AND.setClients)return;var C=cliEns(),now=Date.now(),L=cliOcc(now-30*60000,now+14*864e5).filter(function(o){return o.t.av!==0&&o.t.o&&o.t.o.la!=null}).map(function(o){return {k:o.k,t:o.ts,n:o.c.n,f:cliFirst(o.c.n),tel:cliTel(o.c.tel),o:{t:cliPlace(o),la:o.t.o.la,lo:o.t.o.lo}}});
- var cn=cliCobNext(),ct=C.cob.on&&cn?cliCobTxt():'',j=JSON.stringify({wa:{url:(C.wa.url||'').trim().replace(/\/+$/,''),key:C.wa.key||'',me:cliTel(C.wa.me),yo:!!C.wa.yo,sal:!!C.wa.sal,lleg:!!C.wa.lleg},mg:C.mg||0,list:L,cob:ct?{k:cn.k,t:cn.t,txt:'Te deben: '+ct}:null});if(j!=CLIAL){CLIAL=j;try{AND.setClients(j)}catch(e){}}}
+ var cn=cliCobNext(),ct=C.cob.on&&cn?cliCobTxt():'',j=JSON.stringify({wa:{auto:cliMode()=='auto',url:(C.wa.url||'').trim().replace(/\/+$/,''),key:C.wa.key||'',me:cliTel(C.wa.me),yo:!!C.wa.yo,sal:!!C.wa.sal,lleg:!!C.wa.lleg,g:C.wa.g!==false,ts:C.wa.ts||'',tl:C.wa.tl||''},mg:C.mg||0,list:L,cob:ct?{k:cn.k,t:cn.t,txt:'Te deben: '+ct}:null});if(j!=CLIAL){CLIAL=j;try{AND.setClients(j)}catch(e){}}}
 function cliAndSent(){if(!AND||!AND.cliSent)return;try{var o=JSON.parse(AND.cliSent()||'{}'),C=cliEns(),ch=0;for(var k in o){C.sent[k]=C.sent[k]||{};['y','s','l'].forEach(function(f){if(o[k][f]&&!C.sent[k][f]){C.sent[k][f]=o[k][f];ch=1}})}if(ch)save()}catch(e){}}
 
 // --- Buscar direcciones: Mapbox (si hay token) y, si no encuentra, OpenStreetMap. Solo República Dominicana.
@@ -3257,7 +3278,7 @@ function cliCobBanner(){var C=cliEns(),tx=C.cob.on&&new Date().getDay()==C.cob.d
 // --- Pantallas
 function cliOpts(sel){var A=cliEns().c.filter(function(c){return !c.arch||c.id==sel});return A.length?A.map(function(c){return '<option value="'+c.id+'"'+(c.id==sel?' selected':'')+'>'+esc(c.n)+'</option>'}).join(''):'<option value="">Primero agrega un cliente</option>'}
 function cliBuild(){var a=$('cli_c');if(!a||a.dataset.b)return;a.dataset.b=1;
- a.innerHTML='<h2>Clientes</h2><p class="sub">Clientes que te contratan por fuera de Uber. Con su WhatsApp, el bot les avisa cuando vas en camino y cuando estás llegando.</p>'+
+ a.innerHTML='<h2>Clientes</h2><p class="sub">Clientes que te contratan por fuera de Uber. Con su WhatsApp, les llega un aviso cuando vas en camino y cuando estás llegando.</p>'+
   '<details id="cli_cf"><summary>Agregar cliente</summary><div class="row"><label class="vl">Nombre<input id="clN" autocomplete="off"></label><label class="vl">WhatsApp<input id="clT" type="tel" inputmode="tel" autocomplete="off" placeholder="809 555 1234"></label></div>'+
   '<div class="row"><label class="vl" style="flex:1 1 100%">Dirección habitual de recogida (opcional)<input id="clD" autocomplete="off" oninput="delete CLIGEO.clD" placeholder="Ej. Residencial Los Prados"></label></div>'+
   '<div class="row"><button type="button" onclick="cliGeo(\'clD\')">Buscar</button><button type="button" onclick="cliGeoHere(\'clD\')">Estoy aquí</button></div><div id="clD_r" class="geo" aria-live="polite"></div>'+
@@ -3282,16 +3303,23 @@ function cliBuild(){var a=$('cli_c');if(!a||a.dataset.b)return;a.dataset.b=1;
   '<div class="row"><label class="vl">Fecha<input id="clPf" type="date"></label><label class="vl">Nota (opcional)<input id="clPn" autocomplete="off"></label></div>'+
   '<label class="cli-ck"><input type="checkbox" id="clPx" checked> Sumarlo a los ingresos del día</label><div class="row"><button class="pri" onclick="cliSaveP()">Registrar pago</button></div><div id="cli_pmsg" aria-live="polite"></div>'+
   '<h3>Saldos</h3><div id="cli_pb"></div><h3>Clientes y Uber</h3><div id="cli_pr"></div><h3>Últimos pagos</h3><div id="cli_pl"></div>';
- $('cli_w').innerHTML='<h2>Bot de WhatsApp</h2><p class="sub">El bot manda los avisos solo, aunque vayas manejando. Se configura una vez con la guía <b>whatsapp-bot/GUIA.md</b> (Meta y Cloudflare) y aquí pegas sus datos.</p>'+
-  '<div class="row"><label class="vl" style="flex:1 1 100%">Dirección del bot<input id="clWu" type="url" autocomplete="off" placeholder="https://mis-finanzas-bot.tu-usuario.workers.dev"></label></div>'+
-  '<div class="row"><label class="vl">Clave del bot (APP_KEY)<input id="clWk" type="password" autocomplete="off"></label><label class="vl">Tu WhatsApp<input id="clWm" type="tel" inputmode="tel" autocomplete="off" placeholder="809 555 1234"></label></div>'+
-  '<label class="cli-ck"><input type="checkbox" id="clWy"> Avisarme a mí cuándo salir</label><label class="cli-ck"><input type="checkbox" id="clWs"> Avisar al cliente cuando voy en camino</label><label class="cli-ck"><input type="checkbox" id="clWl"> Avisar al cliente cuando estoy llegando</label>'+
+ $('cli_w').innerHTML='<h2>WhatsApp a tus clientes</h2>'+
+  '<div class="row"><label class="vl" style="flex:1 1 100%">Cómo se mandan los avisos<select id="clWo" onchange="cliWMode()"><option value="auto">Solos, desde mi WhatsApp</option><option value="bot">Con el bot (cuenta de Meta)</option><option value="man">Yo toco Enviar</option></select></label></div><p class="sub" id="clWsub"></p>'+
+  '<div id="clWbot"><div class="row"><label class="vl" style="flex:1 1 100%">Dirección del bot<input id="clWu" type="url" autocomplete="off" placeholder="https://mis-finanzas-bot.tu-usuario.workers.dev"></label></div>'+
+  '<div class="row"><label class="vl">Clave del bot (APP_KEY)<input id="clWk" type="password" autocomplete="off"></label></div><label class="cli-ck"><input type="checkbox" id="clWy"> Mandarme también un WhatsApp a mí cuándo salir</label></div>'+
+  '<div class="row"><label class="vl">Tu WhatsApp<input id="clWm" type="tel" inputmode="tel" autocomplete="off" placeholder="809 555 1234"></label></div>'+
+  '<label class="cli-ck"><input type="checkbox" id="clWs"> Avisar al cliente cuando voy en camino</label><label class="cli-ck"><input type="checkbox" id="clWl"> Avisar al cliente cuando estoy llegando</label>'+
   '<div class="row"><label class="vl">Margen extra al salir (minutos)<input id="clWg" type="number" inputmode="numeric" min="0" max="30"></label></div>'+
   (AND?'':'<label class="cli-ck"><input type="checkbox" id="clWa"> Este aparato manda los avisos automáticos</label><small>Déjalo apagado si usas la app en el teléfono: si no, esta computadora calcularía la salida con su propia ubicación y repetiría los avisos.</small>')+
+  '<h3>Mensajes al cliente</h3><label class="cli-ck"><input type="checkbox" id="clWsg" onchange="cliTplPrev()"> Empezar con «Buenos días», «Buenas tardes» o «Buenas noches» según la hora</label>'+
+  '<div class="row"><label class="vl" style="flex:1 1 100%">Cuando voy en camino<textarea id="clWts" rows="3" maxlength="500" oninput="cliTplPrev()"></textarea></label></div>'+
+  '<div class="row"><label class="vl" style="flex:1 1 100%">Cuando estoy llegando<textarea id="clWtl" rows="3" maxlength="500" oninput="cliTplPrev()"></textarea></label></div>'+
+  '<small>Escribe <b>{nombre}</b>, <b>{hora}</b>, <b>{lugar}</b> o <b>{min}</b> y se cambian solos por los datos del viaje. Con el bot, Meta solo deja mandar sus mensajes aprobados.</small>'+
+  '<div><div id="clWprev" class="sub" aria-live="polite"></div><button onclick="cliTplReset()">Volver a los mensajes de siempre</button></div>'+
   '<h3>Precios y cobros</h3><div class="row"><label class="vl">Comisión que te quita Uber (%)<input id="clWc" type="number" inputmode="numeric" min="0" max="60"></label></div>'+
   '<small>El precio sugerido es lo que Uber le cobraría al pasajero por ese viaje: lo que Uber te pagaría a ti ÷ (1 − comisión). Con 25%, si Uber te pagaría RD$300, el cliente paga RD$400.</small>'+
   '<label class="cli-ck"><input type="checkbox" id="clWr"> Recordarme cobrar a los clientes que deben</label><div class="row"><label class="vl">Día<select id="clWd">'+[1,2,3,4,5,6,0].map(function(i){return '<option value="'+i+'">'+CLIWN[i]+'</option>'}).join('')+'</select></label><label class="vl">Hora<input id="clWh" type="time"></label></div>'+
-  '<div class="row"><button class="pri" onclick="cliSaveW()">Guardar</button><button onclick="cliTestW(this)">Probar el bot</button></div><div id="cli_wmsg" aria-live="polite"></div><div id="cli_wst"></div>';
+  '<div class="row"><button class="pri" onclick="cliSaveW()">Guardar</button><button id="clWt" onclick="cliTestW(this)">Probar</button></div><div id="cli_wmsg" aria-live="polite"></div><div id="cli_wst"></div>';
  cliEditC(0);cliDiasUI();cliWFill();$('clVf').value=today();$('clPf').value=today()}
 function renderCli(){if(!$('cli_c'))return;cliEns();cliBuild();var vc=$('clVc'),pc=$('clPc');if(vc&&document.activeElement!=vc)vc.innerHTML=cliOpts(vc.value);if(pc&&document.activeElement!=pc)pc.innerHTML=cliOpts(pc.value);
  renderCliC();renderCliAg();renderCliP();cliWSt();cliAndSync()}
@@ -3313,7 +3341,7 @@ function renderCliAg(){var C=cliEns(),el=$('cli_vl');if(!el)return;var now=Date.
  L.forEach(function(o){if(o.ds!=last){last=o.ds;h+='<p class="cli-day">'+cliDayLbl(o.ds)+'</p>'}var past=o.ts<now-20*60000,soon=!past&&o.ts-now<3*3600000,paid=C.p.some(function(p){return p.ok==o.k});
   if(soon&&!CLIP[o.k]&&TAB=='cli'&&subOf('cli')=='cvia')cliPlan(o).then(function(){if(TAB=='cli')renderCliAg()});
   h+='<div class="cli-occ"><div class="ct"><span><b>'+hm12(o.ts)+'</b> · '+esc(o.c.n)+'</span><span>'+(o.t.m>0?rd(o.t.m):'')+'</span></div><small>'+esc(cliPlace(o))+(o.t.ds&&o.t.ds.t?' → '+esc(o.t.ds.t):'')+'</small>'+
-   (cliStat(o)?'<div><small>'+cliStat(o)+'</small></div>':'')+(!past&&!cliBot()&&o.ts-now<3*3600000?'<div><small>Los botones abren WhatsApp con el mensaje listo.</small></div>':'')+'<div class="row">'+
+   (cliStat(o)?'<div><small>'+cliStat(o)+'</small></div>':'')+(!past&&!cliBot()&&!cliAutoWa()&&o.ts-now<3*3600000?'<div><small>Los botones abren WhatsApp con el mensaje listo.</small></div>':'')+'<div class="row">'+
    (past?(o.t.m>0&&!paid?'<button onclick="cliPaid(\''+o.k+'\')">Cobrado</button>':paid?'<small>'+ic('check','ok')+' Cobrado</small>':''):'<button onclick="cliGo(\''+o.k+'\',\'s\',this)">Ya salí</button><button onclick="cliGo(\''+o.k+'\',\'l\',this)">Llegando</button>')+
    '<button onclick="cliSkip(this,\''+o.k+'\')">No se hizo</button></div></div>'});
  el.innerHTML=h;
@@ -3370,59 +3398,66 @@ function cliSaveP(){var cid=+$('clPc').value,m=+$('clPm').value,d=$('clPf').valu
 function cliDelP(b,id){tap2(b,'¿Borrar?',function(){var C=cliEns(),p=C.p.filter(function(x){return x.id==id})[0];if(!p)return;C.p=C.p.filter(function(x){return x.id!=id});
  if(p.inc){var c=cliById(p.cid),nm=p.lbl||('Cliente: '+(c?c.n:''));S.logs.some(function(lg){var i=lg.d==p.d&&lg.x?lg.x.findIndex(function(x){return x.c==nm&&x.v==p.m}):-1;if(i>=0)lg.x.splice(i,1);return i>=0});
  S.logs=S.logs.filter(function(l){return !(l.n=='Clientes'&&l.off&&!(l.x||[]).length&&!l.g)})}save();all()})}
-function cliWFill(){var C=cliEns(),w=C.wa;$('clWu').value=w.url||'';$('clWk').value=w.key||'';$('clWm').value=w.me||'';$('clWy').checked=!!w.yo;$('clWs').checked=!!w.sal;$('clWl').checked=!!w.lleg;$('clWg').value=C.mg;
+var CLIWS={auto:'La app abre el chat del cliente con el mensaje escrito, toca Enviar por ti y vuelve a donde estabas (unos 3 segundos). Sale desde tu número, sin bot ni cuenta de Meta. Necesita el lector de ofertas activado en Accesibilidad.',
+ bot:'El bot manda los avisos desde otro número, aunque el teléfono esté bloqueado. Se configura una vez con la guía <b>whatsapp-bot/GUIA.md</b> (Meta y Cloudflare) y aquí pegas sus datos.',
+ man:'Los botones «Ya salí» y «Llegando» abren WhatsApp con el mensaje escrito y tú tocas Enviar.'};
+function cliWMode(){var m=$('clWo').value;$('clWsub').innerHTML=CLIWS[m];$('clWbot').style.display=m=='bot'?'':'none';$('clWt').textContent=m=='bot'?'Probar el bot':'Probar (mensaje a mí)'}
+function cliTplPrev(){var g=$('clWsg').checked,v={nombre:'Ana',hora:hm12(Date.now()+15*60000),lugar:'Plaza Central',min:'15'};
+ $('clWprev').innerHTML='<b>Así le llega a una clienta llamada Ana (ahora):</b><br>En camino: '+esc(cliFillT($('clWts').value||CLIDEF.s,g,v))+'<br>Llegando: '+esc(cliFillT($('clWtl').value||CLIDEF.l,g,Object.assign({},v,{min:'3'})))}
+function cliTplReset(){$('clWts').value=CLIDEF.s;$('clWtl').value=CLIDEF.l;$('clWsg').checked=true;cliTplPrev()}
+function cliWFill(){var C=cliEns(),w=C.wa;$('clWo').value=cliMode();cliWMode();$('clWsg').checked=w.g!==false;$('clWts').value=w.ts||CLIDEF.s;$('clWtl').value=w.tl||CLIDEF.l;cliTplPrev();$('clWu').value=w.url||'';$('clWk').value=w.key||'';$('clWm').value=w.me||'';$('clWy').checked=!!w.yo;$('clWs').checked=!!w.sal;$('clWl').checked=!!w.lleg;$('clWg').value=C.mg;
  $('clWc').value=C.com;$('clWr').checked=!!C.cob.on;$('clWd').value=C.cob.dia;$('clWh').value=C.cob.h||'18:00';if($('clWa'))$('clWa').checked=cliAuto()}
 function cliSaveW(){var C=cliEns(),u=$('clWu').value.trim();if(u&&!/^https:\/\//.test(u)){$('cli_wmsg').innerHTML='<div class="warn">La dirección del bot debe empezar con https://</div>';return}
- C.wa={url:u,key:$('clWk').value.trim(),me:$('clWm').value.trim(),yo:$('clWy').checked,sal:$('clWs').checked,lleg:$('clWl').checked};C.mg=Math.max(0,Math.min(30,+$('clWg').value||0));
+ C.wa={modo:$('clWo').value,url:u,key:$('clWk').value.trim(),me:$('clWm').value.trim(),yo:$('clWy').checked,sal:$('clWs').checked,lleg:$('clWl').checked,g:$('clWsg').checked,ts:cliTplV('clWts','s'),tl:cliTplV('clWtl','l')};C.mg=Math.max(0,Math.min(30,+$('clWg').value||0));
  C.com=Math.max(0,Math.min(60,+$('clWc').value||0));C.cob={on:$('clWr').checked?1:0,dia:+$('clWd').value,h:$('clWh').value||'18:00'};
  if($('clWa'))try{localStorage.setItem('mf-cli-auto',$('clWa').checked?'1':'0')}catch(e){}
  save();cliAndSync();cliWSt();renderCliAg();$('cli_wmsg').innerHTML='<div class="warn" style="background:var(--ac2);color:var(--ac)">Guardado.</div>'}
-async function cliTestW(b){cliSaveW();var w=cliEns().wa,m=$('cli_wmsg');if(!w.url||!w.key||!w.me){m.innerHTML='<div class="warn">Pon la dirección, la clave y tu WhatsApp.</div>';return}b.disabled=true;m.innerHTML='<small>Probando…</small>';
+function cliTplV(id,k){var t=$(id).value.trim();return t==CLIDEF[k]?'':t}
+async function cliTestW(b){cliSaveW();var w=cliEns().wa,m=$('cli_wmsg'),md=cliMode(),tt=cliFillT(w.ts||CLIDEF.s,w.g!==false,{nombre:'(nombre del cliente)',hora:hm12(Date.now()+15*60000),lugar:'(lugar de recogida)',min:'15'});
+ if(md!='bot'){if(cliTel(w.me).length<11){m.innerHTML='<div class="warn">Pon tu WhatsApp para mandarte la prueba.</div>';return}
+  if(!cliAutoWa()){cliOpenWa(w.me,tt);return}var r=AND.cliWa(cliTel(w.me),tt,'ti','','');
+  m.innerHTML=r=='ok'?'<div class="warn" style="background:var(--ac2);color:var(--ac)">'+ic('check','ok')+' Se abrirá tu chat contigo mismo y la app tocará Enviar. Si te llega el mensaje, ya está listo.</div>':'<div class="warn">'+cliWaErr(r)+'</div>';return}
+ if(!w.url||!w.key||!w.me){m.innerHTML='<div class="warn">Pon la dirección, la clave y tu WhatsApp.</div>';return}b.disabled=true;m.innerHTML='<small>Probando…</small>';
  try{var r=await fetch(w.url.replace(/\/+$/,'')+'/'),j=await r.json();if(!j.configurado)throw new Error('el bot responde, pero le faltan WA_TOKEN, WA_PHONE_ID o APP_KEY en Cloudflare');
   await cliSend(w.me,'prueba',[]);m.innerHTML='<div class="warn" style="background:var(--ac2);color:var(--ac)">'+ic('check','ok')+' Listo: te llegó un WhatsApp de prueba («Hello World») del bot.</div>'}
  catch(e){m.innerHTML='<div class="warn">No funcionó: '+esc(cliErr(e))+'.</div>'}b.disabled=false}
-function cliWSt(){var el=$('cli_wst');if(!el)return;var w=cliEns().wa;el.innerHTML=(cliBot()?'':'<div class="warn">'+ic('alert','wn')+' <b>Modo sin bot:</b> los botones «Ya salí» y «Llegando» abren WhatsApp con el mensaje escrito para el cliente y tú tocas Enviar. El aviso de cuándo salir funciona igual. Cuando el bot esté listo, pega sus datos arriba y los avisos saldrán solos.</div>')+'<p class="sub">'+(AND&&AND.setClients?ic('check','ok')+' La app Android revisa tus viajes aunque esté cerrada y avisa a la hora justa.':AND?ic('alert','wn')+' Instala la versión 2.8 de la app para que los avisos funcionen con la app cerrada.':cliAuto()?ic('check','ok')+' Este aparato manda los avisos automáticos, pero solo con la página abierta.':ic('alert','wn')+' En este navegador los avisos automáticos están apagados (los hace tu teléfono). Los botones de la agenda sí funcionan.')+
+function cliWAcc(){try{return !!JSON.parse(AND.info()||'{}').accLive}catch(e){return false}}
+function cliWSt(){var el=$('cli_wst');if(!el)return;var w=cliEns().wa,md=cliMode(),ok=function(t){return '<div class="warn" style="background:var(--ac2);color:var(--ac)">'+ic('check','ok')+' '+t+'</div>'},wn=function(t){return '<div class="warn">'+ic('alert','wn')+' '+t+'</div>'};
+ el.innerHTML=(md=='auto'?(!AND?wn('Este modo funciona en la app Android de Mis Finanzas. En este navegador los botones abren WhatsApp y tú tocas Enviar.')
+   :!AND.cliWa?wn('Instala la versión 2.9 de la app para que los WhatsApp salgan solos desde tu número.')
+   :!cliWAcc()?wn(cliWaErr('acc'))
+   :ok('Los WhatsApp salen solos desde tu número. Con el teléfono bloqueado esperan a que lo desbloquees; si no se pudo mandar, te queda una notificación para enviarlo con un toque.'))
+  :cliBot()?'':wn('<b>Modo sin bot:</b> los botones «Ya salí» y «Llegando» abren WhatsApp con el mensaje escrito para el cliente y tú tocas Enviar. El aviso de cuándo salir funciona igual.'))+'<p class="sub">'+(AND&&AND.setClients?ic('check','ok')+' La app Android revisa tus viajes aunque esté cerrada y avisa a la hora justa.':AND?ic('alert','wn')+' Instala la versión 2.9 de la app para que los avisos funcionen con la app cerrada.':cliAuto()?ic('check','ok')+' Este aparato manda los avisos automáticos, pero solo con la página abierta.':ic('alert','wn')+' En este navegador los avisos automáticos están apagados (los hace tu teléfono). Los botones de la agenda sí funcionan.')+
   (ZCFG.mb?'':'<br>'+ic('alert','wn')+' Sin token de Mapbox, el tiempo hasta el cliente se estima por distancia y hora pico. Ponlo en Más → Zona y Uber → Ajustes para usar el tráfico real.')+'</p>'}
 setTimeout(cliTick,5000);setInterval(cliTick,60000);
 
-// ===== Cuenta y nube (Firebase): inicio de sesión con correo y copia de todos tus datos en tu cuenta.
-// Usa la API REST de Firebase (sin librerías): Authentication (correo y contraseña) y Firestore. Cada usuario solo puede
-// leer y escribir su documento users/{uid} (reglas en firebase/firestore.rules). Los datos van en trozos de 300 KB.
-var FBCFG={apiKey:'',projectId:''};
-function fbCfg(){var o={apiKey:FBCFG.apiKey,projectId:FBCFG.projectId};try{var s=JSON.parse(localStorage.getItem('mf-fb')||'{}');if(s.apiKey&&s.projectId)o=s}catch(e){}return o.apiKey&&o.projectId?o:null}
-function fbAuth(){try{return JSON.parse(localStorage.getItem('mf-auth')||'null')}catch(e){return null}}
+// ===== Cuenta y nube: inicio de sesión con correo y copia de todos tus datos en tu cuenta.
+// Servidor propio en Cloudflare (nube/worker.js, base de datos D1), sin Firebase ni otras cuentas. Cada persona solo puede
+// leer y escribir sus datos y la contraseña se guarda cifrada. Como no hay correo para recuperarla, al crear la cuenta se da
+// un código de recuperación.
+var NUBE='https://mis-finanzas-nube.misfinanzas-bot.workers.dev';
+function fbCfg(){var u=NUBE;try{u=localStorage.getItem('mf-nube')||u}catch(e){}return u?{url:u.replace(/\/+$/,'')}:null}
+function fbAuth(){try{var a=JSON.parse(localStorage.getItem('mf-auth')||'null');return a&&a.t?a:null}catch(e){return null}}
 function fbSetAuth(a){try{if(a)localStorage.setItem('mf-auth',JSON.stringify(a));else localStorage.removeItem('mf-auth')}catch(e){}}
 function fbSync(){try{return JSON.parse(localStorage.getItem('mf-sync')||'{}')||{}}catch(e){return {}}}
 function fbSetSync(o){try{localStorage.setItem('mf-sync',JSON.stringify(o))}catch(e){}}
-var FBERR={EMAIL_EXISTS:'Ya hay una cuenta con ese correo. Toca «Entrar».',INVALID_LOGIN_CREDENTIALS:'Correo o contraseña incorrectos.',INVALID_PASSWORD:'Contraseña incorrecta.',EMAIL_NOT_FOUND:'No hay ninguna cuenta con ese correo.',INVALID_EMAIL:'Ese correo no es válido.',WEAK_PASSWORD:'La contraseña debe tener al menos 6 caracteres.',MISSING_PASSWORD:'Escribe la contraseña.',TOO_MANY_ATTEMPTS_TRY_LATER:'Demasiados intentos. Espera unos minutos.',USER_DISABLED:'Esta cuenta está desactivada.',OPERATION_NOT_ALLOWED:'Falta activar «Correo electrónico/contraseña» en Firebase → Authentication.',CONFIGURATION_NOT_FOUND:'Falta activar Authentication en tu proyecto de Firebase.',PERMISSION_DENIED:'Firebase rechazó el acceso: revisa las reglas de Firestore.',NOT_FOUND:'Falta crear la base de datos Firestore en Firebase.',TOKEN_EXPIRED:'La sesión venció. Entra otra vez.',INVALID_REFRESH_TOKEN:'La sesión venció. Entra otra vez.'};
-function fbMsg(e){var m=String(e&&e.message||e||''),k=m.split(/[ :]/)[0];return FBERR[k]||(/API key/i.test(m)?'La clave de Firebase (apiKey) no es válida.':/fetch|network/i.test(m)?'Sin conexión a internet.':m||'Error desconocido')}
-async function fbPost(url,body,form){var r=await fetch(url,{method:'POST',headers:{'Content-Type':form?'application/x-www-form-urlencoded':'application/json'},body:form?body:JSON.stringify(body)}),j={};try{j=await r.json()}catch(e){}
- if(!r.ok)throw new Error((j.error&&(j.error.message||j.error.status))||('HTTP '+r.status));return j}
-async function fbLogin(email,pw,create){var c=fbCfg();if(!c)throw new Error('La nube no está configurada.');
- var j=await fbPost('https://identitytoolkit.googleapis.com/v1/accounts:'+(create?'signUp':'signInWithPassword')+'?key='+c.apiKey,{email:email,password:pw,returnSecureToken:true});
- var a={e:j.email||email,uid:j.localId,it:j.idToken,rt:j.refreshToken,exp:Date.now()+(+j.expiresIn||3600)*1000-60000};fbSetAuth(a);return a}
-async function fbToken(){var a=fbAuth(),c=fbCfg();if(!a||!c)throw new Error('Sin sesión.');if(Date.now()<a.exp)return a;
- var j=await fbPost('https://securetoken.googleapis.com/v1/token?key='+c.apiKey,'grant_type=refresh_token&refresh_token='+encodeURIComponent(a.rt),true);
- a.it=j.id_token;a.rt=j.refresh_token;a.exp=Date.now()+(+j.expires_in||3600)*1000-60000;fbSetAuth(a);return a}
-function fbDoc(c,a,i){return 'projects/'+c.projectId+'/databases/(default)/documents/users/'+a.uid+(i!=null?'/parts/p'+i:'')}
-async function fbFetch(path,opt){var a=await fbToken();opt=opt||{};opt.headers={'Authorization':'Bearer '+a.it,'Content-Type':'application/json'};var r=await fetch('https://firestore.googleapis.com/v1/'+path,opt);if(r.status==404)return null;var j={};try{j=await r.json()}catch(e){}
- if(!r.ok)throw new Error((j.error&&(j.error.status||j.error.message))||('HTTP '+r.status));return j}
+var FBERR={EMAIL_EXISTS:'Ya hay una cuenta con ese correo. Toca «Entrar».',BAD_LOGIN:'Correo o contraseña incorrectos.',BAD_EMAIL:'Ese correo no es válido.',WEAK_PASSWORD:'La contraseña debe tener al menos 6 caracteres.',TOO_MANY:'Demasiados intentos. Espera 15 minutos y vuelve a probar.',BAD_CODE:'El correo o el código de recuperación no son correctos.',NO_SESSION:'La sesión venció. Entra otra vez.',TOO_BIG:'Tus datos pasan de 8 MB y no caben en la nube.',NOT_CONFIGURED:'La nube no está lista todavía.',SERVER:'La nube tuvo un error. Prueba otra vez en un rato.'};
+function fbMsg(e){var m=String(e&&e.message||e||'');return FBERR[m]||(/fetch|network|load failed/i.test(m)?'Sin conexión a internet.':m||'Error desconocido')}
+async function fbCall(m,path,body,noAuth){var c=fbCfg(),a=noAuth?null:fbAuth(),h={'Content-Type':'application/json'};if(!c)throw new Error('NOT_CONFIGURED');if(a)h.Authorization='Bearer '+a.t;
+ var r=await fetch(c.url+path,{method:m,headers:h,cache:'no-store',body:body?JSON.stringify(body):undefined}),j={};try{j=await r.json()}catch(e){}
+ if(!r.ok||!j.ok){if(j.error=='NO_SESSION'&&a)fbSetAuth(null);throw new Error(j.error||('HTTP '+r.status))}return j}
+async function fbLogin(email,pw,create){var j=await fbCall('POST',create?'/signup':'/login',{email:email,pass:pw},true);fbSetAuth({e:j.email,uid:j.uid,t:j.token});return j}
 // Además de S, viajan los ajustes que viven aparte (zona, asistente, IA, avisos, tema).
-var FBLS=['fin-zcfg','fin-and','fin-ai','fin-mem','fin-ntf','fin-theme'],FBCH=300000,FB={busy:0,t:null,msg:'',applying:0};
-async function fbPush(){var a=fbAuth(),c=fbCfg();if(!a||!c||FB.busy)return;FB.busy=1;
- try{a=await fbToken();var ls={};FBLS.forEach(function(k){try{var v=localStorage.getItem(k);if(v!=null)ls[k]=v}catch(e){}});
-  var upd=Date.now(),body=JSON.stringify({S:S,ls:ls}),n=Math.max(1,Math.ceil(body.length/FBCH)),sy=fbSync(),W=[];
-  for(var i=0;i<n;i++)W.push({update:{name:fbDoc(c,a,i),fields:{d:{stringValue:body.slice(i*FBCH,(i+1)*FBCH)}}}});
-  for(var k=n;k<(sy.uid==a.uid?sy.n||0:0);k++)W.push({delete:fbDoc(c,a,k)});
-  W.push({update:{name:fbDoc(c,a),fields:{upd:{integerValue:String(upd)},n:{integerValue:String(n)},dev:{stringValue:(AND?'App Android':'Navegador')+' · '+PAGEV},email:{stringValue:a.e}}}});
-  await fbFetch('projects/'+c.projectId+'/databases/(default)/documents:commit',{method:'POST',body:JSON.stringify({writes:W})});
-  fbSetSync({uid:a.uid,upd:upd,n:n,dirty:0,at:Date.now()});FB.msg=''}
+var FBLS=['fin-zcfg','fin-and','fin-ai','fin-mem','fin-ntf','fin-theme'],FB={busy:0,t:null,msg:'',applying:0};
+async function fbPush(){var a=fbAuth();if(!a||FB.busy)return;FB.busy=1;
+ try{var ls={};FBLS.forEach(function(k){try{var v=localStorage.getItem(k);if(v!=null)ls[k]=v}catch(e){}});var upd=Date.now();
+  await fbCall('PUT','/data',{upd:upd,dev:(AND?'App Android':'Navegador')+' · '+PAGEV,data:JSON.stringify({S:S,ls:ls})});
+  fbSetSync({uid:a.uid,upd:upd,dirty:0,at:Date.now()});FB.msg=''}
  catch(e){FB.msg=fbMsg(e);var s2=fbSync();s2.dirty=1;fbSetSync(s2)}finally{FB.busy=0;renderNube()}}
-async function fbMeta(){var c=fbCfg(),a=fbAuth(),j=await fbFetch(fbDoc(c,a));if(!j||!j.fields)return null;var f=j.fields;return {upd:+(f.upd&&f.upd.integerValue)||0,n:+(f.n&&f.n.integerValue)||0,dev:f.dev?f.dev.stringValue:''}}
-async function fbPull(m){var c=fbCfg(),a=fbAuth(),P=[];for(var i=0;i<m.n;i++)P.push(fbFetch(fbDoc(c,a,i)));var R=await Promise.all(P);
- return JSON.parse(R.map(function(x){return x&&x.fields&&x.fields.d?x.fields.d.stringValue:''}).join(''))}
+async function fbMeta(){var j=await fbCall('GET','/meta');return j.meta?{upd:+j.meta.upd||0,n:+j.meta.n||0,dev:j.meta.dev||''}:null}
+async function fbPull(){var j=await fbCall('GET','/data');return j.data?JSON.parse(j.data):null}
 // Reemplaza los datos del teléfono por los de la cuenta (los de antes quedan como punto de restauración) y recarga.
-async function fbApply(m){var o=await fbPull(m);if(!o||!validState(o.S))throw new Error('Los datos de la cuenta no son válidos.');FB.applying=1;
+async function fbApply(m){var o=await fbPull();if(!o||!validState(o.S))throw new Error('Los datos de la cuenta no son válidos.');FB.applying=1;
  try{if(o.ls)Object.keys(o.ls).forEach(function(k){if(FBLS.indexOf(k)>=0)try{localStorage.setItem(k,o.ls[k])}catch(e){}});await applyState(o.S)}finally{FB.applying=0}
  fbSetSync({uid:fbAuth().uid,upd:m.upd,n:m.n,dirty:0,at:Date.now()});location.reload()}
 function fbQ(){if(FB.applying||!fbAuth())return;var s=fbSync();s.dirty=1;s.lt=Date.now();fbSetSync(s);clearTimeout(FB.t);FB.t=setTimeout(fbPush,8000)}
@@ -3431,36 +3466,46 @@ async function fbOpen(){var a=fbAuth();if(!a||!fbCfg())return;try{var m=await fb
  if(!m){await fbPush();return}if(m.upd>(sy.upd||0)&&(!sy.dirty||m.upd>(sy.lt||0))){await fbApply(m);return}if(sy.dirty)await fbPush()}catch(e){FB.msg=fbMsg(e);renderNube()}}
 document.addEventListener('visibilitychange',function(){if(document.visibilityState=='hidden'&&fbAuth()&&fbSync().dirty){clearTimeout(FB.t);fbPush()}});
 // --- Ventana de inicio de sesión (la primera vez que abres la app; luego desde Más → Respaldo).
-var LG={mode:'in',msg:'',busy:0,meta:null};
+var LG={mode:'in',msg:'',busy:0,meta:null,rec:''};
 function loginShow(m){var d=$('login');if(!d){d=document.createElement('div');d.id='login';d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');d.setAttribute('aria-labelledby','lgt');document.body.appendChild(d)}LG.mode=m||'in';LG.msg='';loginDraw();setTimeout(function(){var i=d.querySelector('input');if(i)i.focus()},50)}
 function loginClose(skip){if(skip)try{localStorage.setItem('mf-login-skip','1')}catch(e){}var d=$('login');if(d)d.remove();renderNube()}
 function loginDraw(){var d=$('login');if(!d)return;var c=fbCfg(),m=LG.mode,h='<div class="lgbox"><div class="lgb"><i aria-hidden="true">MF</i><div><h2 id="lgt">Mis Finanzas</h2><small>Tus datos guardados en tu cuenta y en cualquier teléfono.</small></div></div>';
  if(m=='pick'){var dt=new Date(LG.meta.upd).toLocaleString('es-DO',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'});
   h+='<p>Tu cuenta ya tiene datos (guardados el '+dt+(LG.meta.dev?' desde '+esc(LG.meta.dev):'')+') y este teléfono también tiene los suyos ('+S.logs.length+' días registrados). ¿Cuáles uso?</p><button class="pri" onclick="loginPick(1,this)">Usar los de mi cuenta</button><button style="width:100%;margin-top:8px" onclick="loginPick(0,this)">Usar los de este teléfono y subirlos</button><small>Los datos que no elijas quedan guardados como punto de restauración en Más → Respaldo.</small>'}
- else if(m=='cfg'){var o=c||{apiKey:'',projectId:''};h+='<p class="sub">Pega los datos de tu proyecto de Firebase (Configuración del proyecto → Tus apps → Web). Guía: <b>firebase/GUIA.md</b>.</p><form onsubmit="return loginCfg(event)"><label>apiKey<input id="lgk" autocomplete="off" value="'+esc(o.apiKey)+'" required></label><label>projectId<input id="lgp" autocomplete="off" value="'+esc(o.projectId)+'" required></label><button class="pri">Guardar</button></form><button class="lnk" style="margin-top:10px" onclick="loginShow(\'in\')">Volver</button>'}
- else if(!c)h+='<p>La nube todavía no está configurada en esta app. Puedes usarla sin cuenta: tus datos quedan solo en este teléfono y podrás crear tu cuenta más adelante en <b>Más → Respaldo</b>.</p><button class="pri" onclick="loginClose(1)">Usar sin cuenta</button><button class="lnk" style="margin-top:12px" onclick="loginShow(\'cfg\')">Configurar Firebase</button>';
+ else if(m=='rec')h+='<p>Guarda este <b>código de recuperación</b> (anótalo o hazle captura). Si olvidas la contraseña, es la única forma de volver a entrar a tu cuenta, y no se puede ver otra vez:</p>'+
+  '<p style="font:700 24px/1.3 ui-monospace,Consolas,monospace;letter-spacing:2px;text-align:center;padding:14px 8px;border:2px dashed var(--bd);border-radius:14px;user-select:all;margin:10px 0">'+esc(LG.rec)+'</p>'+
+  '<button style="width:100%" onclick="loginCopy(this)">Copiar el código</button><button class="pri" style="margin-top:8px"'+(LG.busy?' disabled':'')+' onclick="loginAfter()">'+(LG.busy?'Un momento…':'Ya lo guardé')+'</button>';
+ else if(m=='reset')h+='<p class="sub">Escribe tu correo, el código de recuperación que te dimos al crear la cuenta y una contraseña nueva.</p><form onsubmit="return loginRec(event)"><label>Correo<input id="lge" type="email" autocomplete="email" inputmode="email" required></label>'+
+  '<label>Código de recuperación<input id="lgc" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABCD-EFGH-JKMN" required></label><label>Contraseña nueva<input id="lgw" type="password" autocomplete="new-password" minlength="6" required></label>'+
+  '<label>Repite la contraseña<input id="lgw2" type="password" autocomplete="new-password" minlength="6" required></label><button class="pri"'+(LG.busy?' disabled':'')+'>'+(LG.busy?'Un momento…':'Cambiar la contraseña')+'</button></form><button class="lnk" style="margin-top:12px" onclick="loginShow(\'in\')">Volver</button>';
  else{var up=m=='up';h+='<div class="lgtab" role="group" aria-label="Elegir"><button type="button" aria-pressed="'+!up+'" onclick="loginShow(\'in\')">Entrar</button><button type="button" aria-pressed="'+up+'" onclick="loginShow(\'up\')">Crear cuenta</button></div>'+
   '<form onsubmit="return loginGo(event)"><label>Correo<input id="lge" type="email" autocomplete="email" inputmode="email" required></label><label>Contraseña<input id="lgw" type="password" autocomplete="'+(up?'new-password':'current-password')+'" minlength="6" required></label>'+
   (up?'<label>Repite la contraseña<input id="lgw2" type="password" autocomplete="new-password" minlength="6" required></label>':'')+'<button class="pri"'+(LG.busy?' disabled':'')+'>'+(LG.busy?'Un momento…':up?'Crear mi cuenta':'Entrar')+'</button></form>'+
-  (up?'':'<button class="lnk" style="margin-top:12px" onclick="loginReset()">Olvidé mi contraseña</button>')+'<button class="lnk" style="margin-top:12px;display:block" onclick="loginClose(1)">Usar sin cuenta (solo en este teléfono)</button>'}
- h+=(LG.msg?'<div class="warn" role="alert">'+LG.msg+'</div>':'')+'</div>';d.innerHTML=h}
-function loginCfg(e){e.preventDefault();var k=$('lgk').value.trim(),p=$('lgp').value.trim();try{localStorage.setItem('mf-fb',JSON.stringify({apiKey:k,projectId:p}))}catch(x){}loginShow('in');return false}
+  (up?'<small>Al crear la cuenta te daremos un código para recuperarla si olvidas la contraseña.</small>':'<button class="lnk" style="margin-top:12px" onclick="loginShow(\'reset\')">Olvidé mi contraseña</button>')+'<button class="lnk" style="margin-top:12px;display:block" onclick="loginClose(1)">Usar sin cuenta (solo en este teléfono)</button>'}
+ h+=(LG.msg?'<div class="warn" role="alert"'+(m=='rec'?' style="background:var(--ac2);color:var(--ac)"':'')+'>'+LG.msg+'</div>':'')+'</div>';d.innerHTML=h}
 async function loginGo(e){e.preventDefault();var em=$('lge').value.trim(),pw=$('lgw').value,up=LG.mode=='up';if(up&&pw!=$('lgw2').value){LG.msg='Las contraseñas no coinciden.';loginDraw();return false}
  LG.busy=1;LG.msg='';loginDraw();
- try{await fbLogin(em,pw,up);var m=await fbMeta(),local=S.logs.length>0||cliEns().c.length>0;
-  if(!m){await fbPush();loginClose()}else if(!local)await fbApply(m);else{LG.meta=m;LG.busy=0;LG.mode='pick';loginDraw()}}
+ try{var j=await fbLogin(em,pw,up);LG.busy=0;if(j.rec){LG.rec=j.rec;LG.mode='rec';loginDraw()}else await loginAfter()}
  catch(x){fbSetAuth(null);LG.msg=esc(fbMsg(x));LG.busy=0;loginDraw();var i=$('lge');if(i)i.value=em}
- LG.busy=0;return false}
+ return false}
+// Ya con sesión: si la cuenta no tiene datos se suben los del teléfono; si el teléfono está vacío se bajan; si los dos tienen, eliges.
+async function loginAfter(){LG.busy=1;LG.msg='';loginDraw();
+ try{var m=await fbMeta(),local=S.logs.length>0||cliEns().c.length>0;LG.busy=0;
+  if(!m){await fbPush();loginClose()}else if(!local)await fbApply(m);else{LG.meta=m;LG.mode='pick';loginDraw()}}
+ catch(x){LG.busy=0;LG.msg=esc(fbMsg(x));loginDraw()}}
 async function loginPick(cloud,b){b.disabled=true;try{if(cloud)await fbApply(LG.meta);else{await addPoint('pre');await fbPush();loginClose()}}catch(x){LG.msg=esc(fbMsg(x));loginDraw()}}
-async function loginReset(){var em=($('lge')||{}).value;if(!em){LG.msg='Escribe tu correo y toca otra vez «Olvidé mi contraseña».';loginDraw();return}
- try{await fbPost('https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key='+fbCfg().apiKey,{requestType:'PASSWORD_RESET',email:em});LG.msg='Te envié un correo a '+esc(em)+' para cambiar la contraseña.'}catch(x){LG.msg=esc(fbMsg(x))}loginDraw();var i=$('lge');if(i)i.value=em}
+async function loginRec(e){e.preventDefault();var em=$('lge').value.trim(),cd=$('lgc').value,pw=$('lgw').value;if(pw!=$('lgw2').value){LG.msg='Las contraseñas no coinciden.';loginDraw();return false}
+ LG.busy=1;LG.msg='';loginDraw();
+ try{var j=await fbCall('POST','/reset',{email:em,rec:cd,pass:pw},true);fbSetAuth({e:j.email,uid:j.uid,t:j.token});LG.busy=0;LG.rec=j.rec;LG.mode='rec';LG.msg='Listo, cambiaste la contraseña. Este es tu código nuevo: el de antes ya no sirve.';loginDraw()}
+ catch(x){LG.busy=0;LG.msg=esc(fbMsg(x));loginDraw();var i=$('lge');if(i)i.value=em;if($('lgc'))$('lgc').value=cd}
+ return false}
+function loginCopy(b){var t=LG.rec;try{navigator.clipboard.writeText(t).then(function(){b.textContent='Copiado'},function(){b.textContent='Mantén presionado el código para copiarlo'})}catch(e){b.textContent='Mantén presionado el código para copiarlo'}}
 // Cerrar sesión: sube lo pendiente y borra los datos de este teléfono (siguen en tu cuenta), para que otra persona pueda entrar con la suya.
 function fbLogout(b){tap2(b,'¿Seguro? Toca otra vez',async function(){if(fbSync().dirty){await fbPush();if(fbSync().dirty){FB.msg='No pude subir tus últimos cambios ('+FB.msg+'). Conéctate a internet antes de cerrar la sesión.';renderNube();return}}
- fbSetAuth(null);fbSetSync({});try{if(AND&&AND.setClients)AND.setClients('{}')}catch(e){}try{Object.keys(localStorage).forEach(function(k){if(k==KEY||k.indexOf('fin-')==0||k.indexOf(KEY+'-bak')==0||k=='mf-login-skip')localStorage.removeItem(k)})}catch(e){}
+ try{await fbCall('POST','/logout')}catch(e){}fbSetAuth(null);fbSetSync({});try{if(AND&&AND.setClients)AND.setClients('{}')}catch(e){}try{Object.keys(localStorage).forEach(function(k){if(k==KEY||k.indexOf('fin-')==0||k.indexOf(KEY+'-bak')==0||k=='mf-login-skip')localStorage.removeItem(k)})}catch(e){}
  try{await IDB.put('main','');var B=await IDB.listB();await Promise.all(B.map(function(x){return IDB.delB(x.id)}))}catch(e){}location.reload()})}
 function renderNube(){var el=$('nube');if(!el)return;var c=fbCfg(),a=fbAuth(),sy=fbSync(),h='<h2>Cuenta y nube</h2>';
- if(!c)h+='<p class="sub">Guarda tus datos en tu cuenta de Firebase (gratis) para no perderlos y usarlos en otro teléfono. Primero crea el proyecto con la guía <b>firebase/GUIA.md</b>.</p><button class="pri" onclick="loginShow(\'cfg\')">Configurar Firebase</button>';
- else if(!a)h+='<p class="sub">Entra con tu cuenta para guardar tus datos en la nube y usarlos en cualquier teléfono. Cada persona ve solo los suyos.</p><button class="pri" onclick="loginShow(\'in\')">Entrar o crear cuenta</button>';
+ if(!a)h+='<p class="sub">Entra con tu cuenta para guardar tus datos en la nube (gratis) y usarlos en cualquier teléfono. Cada persona ve solo los suyos.</p><button class="pri" onclick="loginShow(\'in\')">Entrar o crear cuenta</button>';
  else h+='<p>'+ic('check','ok')+' Sesión iniciada: <b>'+esc(a.e)+'</b></p><p class="sub">'+(FB.busy?'Guardando en la nube…':sy.dirty?'Hay cambios por subir (se suben solos en unos segundos).':sy.at?'Todo guardado en la nube · '+new Date(sy.at).toLocaleString('es-DO',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):'')+'</p>'+
   '<div class="row"><button onclick="fbPush()">Guardar ahora</button><button onclick="fbLogout(this)">Cerrar sesión</button></div><small>Al cerrar la sesión, los datos se borran de este teléfono y quedan en tu cuenta.</small>';
  if(FB.msg)h+='<div class="warn" role="alert">'+esc(FB.msg)+'</div>';el.innerHTML=h}
