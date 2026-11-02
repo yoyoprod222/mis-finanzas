@@ -558,7 +558,7 @@ items:[
 {id:9,name:"Ahorro mínimo diario",amt:100,freq:"d",total:0,prio:3,sv:1}],
 split:[{k:"res",n:"Fondo para días malos (hasta su meta)",p:12.5},{k:"extra",n:"Abono extra a deudas (tarjeta primero)",p:42.5},{k:"ahorro",n:"Ahorro",p:15},{k:"super",n:"Supermercado de la casa",p:20},{k:"pers",n:"Personal / ocio",p:10}],
 logs:[]}}
-var HNAV=false,SCHEMA=6,_sm=null,_nosnap=false,PAGEV='mf-v46';
+var HNAV=false,SCHEMA=6,_sm=null,_nosnap=false,PAGEV='mf-v47';
 var S;
 try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 function upgrade(){if(S&&S.items&&(S.v||0)<SCHEMA){try{localStorage.setItem(KEY+'-bak-'+(S.v||0)+'-'+Date.now(),JSON.stringify(S));pruneBak()}catch(e){}}
@@ -1046,6 +1046,9 @@ function runTests(){var T=[],saved=S,near=function(a,b){return Math.abs(a-b)<0.0
    return L.length==3&&near(a.ch,0.1)&&near(o.ch,-0.05)&&B&&near(B.ch,30/700)&&M.length==2&&M[1].ev==95&&M[1].evk['refresco 2 lt']==95&&supTips().length>=3})});
  t('Agenda: saca el punto y el nombre de un enlace de Google Maps',function(){var p=cliGmParse('https://www.google.com/maps/place/BBK+Studio/@18.4955,-69.8462,17z/data=!3m1!4b1!3d18.49561!4d-69.84605'),q=cliGmParse('https://maps.google.com/?q=18.47,-69.93');
   return p.name=='BBK Studio'&&near(p.la,18.49561)&&near(p.lo,-69.84605)&&near(q.la,18.47)&&!cliGmParse('https://maps.app.goo.gl/abc123')&&CLIGM.test('mira https://maps.app.goo.gl/abc123')&&!CLIGM.test('https://example.com/maps')});
+ t('Agenda: «Viaje terminado» aparece aunque el viaje no tenga precio y luego da Cobrado y Recibo con el monto escrito',function(){var ts=Date.now()-3600000,k='5-x';return run(mk([],[],{cli:{c:[{id:1,n:'Ana',tel:'8095551234'}],v:[],p:[],sent:{},done:{}}}),function(){
+   var o={k:k,t:{m:0},c:{id:1,n:'Ana',tel:'8095551234'},ds:today(),ts:ts},a=cliOccBtns(o,true,false);S.cli.done[k]={t:Date.now(),m:450};var b=cliOccBtns(o,true,false);
+   return /Viaje terminado/.test(a)&&/No se hizo/.test(a)&&!/Recibo PDF/.test(a)&&cliAmt(o)==450&&/Recibo PDF/.test(b)&&/Cobrado/.test(b)&&!/No se hizo/.test(b)&&!/Viaje terminado</.test(b)})});
  t('Recibo: arma el PDF del viaje del cliente',function(){if(!window.jspdf)return false;var b=cliRcPdf({c:{n:'Ana Pérez'},ds:'2026-03-05',ts:new Date(2026,2,5,8,0).getTime(),t:{m:450,o:{t:'Naco'},ds:{t:'Gazcue'}}},true,7);return /^JVBER/.test(b)&&b.length>1000});
  return T}
 function renderVT(){var T=runTests(),ok=T.filter(function(q){return q[1]}).length;$('vt').innerHTML='<h2>Verificaci\u00f3n del motor financiero</h2><p class="sub">Estas pruebas se ejecutan al abrir la p\u00e1gina y comprueban que el reparto, las prioridades, el fondo y los pendientes calculen bien.</p><div class="warn" style="'+(ok==T.length?'background:var(--ac2);color:var(--ac)':'')+'">'+ok+' de '+T.length+' pruebas correctas.</div>'+T.map(function(q){return '<div class="leg"><span>'+q[0]+'</span><span>'+(q[1]?'Correcta':'FALLA')+'</span></div>'}).join('')}
@@ -3415,12 +3418,33 @@ function renderCliAg(){var C=cliEns(),el=$('cli_vl');if(!el)return;var now=Date.
   if(soon&&!CLIP[o.k]&&TAB=='cli'&&subOf('cli')=='cvia')cliPlan(o).then(function(){if(TAB=='cli')renderCliAg()});
   h+='<div class="cli-occ"><div class="ct"><span><b>'+hm12(o.ts)+'</b> · '+esc(o.c.n)+'</span><span>'+(o.t.m>0?rd(o.t.m):'')+'</span></div><small>'+esc(cliPlace(o))+(o.t.ds&&o.t.ds.t?' → '+esc(o.t.ds.t):'')+'</small>'+
    (cliStat(o)?'<div><small>'+cliStat(o)+'</small></div>':'')+(!past&&!cliBot()&&!cliAutoWa()&&o.ts-now<3*3600000?'<div><small>Los botones abren WhatsApp con el mensaje listo.</small></div>':'')+'<div class="row">'+
-   (past?(o.t.m>0&&!paid?'<button onclick="cliPaid(\''+o.k+'\')">Cobrado</button>':paid?'<small>'+ic('check','ok')+' Cobrado</small>':'')+(o.t.m>0?'<button onclick="cliRc(\''+o.k+'\',this)">'+((C.rcs||{})[o.k]?'Recibo enviado · otra vez':'Recibo PDF')+'</button>':''):'<button onclick="cliGo(\''+o.k+'\',\'s\',this)">Ya salí</button><button onclick="cliGo(\''+o.k+'\',\'l\',this)">Llegando</button>')+
-   '<button onclick="cliSkip(this,\''+o.k+'\')">No se hizo</button></div></div>'});
+   cliOccBtns(o,past,paid)+'</div>'+(CLIEND==o.k?cliEndHtml(o,paid):'')+'</div>'});
  el.innerHTML=h;
  var T=$('cli_vt');if(T)T.innerHTML=C.v.length?C.v.map(function(t){var c=cliById(t.cid),ended=t.rec&&t.hasta&&t.hasta<today();
   return '<div class="leg"><span><b>'+(c?esc(c.n):'(cliente borrado)')+'</b> · '+(t.rec?cliDiasTxt(t.dias):fdate(t.d))+' '+hm12(cliTs(t,today()))+'<br><small>'+esc((t.o&&t.o.t)||'')+(t.ds&&t.ds.t?' → '+esc(t.ds.t):'')+(t.m>0?' · '+rd(t.m):'')+(t.rec?' · desde '+fdate(t.d)+(t.hasta?' hasta '+fdate(t.hasta):''):'')+(ended?' · terminado':'')+(t.o&&t.o.la==null?' · <b>sin ubicación</b>':'')+(t.av===0?' · sin avisos':'')+'</small></span>'+
    '<span class="cli-act"><button onclick="cliEditV('+t.id+')">Editar</button>'+(t.rec&&!ended?'<button onclick="cliEndV(this,'+t.id+')">Terminar</button>':'')+'<button class="x" aria-label="Borrar viaje" onclick="cliDelV(this,'+t.id+')">✕</button></span></div>'}).join(''):'<p class="sub">Sin viajes guardados.</p>'}
+// Botones de un viaje: antes, «Ya salí» y «Llegando»; desde 3 h antes, «Viaje terminado» (cobro y recibo en un paso);
+// terminado o pasado, «Cobrado» y «Recibo PDF». El monto puede venir del viaje o del que escribiste al terminarlo.
+var CLIEND='';
+function cliAmt(o){var d=(cliEns().done||{})[o.k];return d&&d.m>0?d.m:+o.t.m||0}
+function cliOccBtns(o,past,paid){var C=cliEns(),k=o.k,done=(C.done||{})[k],m=cliAmt(o),q="'"+k+"'",h='';
+ if(!past&&!done)h+='<button onclick="cliGo('+q+',\'s\',this)">Ya salí</button><button onclick="cliGo('+q+',\'l\',this)">Llegando</button>';
+ if(!done&&o.ts-Date.now()<3*3600000)h+='<button class="pri" onclick="CLIEND='+q+';renderCliAg()">Viaje terminado</button>';
+ if(done||past){h+=done?'<small>'+ic('check','ok')+' Terminado</small>':'';
+  h+=paid?'<small>'+ic('check','ok')+' Cobrado</small>':m>0?'<button onclick="cliPaid('+q+')">Cobrado</button>':'';
+  if(m>0)h+='<button onclick="cliRc('+q+',this)">'+((C.rcs||{})[k]?'Recibo enviado · otra vez':'Recibo PDF')+'</button>'}
+ if(!done)h+='<button onclick="cliSkip(this,'+q+')">No se hizo</button>';
+ return h}
+function cliEndHtml(o,paid){var m=cliAmt(o),tel=cliTel(o.c.tel).length>=11;
+ return '<div class="arow" style="margin-top:8px"><b>Viaje terminado</b><div class="row" style="margin-top:6px"><label>Cobrado (RD$)<input id="cleM" type="number" inputmode="decimal" min="0" value="'+(m||'')+'" placeholder="Monto del viaje"></label></div>'+
+  (paid?'<small>'+ic('check','ok')+' Ya está registrado como cobrado.</small>':'<label class="cli-ck"><input type="checkbox" id="cleP" checked> Ya me pagó (lo sumo a los ingresos de '+cliDayLbl(o.ds).toLowerCase()+')</label>')+
+  '<label class="cli-ck"><input type="checkbox" id="cleR"'+(tel?' checked':' disabled')+'> Mandarle el recibo en PDF'+(tel?(cliMode()=='auto'&&AND&&AND.waPdf?' por WhatsApp (sale solo)':''):' (el cliente no tiene WhatsApp guardado)')+'</label>'+
+  '<div class="row" style="margin-top:6px"><button class="pri" onclick="cliEndOk(\''+o.k+'\')">Guardar</button><button onclick="CLIEND=\'\';renderCliAg()">Cancelar</button></div></div>'}
+function cliEndOk(k){var C=cliEns(),o=cliFind(k);if(!o)return;var m=+$('cleM').value||0,pay=$('cleP')&&$('cleP').checked,rc=$('cleR')&&$('cleR').checked&&!$('cleR').disabled,paid=C.p.some(function(p){return p.ok==k});
+ if((pay||rc)&&!(m>0)){$('cleM').focus();cliSay('Escribe cuánto cobraste para registrar el pago o hacer el recibo.');return}
+ C.done=C.done||{};C.done[k]={t:Date.now(),m:m};CLIEND='';
+ if(pay&&!paid&&m>0){cliPayAdd(o.c.id,m,o.ds,'Viaje '+hm12(o.ts),true,k);cliSay(ic('check','ok')+' Viaje terminado y cobro de '+rd(m)+' registrado.',1)}else{save();cliSay(ic('check','ok')+' Viaje terminado.',1)}
+ if(rc)cliRc(k);else renderCliAg()}
 function cliDiasTxt(d){d=(d||[]).slice().sort();var s=d.join('');if(s=='12345')return 'Lun a vie';if(s=='123456')return 'Lun a sáb';if(s=='0123456')return 'Todos los días';return d.map(function(i){return CLIWN[i].slice(0,3)}).join(', ')}
 function renderCliP(){var C=cliEns(),el=$('cli_pb');if(!el)return;var tot=0;
  el.innerHTML=C.c.length?C.c.map(function(c){var o=cliOwed(c.id);if(c.arch&&!o.bal)return '';tot+=Math.max(0,o.bal);return '<div class="leg"><span>'+esc(c.n)+'<br><small>'+o.n+' viajes · '+rd(o.due)+' · pagado '+rd(o.paid)+'</small></span><span class="cli-act"><b'+(o.bal>0?' style="color:var(--rd)"':'')+'>'+(o.bal>0?'Debe '+rd(o.bal):o.bal<0?'A favor '+rd(-o.bal):'Al día')+'</b>'+(cliTel(c.tel).length>=11&&o.n?'<button onclick="cliStmt('+c.id+')">Enviar estado</button>':'')+'</span></div>'}).join('')+(tot>0?'<p><b>Total por cobrar: '+rd(tot)+'</b></p>':''):'<p class="sub">Sin clientes.</p>';
@@ -3465,7 +3489,7 @@ function cliPayAdd(cid,m,d,n,inc,ok){var C=cliEns(),c=cliById(cid),lbl='Cliente:
 // al registro de Uber cuando lo guardes (addLog).
 function cliInc(d,c,m){var L=S.logs.filter(function(l){return l.d==d}),lg=L.filter(function(l){return !l.off}).pop()||L.pop();
  if(!lg){lg={d:d,g:0,e:{glp:0,comida:0,hormiga:0,otros:0},x:[],h:0,off:true,n:'Clientes'};S.logs.push(lg);S.logs.sort(function(a,b){return a.d<b.d?-1:1})}lg.x=lg.x||[];lg.x.push({c:c,v:m})}
-function cliPaid(k){var o=cliFind(k);if(!o)return;cliPayAdd(o.c.id,o.t.m,o.ds,'Viaje '+hm12(o.ts),true,k);cliSay(ic('check','ok')+' Cobro de '+rd(o.t.m)+' a '+esc(o.c.n)+' registrado y sumado a los ingresos de '+cliDayLbl(o.ds).toLowerCase()+'.',1);var C=cliEns();if(C.rc&&C.rc.auto&&!(C.rcs||{})[k])cliRc(k)}
+function cliPaid(k){var o=cliFind(k);if(!o)return;var am=cliAmt(o);if(!(am>0)){CLIEND=k;renderCliAg();return}cliPayAdd(o.c.id,am,o.ds,'Viaje '+hm12(o.ts),true,k);cliSay(ic('check','ok')+' Cobro de '+rd(am)+' a '+esc(o.c.n)+' registrado y sumado a los ingresos de '+cliDayLbl(o.ds).toLowerCase()+'.',1);var C=cliEns();if(C.rc&&C.rc.auto&&!(C.rcs||{})[k])cliRc(k)}
 function cliSaveP(){var cid=+$('clPc').value,m=+$('clPm').value,d=$('clPf').value||today();if(!cliById(cid)){$('cli_pmsg').innerHTML='<div class="warn">Primero agrega un cliente.</div>';return}if(!(m>0)){$('clPm').focus();return}
  cliPayAdd(cid,m,d,$('clPn').value.trim(),$('clPx').checked);$('clPm').value='';$('clPn').value='';$('cli_pmsg').innerHTML='<div class="warn" style="background:var(--ac2);color:var(--ac)">Pago de '+rd(m)+' registrado.</div>'}
 function cliDelP(b,id){tap2(b,'¿Borrar?',function(){var C=cliEns(),p=C.p.filter(function(x){return x.id==id})[0];if(!p)return;C.p=C.p.filter(function(x){return x.id!=id});
@@ -3799,7 +3823,7 @@ function cliRcPdf(o,paid,num){var J=window.jspdf&&window.jspdf.jsPDF;if(!J)throw
  tx(paid?'PAGADO':'PENDIENTE DE PAGO',10,1,paid?AC:[178,106,0]);ln();
  if(C.rc&&C.rc.n)tx('Conductor: '+C.rc.n,9,0,MU);tx('¡Gracias por viajar conmigo!',9,0,MU,'c');
  return doc.output('datauristring').split(',')[1]}
-async function cliRc(k,b){var C=cliEns(),o=cliFind(k);if(!o){cliSay('No encontré ese viaje.');return}var tel=cliTel(o.c.tel);
+async function cliRc(k,b){var C=cliEns(),o=cliFind(k);if(!o){cliSay('No encontré ese viaje.');return}var tel=cliTel(o.c.tel),am=cliAmt(o);o=Object.assign({},o,{t:Object.assign({},o.t,{m:am})});
  var paid=C.p.some(function(p){return p.ok==k}),num=(C.rcn||0)+1,b64,name='Recibo '+cliFirst(o.c.n)+' '+o.ds+'.pdf',cap=cliSaludo(Date.now())+', '+cliFirst(o.c.n)+'. Aquí tienes el recibo de tu viaje ('+rd(o.t.m||0)+'). ¡Gracias!';
  try{b64=cliRcPdf(o,paid,num)}catch(e){cliSay(esc(e.message||e));return}
  C.rcn=num;C.rcs=C.rcs||{};C.rcs[k]=Date.now();save();
