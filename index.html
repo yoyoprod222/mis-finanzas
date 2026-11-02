@@ -558,7 +558,7 @@ items:[
 {id:9,name:"Ahorro mínimo diario",amt:100,freq:"d",total:0,prio:3,sv:1}],
 split:[{k:"res",n:"Fondo para días malos (hasta su meta)",p:12.5},{k:"extra",n:"Abono extra a deudas (tarjeta primero)",p:42.5},{k:"ahorro",n:"Ahorro",p:15},{k:"super",n:"Supermercado de la casa",p:20},{k:"pers",n:"Personal / ocio",p:10}],
 logs:[]}}
-var HNAV=false,SCHEMA=6,_sm=null,_nosnap=false,PAGEV='mf-v44';
+var HNAV=false,SCHEMA=6,_sm=null,_nosnap=false,PAGEV='mf-v45';
 var S;
 try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 function upgrade(){if(S&&S.items&&(S.v||0)<SCHEMA){try{localStorage.setItem(KEY+'-bak-'+(S.v||0)+'-'+Date.now(),JSON.stringify(S));pruneBak()}catch(e){}}
@@ -1044,6 +1044,8 @@ function runTests(){var T=[],saved=S,near=function(a,b){return Math.abs(a-b)<0.0
    {id:2,d:'2026-02-12',total:950,items:[{k:'arroz 10 lb',q:2,p:440,t:880,c:'basicos'},{k:'aceite 1 gal',q:1,p:190,t:190,c:'basicos'},{k:'huevos 30',q:1,p:100,t:100,c:'proteinas'},{k:'refresco 2 lt',q:1,p:95,t:95,c:'refrescos',e:true}]}]}),function(){
    var L=supPrices(),a=L.filter(function(x){return x.k=='arroz 10 lb'})[0],o=L.filter(function(x){return x.k=='aceite 1 gal'})[0],B=supBasket(L),M=supMonths();
    return L.length==3&&near(a.ch,0.1)&&near(o.ch,-0.05)&&B&&near(B.ch,30/700)&&M.length==2&&M[1].ev==95&&M[1].evk['refresco 2 lt']==95&&supTips().length>=3})});
+ t('Agenda: saca el punto y el nombre de un enlace de Google Maps',function(){var p=cliGmParse('https://www.google.com/maps/place/BBK+Studio/@18.4955,-69.8462,17z/data=!3m1!4b1!3d18.49561!4d-69.84605'),q=cliGmParse('https://maps.google.com/?q=18.47,-69.93');
+  return p.name=='BBK Studio'&&near(p.la,18.49561)&&near(p.lo,-69.84605)&&near(q.la,18.47)&&!cliGmParse('https://maps.app.goo.gl/abc123')&&CLIGM.test('mira https://maps.app.goo.gl/abc123')&&!CLIGM.test('https://example.com/maps')});
  t('Recibo: arma el PDF del viaje del cliente',function(){if(!window.jspdf)return false;var b=cliRcPdf({c:{n:'Ana Pérez'},ds:'2026-03-05',ts:new Date(2026,2,5,8,0).getTime(),t:{m:450,o:{t:'Naco'},ds:{t:'Gazcue'}}},true,7);return /^JVBER/.test(b)&&b.length>1000});
  return T}
 function renderVT(){var T=runTests(),ok=T.filter(function(q){return q[1]}).length;$('vt').innerHTML='<h2>Verificaci\u00f3n del motor financiero</h2><p class="sub">Estas pruebas se ejecutan al abrir la p\u00e1gina y comprueban que el reparto, las prioridades, el fondo y los pendientes calculen bien.</p><div class="warn" style="'+(ok==T.length?'background:var(--ac2);color:var(--ac)':'')+'">'+ok+' de '+T.length+' pruebas correctas.</div>'+T.map(function(q){return '<div class="leg"><span>'+q[0]+'</span><span>'+(q[1]?'Correcta':'FALLA')+'</span></div>'}).join('')}
@@ -2340,7 +2342,10 @@ var ZK=['sde','dn','sdn','stgo'],ZSD=['sde','dn','sdn'];
 var ZCFG={on:true,auto:true,web:true,mb:'',km:151,peaje:200,horas:2.5,kmMao:54,kmV:205,horasV:3,peajeV:200,glpkm:5,familia:true,rem:true,casa:''};
 try{var zc0=JSON.parse(localStorage.getItem('fin-zcfg')||'{}');for(var zk0 in zc0)if(zk0 in ZCFG)ZCFG[zk0]=zc0[zk0]}catch(e){}
 var ZST={busy:0,msg:''};
-function zSaveCfg(){try{localStorage.setItem('fin-zcfg',JSON.stringify(ZCFG))}catch(e){}try{fbQ()}catch(e){}}
+function zSaveCfg(){try{localStorage.setItem('fin-zcfg',JSON.stringify(ZCFG))}catch(e){}try{fbQ()}catch(e){}liveMbSync()}
+// El mapa del enlace usa tu token de Mapbox: si cambió, el enlace se renueva (misma dirección) desde la app Android,
+// que es la que guarda la clave nueva para mandar la ubicación.
+function liveMbSync(){try{var L=ANDCFG.live;if(L&&L.id&&L.on&&AND&&AND.setLive&&fbAuth()&&(L.mb||'')!==(ZCFG.mb||''))liveOn(false)}catch(e){}}
 function zGet(){try{var z=JSON.parse(localStorage.getItem('fin-zona')||'null');return z&&z.hoy==today()&&z.v==3?z:null}catch(e){return null}}
 function zPut(z){try{localStorage.setItem('fin-zona',JSON.stringify(z))}catch(e){}}
 function fetchT(u,ms,o){var c=new AbortController(),t=setTimeout(function(){c.abort()},ms||9000);return fetch(u,Object.assign({signal:c.signal,cache:'no-store'},o||{})).then(function(r){clearTimeout(t);if(!r.ok)throw new Error('HTTP '+r.status);return r.json()},function(e){clearTimeout(t);throw e})}
@@ -3258,11 +3263,26 @@ function cliAndSent(){if(!AND||!AND.cliSent)return;try{var o=JSON.parse(AND.cliS
 
 // --- Buscar direcciones: Mapbox (si hay token) y, si no encuentra, OpenStreetMap. Solo República Dominicana.
 async function cliGeo(f){var q=$(f).value.trim(),out=$(f+'_r');if(q.length<3){out.innerHTML='<small>Escribe al menos 3 letras.</small>';return}out.innerHTML='<small>Buscando…</small>';
- try{var L=await cliGeoFind(q);CLIGEO[f+'_L']=L;out.innerHTML=L.length?L.map(function(x,i){return '<button type="button" class="chip" onclick="cliGeoPick(\''+f+'\','+i+')">'+esc(cliShort(x.t))+'</button>'}).join(''):'<small>No encontré ese lugar. Prueba con el sector o un lugar conocido cerca (ej. «Ágora Mall»).</small>'}
- catch(e){out.innerHTML='<small>No se pudo buscar (¿sin internet?).</small>'}}
-async function cliGeoFind(q){var L=[];if(ZCFG.mb){try{var r=await fetch('https://api.mapbox.com/search/geocode/v6/forward?q='+encodeURIComponent(q)+'&country=do&language=es&limit=5&proximity=-69.93,18.48&access_token='+encodeURIComponent(ZCFG.mb)),j=await r.json();
-  L=(j.features||[]).map(function(x){return {t:x.properties.full_address||x.properties.name,la:x.geometry.coordinates[1],lo:x.geometry.coordinates[0]}})}catch(e){}}
- if(!L.length){var r2=await fetch('https://nominatim.openstreetmap.org/search?format=json&countrycodes=do&limit=5&accept-language=es&q='+encodeURIComponent(q));L=(await r2.json()).map(function(x){return {t:x.display_name,la:+x.lat,lo:+x.lon}})}
+ try{var L=await cliGeoFind(q);CLIGEO[f+'_L']=L;out.innerHTML=L.length?L.map(function(x,i){return '<button type="button" class="chip" onclick="cliGeoPick(\''+f+'\','+i+')">'+esc(cliShort(x.t))+'</button>'}).join(''):'<small>No encontré ese lugar. Prueba con el sector o un lugar conocido cerca (ej. «Ágora Mall»), o búscalo en Google Maps, toca <b>Compartir → Copiar enlace</b> y pégalo aquí.</small>'}
+ catch(e){out.innerHTML=e&&e.message=='GMAPS'?'<small>No pude abrir ese enlace de Google Maps. Copia el enlace otra vez desde «Compartir» del lugar.</small>':'<small>No se pudo buscar (¿sin internet?).</small>'}}
+// Búsqueda de lugares para la Agenda de clientes:
+// 1) Un enlace de Google Maps (Compartir → Copiar enlace) o coordenadas pegadas: el punto exacto (el enlace corto lo abre la nube).
+// 2) Mapbox Search Box: negocios y lugares (POI) además de direcciones. 3) Direcciones de Mapbox. 4) OpenStreetMap.
+var CLIGM=/(https?:\/\/(?:maps\.app\.goo\.gl|goo\.gl\/maps|g\.co\/kgs|(?:www\.)?google\.[a-z.]+\/maps|maps\.google\.[a-z.]+)[^\s]*)/i;
+function cliGmParse(u){var m=u.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/)||u.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/)||u.match(/[?&](?:q|query|ll|destination|center)=(-?\d+\.\d+)(?:,|%2C)\s*(-?\d+\.\d+)/i);
+ if(!m)return null;var n=u.match(/\/place\/([^\/@?]+)/),nm='';try{nm=n?decodeURIComponent(n[1].replace(/\+/g,' ')):''}catch(e){}return{la:+m[1],lo:+m[2],name:nm}}
+async function cliGeoLink(q){var c=q.match(/(-?1[78]\.\d{3,})\s*,\s*(-?(?:6[89]|7[0-2])\.\d{3,})/);if(c&&!CLIGM.test(q))return{t:'Punto '+c[1]+', '+c[2],la:+c[1],lo:+c[2]};
+ var m=q.match(CLIGM);if(!m)return null;var before=q.slice(0,m.index).replace(/\s+/g,' ').trim(),g=cliGmParse(m[1]);
+ if(!g){var cf=fbCfg();if(!cf)return null;try{var r=await fetch(cf.url+'/geo?u='+encodeURIComponent(m[1])),j=await r.json();if(j.ok)g={la:j.la,lo:j.lo,name:j.name||''}}catch(e){}}
+ if(!g)throw new Error('GMAPS');return{t:(g.name||before||'Lugar de Google Maps').slice(0,90),la:g.la,lo:g.lo,gm:1}}
+async function cliGeoFind(q){var L=[],seen={},add=function(x){var k=Math.round(x.la*2000)+'|'+Math.round(x.lo*2000)+'|'+nz(x.t).slice(0,12);if(!seen[k]&&isFinite(x.la)&&isFinite(x.lo)){seen[k]=1;L.push(x)}};
+ var g=await cliGeoLink(q);if(g)return [g];
+ if(ZCFG.mb){var tk='&access_token='+encodeURIComponent(ZCFG.mb),px='&proximity=-69.93,18.48';
+  try{var r=await fetch('https://api.mapbox.com/search/searchbox/v1/forward?q='+encodeURIComponent(q)+'&country=do&language=es&limit=6&types=poi,address,place,street'+px+tk),j=await r.json();
+   (j.features||[]).forEach(function(x){var p=x.properties||{},c=x.geometry&&x.geometry.coordinates;if(!c)return;add({t:p.name+(p.full_address&&p.full_address.indexOf(p.name)!=0?', '+p.full_address:p.place_formatted?', '+p.place_formatted:''),la:c[1],lo:c[0],poi:p.feature_type=='poi'})})}catch(e){}
+  if(L.length<3)try{var r1=await fetch('https://api.mapbox.com/search/geocode/v6/forward?q='+encodeURIComponent(q)+'&country=do&language=es&limit=5'+px+tk),j1=await r1.json();
+   (j1.features||[]).forEach(function(x){add({t:x.properties.full_address||x.properties.name,la:x.geometry.coordinates[1],lo:x.geometry.coordinates[0]})})}catch(e){}}
+ if(!L.length){var r2=await fetch('https://nominatim.openstreetmap.org/search?format=json&countrycodes=do&limit=5&accept-language=es&q='+encodeURIComponent(q));(await r2.json()).forEach(function(x){add({t:x.display_name,la:+x.lat,lo:+x.lon})})}
  return L}
 function cliShort(t){return String(t||'').split(',').slice(0,3).join(',').trim()}
 function cliGeoPick(f,i){var x=CLIGEO[f+'_L'][i];CLIGEO[f]={t:cliShort(x.t),la:x.la,lo:x.lo};$(f).value=CLIGEO[f].t;$(f+'_r').innerHTML='<small>'+ic('check','ok')+' Ubicación guardada</small>'}
@@ -3270,7 +3290,7 @@ async function cliGeoHere(f){var out=$(f+'_r');out.innerHTML='<small>Leyendo tu 
  if(!$(f).value.trim())$(f).value='Mi ubicación';CLIGEO[f]={t:$(f).value.trim(),la:h.la,lo:h.lo};out.innerHTML='<small>'+ic('check','ok')+' Guardé el punto donde estás ahora</small>'}
 // Punto de un campo: el elegido de la lista o, si solo escribiste, el primer resultado de la búsqueda.
 async function cliPoint(f){var v=$(f).value.trim();if(!v)return null;if(CLIGEO[f]&&CLIGEO[f].la!=null)return {t:v,la:CLIGEO[f].la,lo:CLIGEO[f].lo};
- try{var L=await cliGeoFind(v);if(L[0]){var q={t:v,la:L[0].la,lo:L[0].lo,f:cliShort(L[0].t)};if(gHav({la:18.48,lo:-69.93},q)>60000)q.far=1;return q}}catch(e){}return {t:v}}
+ try{var L=await cliGeoFind(v);if(L[0]){var q={t:L[0].gm?cliShort(L[0].t):v,la:L[0].la,lo:L[0].lo,f:cliShort(L[0].t)};if(gHav({la:18.48,lo:-69.93},q)>60000)q.far=1;return q}}catch(e){}return {t:v}}
 // --- Precio sugerido: lo que Uber le cobraría al pasajero por ese viaje (no lo que te llega a ti).
 // Lo que Uber te paga sale de tus últimos 90 días (bruto por km pagado y por hora); sin historial, de tus metas del asistente.
 function cliRates(){var t0=new Date(today()+'T00:00'),K={g:0,k:0},H={g:0,h:0};S.logs.forEach(function(x){if(x.off||!(x.g>0))return;var age=(t0-new Date(x.d+'T00:00'))/864e5;if(age>90||age<0)return;var w=Math.pow(0.5,age/42),km=+x.kmp||+x.km||0;if(km>0){K.g+=x.g*w;K.k+=km*w}if(+x.h>0){H.g+=x.g*w;H.h+=x.h*w}});
@@ -3300,15 +3320,15 @@ function cliOpts(sel){var A=cliEns().c.filter(function(c){return !c.arch||c.id==
 function cliBuild(){var a=$('cli_c');if(!a||a.dataset.b)return;a.dataset.b=1;
  a.innerHTML='<h2>Clientes</h2><p class="sub">Clientes que te contratan por fuera de Uber. Con su WhatsApp, les llega un aviso cuando vas en camino y cuando estás llegando.</p>'+
   '<details id="cli_cf"><summary>Agregar cliente</summary><div class="row"><label class="vl">Nombre<input id="clN" autocomplete="off"></label><label class="vl">WhatsApp<input id="clT" type="tel" inputmode="tel" autocomplete="off" placeholder="809 555 1234"></label></div>'+
-  '<div class="row"><label class="vl" style="flex:1 1 100%">Dirección habitual de recogida (opcional)<input id="clD" autocomplete="off" oninput="delete CLIGEO.clD" placeholder="Ej. Residencial Los Prados"></label></div>'+
+  '<div class="row"><label class="vl" style="flex:1 1 100%">Dirección habitual de recogida (opcional)<input id="clD" autocomplete="off" oninput="delete CLIGEO.clD" placeholder="Lugar, dirección o enlace de Google Maps"></label></div>'+
   '<div class="row"><button type="button" onclick="cliGeo(\'clD\')">Buscar</button><button type="button" onclick="cliGeoHere(\'clD\')">Estoy aquí</button></div><div id="clD_r" class="geo" aria-live="polite"></div>'+
   '<div class="row"><label class="vl" style="flex:1 1 100%">Nota (opcional)<input id="clO" autocomplete="off"></label></div>'+
   '<div class="row"><button class="pri" id="clSave" onclick="cliSaveC(this)">Guardar cliente</button><button type="button" onclick="cliEditC(0)">Cancelar</button></div></details><div id="cli_cl"></div>';
  $('cli_v').innerHTML='<h2>Agenda de viajes</h2><p class="sub">Viajes con tus clientes. La app calcula a qué hora salir según dónde estás y el tráfico, y te avisa para llegar a la hora acordada.</p>'+
   '<details id="cli_nv"><summary>Nuevo viaje</summary><div class="row"><label class="vl">Cliente<select id="clVc" onchange="cliPrefill()"></select></label><label class="vl">Precio del viaje (RD$)<input id="clVm" type="number" inputmode="decimal" min="0"></label></div>'+
-  '<div class="row"><label class="vl" style="flex:1 1 100%">Punto de recogida<input id="clVo" autocomplete="off" oninput="delete CLIGEO.clVo" placeholder="Ej. Residencial Los Prados"></label></div>'+
+  '<div class="row"><label class="vl" style="flex:1 1 100%">Punto de recogida<input id="clVo" autocomplete="off" oninput="delete CLIGEO.clVo" placeholder="Lugar, dirección o enlace de Google Maps"></label></div>'+
   '<div class="row"><button type="button" onclick="cliGeo(\'clVo\')">Buscar</button><button type="button" onclick="cliGeoHere(\'clVo\')">Estoy aquí</button></div><div id="clVo_r" class="geo" aria-live="polite"></div>'+
-  '<div class="row"><label class="vl" style="flex:1 1 100%">Destino<input id="clVd" autocomplete="off" oninput="delete CLIGEO.clVd" placeholder="Ej. Torre Empresarial, Piantini"></label></div>'+
+  '<div class="row"><label class="vl" style="flex:1 1 100%">Destino<input id="clVd" autocomplete="off" oninput="delete CLIGEO.clVd" placeholder="Lugar, dirección o enlace de Google Maps"></label></div>'+
   '<div class="row"><button type="button" onclick="cliGeo(\'clVd\')">Buscar</button></div><div id="clVd_r" class="geo" aria-live="polite"></div>'+
   '<div class="row"><button type="button" onclick="cliPriceUI(this)">Calcular precio sugerido</button></div><div id="clVpr" aria-live="polite"></div>'+
   '<div class="row"><label class="vl">Fecha (o desde cuándo)<input id="clVf" type="date"></label><label class="vl">Hora de recogida<input id="clVh" type="time" value="07:30"></label></div>'+
@@ -3622,7 +3642,7 @@ function liveHtml(){var L=ANDCFG.live,u=liveLink(),I=AND?andJ('info')||{}:{};
   '<button onclick="tap2(this,\'¿Cambiar? El enlace viejo dejará de funcionar\',function(){liveOn(true)})">Cambiar el enlace</button><button class="x" style="width:auto;padding:6px 12px" onclick="tap2(this,\'¿Borrar?\',liveDel)">Borrar</button></div>'}
  return h+(LIVEMSG?'<div class="warn" style="margin-top:8px">'+LIVEMSG+'</div>':'')}
 async function liveOn(nuevo,b){if(b)b.disabled=true;LIVEMSG='';
- try{var j=await fbCall('POST','/live',{name:ANDCFG.liveN||'',nuevo:!!nuevo});ANDCFG.live={id:j.id,on:true};andKeep();
+ try{var j=await fbCall('POST','/live',{name:ANDCFG.liveN||'',nuevo:!!nuevo,mb:ZCFG.mb||''});ANDCFG.live={id:j.id,on:true,mb:ZCFG.mb||''};andKeep();
   if(AND&&AND.setLive)AND.setLive(JSON.stringify({on:true,url:fbCfg().url,id:j.id,key:j.key,day:ANDCFG.liveDay!==false}))}
  catch(e){LIVEMSG='No se pudo: '+esc((typeof FBERR!='undefined'&&FBERR[e.message])||e.message)}
  renderAndCf()}
@@ -3761,6 +3781,8 @@ async function cliRc(k,b){var C=cliEns(),o=cliFind(k);if(!o){cliSay('No encontr�
 
 // ===== Compartir → Mis Finanzas (app Android): foto, texto o PDF al registro inteligente =====
 function mfShared(){if(!AND||!AND.shared)return;var s='';try{s=AND.shared()}catch(e){}if(!s)return;var j;try{j=JSON.parse(s)}catch(e){return}
+ // Un lugar compartido desde Google Maps: va a la recogida de un viaje nuevo en la Agenda de clientes.
+ if(j.type=='txt'&&CLIGM.test(j.text||'')){setTab('cli','cvia');setTimeout(function(){try{cliVReset();var d=$('cli_nv');if(d)d.open=true;$('clVo').value=String(j.text).trim();cliGeo('clVo');d.scrollIntoView({block:'start'})}catch(e){}},350);return}
  setTab('ia','cop');setTimeout(function(){try{fiR_st()}catch(e){}var el=$('fi_st');if(el)el.scrollIntoView({block:'start'});
   if(j.type=='img')fiReceiptUrl('data:'+(j.mime||'image/jpeg')+';base64,'+j.b64);
   else if(j.type=='txt'&&$('staiin')){$('staiin').value=String(j.text||'').slice(0,1500);AIP='st';runAI()}
@@ -3869,7 +3891,7 @@ setTab(TABS.some(function(x){return x[0]==t0})?t0:"inicio");
 HNAV=true;
 addEventListener("hashchange",function(){var h=location.hash.slice(1).split("/");if(h[0]&&SUBS[h[0]]&&(h[0]!=TAB||(h[1]&&h[1]!=subOf(TAB))))setTab(h[0],h[1])});
 $("fecha").value=today();all();
-renderVT();idbRecover();renderPwa();fiBoot();try{mfShared()}catch(e){}
+renderVT();idbRecover();renderPwa();fiBoot();try{mfShared()}catch(e){}setTimeout(liveMbSync,4000);
 // Primera vez: ventana para entrar o crear la cuenta (o seguir sin cuenta). Con sesión: trae lo último de la nube.
 try{if(fbAuth())fbOpen();else if(!localStorage.getItem('mf-login-skip'))loginShow('in')}catch(e){}
 </script>
