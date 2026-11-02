@@ -514,13 +514,13 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px color-mix(in srgb,v
   <div id="hedit"></div><div id="hist"></div>
   <button onclick="reset(this)" style="margin-top:8px">Reiniciar todo</button></div>
 <div class="card" id="cal"></div><div class="card" id="simd"></div><div class="card" id="cob"></div><div class="card" id="rend"></div><div class="card" id="mes"></div><div class="card" id="ost"></div><div class="card" id="payc"></div><div class="card" id="accs"></div><div class="card" id="movc"></div><div class="card" id="and_est"></div>
-<div class="card" id="and_of"></div>
+<div class="card" id="and_of"></div><div class="card" id="and_inc"></div>
 <div class="card" id="and_zn"></div>
 <div class="card" id="and_map"></div>
 <div class="card" id="and_cf"></div>
 <div class="card" id="cli_c"></div><div class="card" id="cli_v"></div><div class="card" id="cli_p"></div><div class="card" id="cli_w"></div>
 <div class="card" id="vt"></div><div class="card" id="pdfc"></div><div class="card" id="nube"></div><div class="card" id="resp"></div><div class="card" id="pwa"></div>
-<div class="card" id="masm"></div><div class="card" id="hzc"></div><div class="card" id="tcc"></div><div class="card" id="logros"></div><div class="card" id="veh"></div><div class="card" id="impu"></div><div class="card" id="pres"></div><div class="card" id="cierre"></div><div class="card" id="sugp"></div>
+<div class="card" id="masm"></div><div class="card" id="hzc"></div><div class="card" id="tcc"></div><div class="card" id="logros"></div><div class="card" id="wsum"></div><div class="card" id="veh"></div><div class="card" id="impu"></div><div class="card" id="pres"></div><div class="card" id="cierre"></div><div class="card" id="sugp"></div>
 <div class="card" id="fi_zona"></div><div class="card" id="fi_cop"></div><div class="card" id="fi_diag"></div><div class="card" id="fi_wi"></div><div class="card" id="fi_af"></div><div class="card" id="fi_st"></div><div class="card" id="fi_fc"></div><div class="card" id="fi_au"></div><div class="card" id="fi_ub"></div><div class="card" id="fi_ob"></div><div class="card" id="fi_ad"></div><div class="card" id="fi_me"></div><div class="card" id="fi_cfg"></div>
 <div hidden>
 </div>
@@ -559,7 +559,7 @@ items:[
 {id:9,name:"Ahorro mínimo diario",amt:100,freq:"d",total:0,prio:3,sv:1}],
 split:[{k:"res",n:"Fondo para días malos (hasta su meta)",p:12.5},{k:"extra",n:"Abono extra a deudas (tarjeta primero)",p:42.5},{k:"ahorro",n:"Ahorro",p:15},{k:"super",n:"Supermercado de la casa",p:20},{k:"pers",n:"Personal / ocio",p:10}],
 logs:[]}}
-var HNAV=false,SCHEMA=6,_sm=null,_nosnap=false,PAGEV='mf-v50';
+var HNAV=false,SCHEMA=6,_sm=null,_nosnap=false,PAGEV='mf-v51';
 var S;
 try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 function upgrade(){if(S&&S.items&&(S.v||0)<SCHEMA){try{localStorage.setItem(KEY+'-bak-'+(S.v||0)+'-'+Date.now(),JSON.stringify(S));pruneBak()}catch(e){}}
@@ -1055,6 +1055,17 @@ function runTests(){var T=[],saved=S,near=function(a,b){return Math.abs(a-b)<0.0
    var o={k:k,t:{m:0},c:{id:1,n:'Ana',tel:'8095551234'},ds:today(),ts:ts},a=cliOccBtns(o,true,false);S.cli.done[k]={t:Date.now(),m:450};var b=cliOccBtns(o,true,false);
    return /Viaje terminado/.test(a)&&/No se hizo/.test(a)&&!/Recibo PDF/.test(a)&&cliAmt(o)==450&&/Recibo PDF/.test(b)&&/Cobrado/.test(b)&&!/No se hizo/.test(b)&&!/Viaje terminado</.test(b)})});
  t('Agenda: decodifica la ruta de Google (polyline) para el mapa del precio',function(){var P=cliPoly('_p~iF~ps|U_ulLnnqC_mqNvxq`@');return P.length==3&&near(P[0][0],38.5)&&near(P[0][1],-120.2)&&near(P[1][0],40.7)&&near(P[1][1],-120.95)&&near(P[2][0],43.252)&&near(P[2][1],-126.453)});
+ t('Precio: regreso vacío e ida y vuelta con espera y peajes',function(){var M=uberModel([]),e={km:30,s:40*60},q=cliPriceOf(30,40,{cpk:5},0.25,M),a=cliTripPrice(e,q,M,{tipo:'ida',peaje:100},5),b=cliTripPrice(e,q,M,{tipo:'iv',peaje:100,espera:15},5);
+  return near(q.pas,35+160+14*8+160)&&a.total==Math.ceil((q.pas+100)/10)*10&&b.total==Math.ceil((2*q.pas+15*4+200)/10)*10&&cliTripPrice(e,q,M,{tipo:'vacio'},5).extra>150});
+ t('Súper: lista de lo que compras seguido y el supermercado más barato',function(){return run(mk([],[],{spr:[{id:1,d:fiAdd(today(),-20),tienda:'Supermercados La Sirena',total:0,items:[{k:'arroz 10 lb',q:1,p:400,t:400,c:'basicos'},{k:'refresco 2 lt',q:2,p:90,t:180,c:'refrescos',e:true}]},
+   {id:2,d:fiAdd(today(),-5),tienda:'Supermercados Nacional',total:0,items:[{k:'arroz 10 lb',q:1,p:380,t:380,c:'basicos'},{k:'refresco 2 lt',q:2,p:95,t:190,c:'refrescos',e:true},{k:'pan',q:1,p:50,t:50,c:'lacteos'}]}]}),function(){
+   var L=supList(),C=supStores(),a=L.filter(function(x){return x.k=='arroz 10 lb'})[0],r=C.rows.filter(function(x){return x.k=='arroz 10 lb'})[0];
+   return L.length==2&&a.p==380&&!L[0].e&&L[1].e&&r&&r.best.s=='nacional'&&near(r.diff,20)&&C.wins.nacional==1&&C.wins['la sirena']==1})});
+ t('Plataformas: compara Uber, DiDi e InDrive por hora y por km',function(){var t0=new Date(2026,2,3,18).getTime(),O=[0,1,2,3].map(function(i){return{t:t0+i*6e4,v:2,nph:400,npk:20,fare:300}}).concat([0,1,2].map(function(i){return{t:t0+i*6e4,pl:'d',v:1,nph:300,npk:15,fare:250}})),A=platAgg(O);
+  return A.length==2&&A[0].k=='u'&&A[0].n==4&&near(A[0].nph,400)&&A[1].k=='d'&&near(A[1].ok,0)&&A[0].best==HZB[hzBlock(18)][1]});
+ t('Incentivos: cuenta los viajes del reto (anotados y los que no captó la app)',function(){return run(mk([],[{d:'2026-03-02',g:2000,v:8,h:6,e:{}},{d:'2026-03-03',g:2500,v:10,h:7,e:{}},{d:'2026-03-09',g:900,v:4,h:3,e:{}}]),function(){return incDone({desde:'2026-03-02',hasta:'2026-03-08',meta:30,extra:2})==20})});
+ t('Resumen semanal: compara la semana pasada con la anterior',function(){var a=fiAdd(wkStart(today()),-7);return run(mk([],[{d:a,g:3000,v:10,h:8,e:{glp:500}},{d:fiAdd(a,-7),g:2000,v:7,h:6,e:{glp:400}}]),function(){var D=wsumData();return D.cur.dias==1&&D.cur.g==3000&&D.prev.g==2000&&D.cur.v==10&&D.cur.E.glp==500&&wsumTips(D).length>=2})});
+ t('Carta de ingresos: suma bruto, neto y días por mes',function(){var m=today().slice(0,7);return run(mk([],[{d:m+'-01',g:3000,h:8,e:{glp:500}},{d:m+'-02',g:2000,h:6,e:{}}]),function(){var M=incMonths(2),c=M[M.length-1];return M.length==2&&c.parcial&&c.g==5000&&c.dias==2&&near(c.n,4500)})});
  t('Recibo: arma el PDF del viaje del cliente',function(){if(!window.jspdf)return false;var b=cliRcPdf({c:{n:'Ana Pérez'},ds:'2026-03-05',ts:new Date(2026,2,5,8,0).getTime(),t:{m:450,o:{t:'Naco'},ds:{t:'Gazcue'}}},true,7);return /^JVBER/.test(b)&&b.length>1000});
  return T}
 function renderVT(){var T=runTests(),ok=T.filter(function(q){return q[1]}).length;$('vt').innerHTML='<h2>Verificaci\u00f3n del motor financiero</h2><p class="sub">Estas pruebas se ejecutan al abrir la p\u00e1gina y comprueban que el reparto, las prioridades, el fondo y los pendientes calculen bien.</p><div class="warn" style="'+(ok==T.length?'background:var(--ac2);color:var(--ac)':'')+'">'+ok+' de '+T.length+' pruebas correctas.</div>'+T.map(function(q){return '<div class="leg"><span>'+q[0]+'</span><span>'+(q[1]?'Correcta':'FALLA')+'</span></div>'}).join('')}
@@ -1337,7 +1348,7 @@ function renderSup(){var T=totals(S.logs),asg=T.ssuper||0,sp=0,est=0;S.sp.forEac
  if(S.list.length)h+='<p style="margin:8px 0 0">Tu lista cuesta aprox. <b>'+rd(est)+'</b>. '+(av>=est?'Con lo disponible ya te alcanza.':'Te faltan '+rd(est-Math.max(0,av))+' para cubrirla completa.')+'</p>';
  $("sup").innerHTML=h}
 function ens3(){if(!S.pay)S.pay=[];if(!S.npay)S.npay=S.pay.reduce(function(m,p){return Math.max(m,p.id)},0)+1;S.items.forEach(function(i){if(i.apr==null)i.apr=/tarjeta|cr[e\u00e9]dito/i.test(i.name)&&i.total>0?60:0;if(i.apr>0&&!i.start)i.start=today()});if(!S.acc){S.acc=[{id:1,type:'cash',name:'Efectivo',entity:'',num:'',bal0:0}];S.nacc=2}if(!S.mov)S.mov=[];if(!S.nmov)S.nmov=1;if(!S.nacc)S.nacc=S.acc.reduce(function(m,a){return Math.max(m,a.id)},0)+1}
-function ens2(){ens3();if(!S.lim)S.lim={comida:400,hormiga:200};if(!S.cal)S.cal=[];if(!S.cob)S.cob=[];if(S.apr==null)S.apr=60;if(S.cut==null)S.cut=0;if(!S.zp||typeof S.zp!='object')S.zp={};if(!Array.isArray(S.dz))S.dz=dzDef();dzMig();if(!Array.isArray(S.dzn))S.dzn=[19,6];if(!Array.isArray(S.tc))S.tc=[];if(!Array.isArray(S.spr))S.spr=[];gpsPrune()}
+function ens2(){ens3();if(!S.lim)S.lim={comida:400,hormiga:200};if(!S.cal)S.cal=[];if(!S.cob)S.cob=[];if(S.apr==null)S.apr=60;if(S.cut==null)S.cut=0;if(!S.zp||typeof S.zp!='object')S.zp={};if(!Array.isArray(S.dz))S.dz=dzDef();dzMig();if(!Array.isArray(S.dzn))S.dzn=[19,6];if(!Array.isArray(S.tc))S.tc=[];if(!Array.isArray(S.spr))S.spr=[];if(!Array.isArray(S.inc))S.inc=[];gpsPrune()}
 function svPaid(T){var t=0;S.items.forEach(function(i){if(i.sv)t+=T["i"+i.id]||0});return t}
 function itOf(k){var f=function(a){return a.filter(function(i){return 'i'+i.id==k})[0]},r=f(S.items),c=S.cfg||[];if(r)return r;for(var j=c.length-1;j>=0;j--){r=f(c[j].c.i);if(r)return r}}
 function oldRows(T){var cur={};rowsOf(0).forEach(function(c){cur[c.key]=1});return Object.keys(T).filter(function(k){return k[0]=='i'&&!cur[k]&&T[k]>0.005}).map(function(k,i){var it=itOf(k);return{key:k,name:(it?it.name:'Obligaci\u00f3n anterior')+' (anterior)',v:T[k]}}).map(grpCol)}
@@ -1555,13 +1566,13 @@ function wkLabel(k){var n=Math.ceil(+k.slice(8)/7),e=new Date(k+'T00:00'),m=['en
 function fillWeeks(){var w=weeksOf($('pdm').value),sel=$('pdw');sel.innerHTML=w.length?w.map(function(k){return '<option value="'+k+'">'+wkLabel(k)+'</option>'}).join(''):'<option value="">Sin semanas registradas</option>';sel.selectedIndex=Math.max(0,w.length-1)}
 function renderPdf(){var ms=weekMonths();$('pdfc').innerHTML='<h2>Reporte semanal en PDF</h2><p class="sub">Elige el mes y la semana (de lunes a domingo; la semana 1 es la que empieza en el primer lunes del mes). El informe incluye resumen, reparto del dinero, gastos e ingresos extras, análisis día por día, estado de deudas y ahorro, y retroalimentación para la semana siguiente.</p><div class="row"><label>Mes<select id="pdm" onchange="fillWeeks()">'+ms.map(function(m){return '<option value="'+m+'">'+mname(m)+'</option>'}).join('')+'</select></label><label>Semana<select id="pdw"></select></label><button class="pri" onclick="makePdf()">Descargar reporte PDF</button></div><div id="pdmsg"></div>';fillWeeks()}
 // Pantallas pesadas que no se ven (gráficos de Análisis, el Asistente con su mapa): se dibujan al abrirlas, no en cada cambio.
-var LZ={},LZF={ana:function(){renderRend();renderMes();renderPdf();renderResp();renderHoras()},and:function(){renderAndAll()}};
+var LZ={},LZF={ana:function(){renderRend();renderMes();renderPdf();try{$('pdfc').insertAdjacentHTML('beforeend',incLetterHtml())}catch(e){}renderResp();renderHoras()},and:function(){renderAndAll()}};
 function lazy(t){if(TAB==t){LZ[t]=0;try{LZF[t]()}catch(e){}}else LZ[t]=1}
-function all(){ens();ens2();try{andShiftSync()}catch(e){}$("dpw").value=S.dpw;$("cush").value=cush();kpis();renderWk();tb();renderGoals();renderSup();split();esc2();hist();draw();prev();rPend();renderCal();renderSim();renderCob();try{renderCli();renderNube()}catch(e){}lazy('ana');try{renderTC();renderLogros()}catch(e){}renderAcc();renderMov();renderOst();renderPay();renderOdet();renderPred();renderSubnav();renderOb();try{fuelMig();carApply()}catch(e){}fiSummary();p2All();heroUpd();try{andSync()}catch(e){}lazy('and');if(TAB=='ia'&&['cop','st','wi','af'].indexOf(subOf('ia'))<0)renderFI();try{driveAuto();if($('drive'))driveDraw();driveBtn()}catch(e){}}
+function all(){ens();ens2();try{andShiftSync()}catch(e){}$("dpw").value=S.dpw;$("cush").value=cush();kpis();renderWk();tb();renderGoals();renderSup();split();esc2();hist();draw();prev();rPend();renderCal();renderSim();renderCob();try{renderCli();renderNube()}catch(e){}lazy('ana');try{renderTC();renderLogros();renderWsum()}catch(e){}renderAcc();renderMov();renderOst();renderPay();renderOdet();renderPred();renderSubnav();renderOb();try{fuelMig();carApply()}catch(e){}fiSummary();p2All();heroUpd();try{andSync()}catch(e){}lazy('and');if(TAB=='ia'&&['cop','st','wi','af'].indexOf(subOf('ia'))<0)renderFI();try{driveAuto();if($('drive'))driveDraw();driveBtn()}catch(e){}}
 var TABS=[["inicio",'<svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-5h4v5"/></svg>',"Inicio"],["ia",'<svg viewBox="0 0 24 24"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M18.5 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>',"IA"],["reg",'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>',"Registrar"],["cta",'<svg viewBox="0 0 24 24"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3"/><path d="M4 7.5V17a2 2 0 0 0 2 2h13a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1H6.5A2.5 2.5 0 0 1 4 7.5Z"/><circle cx="16.5" cy="13.5" r="1.1"/></svg>',"Cuentas"],["deu",'<svg viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h4"/></svg>',"Deudas"],["hog",'<svg viewBox="0 0 24 24"><path d="M5 9h14l-1.4 9.2a2 2 0 0 1-2 1.8H8.4a2 2 0 0 1-2-1.8L5 9Z"/><path d="M9 9l3-5 3 5"/></svg>',"Hogar"],["ana",'<svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M21 20H3"/></svg>',"Análisis"]];
 var SUBS={inicio:[['res','Resumen'],['hoy','Hoy y semana'],['pred','Predicci\u00f3n'],['logros','Logros']],ia:[['zona','Zona del día'],['cop','Copiloto'],['diag','Diagn\u00f3stico'],['fc','Pron\u00f3stico'],['au','Autopsia'],['ub','Uber'],['ob','Objetivos'],['ad','Auditor'],['me','Memoria'],['cfg','Ajustes IA']],reg:[['dia','Registrar'],['dist','Distribuci\u00f3n'],['hist','Historial'],['imp','Importar Uber'],['veh','Veh\u00edculo']],cta:[['cue','Cuentas'],['mov','Movimientos'],['cierre','Cierre semanal']],deu:[['est','Estado'],['pag','Pagos'],['obl','Obligaciones'],['meta','Metas'],['sim','Simulador'],['tc','Tarjetas']],hog:[['sup','S\u00faper'],['pres','Presupuesto'],['cob','Por cobrar'],['rep','Reparto']],ana:[['tend','Tendencias'],['horas','Mejores horas'],['pdf','Reporte PDF'],['resp','Respaldo'],['mas','App y avisos']],mas:[['menu','Todo']]},SUB={},TAB='inicio';
-TABS.push(['mas','','M\u00e1s']);TABS.push(['and','','Asistente']);TABS.push(['cli','','Clientes']);SUBS.cli=[['clis','Clientes'],['cvia','Agenda'],['cpag','Pagos'],['cbot','Ajustes']];SUBS.and=[['aest','Estado'],['aof','Ofertas'],['azon','Zonas de cuidado'],['amap','Mapa'],['acfg','Ajustes']];
-function tabs(){var map=[['#kpis','inicio','res'],['#obk','inicio','res'],['#zona','inicio','res'],['#jor','inicio','res'],['#veh','reg','veh'],['#impu','reg','imp'],['#pres','hog','pres'],['#cierre','cta','cierre'],['#sugp','deu','pag'],['#fisum','inicio','res'],['#fi_zona','ia','zona'],['#fi_cop','ia','cop'],['#fi_diag','ia','diag'],['#fi_wi','ia','cop'],['#fi_af','ia','cop'],['#fi_st','ia','cop'],['#fi_fc','ia','fc'],['#fi_au','ia','au'],['#fi_ub','ia','ub'],['#fi_ob','ia','ob'],['#fi_ad','ia','ad'],['#fi_me','ia','me'],['#fi_cfg','ia','cfg'],['#hoy','inicio','hoy'],['#wk','inicio','hoy'],['#pred','inicio','pred'],['#fecha','reg','dia'],['#pie','reg','dist'],['#hist','reg','hist'],['#accs','cta','cue'],['#movc','cta','mov'],['#ost','deu','est'],['#cal','deu','est'],['#payc','deu','pag'],['#tb','deu','obl'],['#odet','deu','obl'],['#goals','deu','meta'],['#simd','deu','sim'],['#sup','hog','sup'],['#cob','hog','cob'],['#split','hog','rep'],['#esc','hog','rep'],['#rend','ana','tend'],['#mes','ana','tend'],['#pdfc','ana','pdf'],['#resp','ana','resp'],['#vt','ana','mas'],['#and_est','and','aest'],['#and_of','and','aof'],['#and_zn','and','azon'],['#and_map','and','amap'],['#and_cf','and','acfg'],['#cli_c','cli','clis'],['#cli_v','cli','cvia'],['#cli_p','cli','cpag'],['#cli_w','cli','cbot'],['#nube','ana','resp'],['#masm','mas','menu'],['#hzc','ana','horas'],['#tcc','deu','tc'],['#logros','inicio','logros']];
+TABS.push(['mas','','M\u00e1s']);TABS.push(['and','','Asistente']);TABS.push(['cli','','Clientes']);SUBS.cli=[['clis','Clientes'],['cvia','Agenda'],['cpag','Pagos'],['cbot','Ajustes']];SUBS.and=[['aest','Estado'],['aof','Ofertas'],['ainc','Incentivos'],['azon','Zonas de cuidado'],['amap','Mapa'],['acfg','Ajustes']];
+function tabs(){var map=[['#kpis','inicio','res'],['#obk','inicio','res'],['#zona','inicio','res'],['#jor','inicio','res'],['#veh','reg','veh'],['#impu','reg','imp'],['#pres','hog','pres'],['#cierre','cta','cierre'],['#sugp','deu','pag'],['#fisum','inicio','res'],['#fi_zona','ia','zona'],['#fi_cop','ia','cop'],['#fi_diag','ia','diag'],['#fi_wi','ia','cop'],['#fi_af','ia','cop'],['#fi_st','ia','cop'],['#fi_fc','ia','fc'],['#fi_au','ia','au'],['#fi_ub','ia','ub'],['#fi_ob','ia','ob'],['#fi_ad','ia','ad'],['#fi_me','ia','me'],['#fi_cfg','ia','cfg'],['#hoy','inicio','hoy'],['#wk','inicio','hoy'],['#pred','inicio','pred'],['#fecha','reg','dia'],['#pie','reg','dist'],['#hist','reg','hist'],['#accs','cta','cue'],['#movc','cta','mov'],['#ost','deu','est'],['#cal','deu','est'],['#payc','deu','pag'],['#tb','deu','obl'],['#odet','deu','obl'],['#goals','deu','meta'],['#simd','deu','sim'],['#sup','hog','sup'],['#cob','hog','cob'],['#split','hog','rep'],['#esc','hog','rep'],['#rend','ana','tend'],['#mes','ana','tend'],['#pdfc','ana','pdf'],['#resp','ana','resp'],['#vt','ana','mas'],['#and_est','and','aest'],['#and_of','and','aof'],['#and_zn','and','azon'],['#and_map','and','amap'],['#and_cf','and','acfg'],['#and_inc','and','ainc'],['#cli_c','cli','clis'],['#cli_v','cli','cvia'],['#cli_p','cli','cpag'],['#cli_w','cli','cbot'],['#nube','ana','resp'],['#masm','mas','menu'],['#hzc','ana','horas'],['#wsum','inicio','res'],['#tcc','deu','tc'],['#logros','inicio','logros']];
  document.querySelectorAll('main > .card, main > .grid > .card').forEach(function(e){var t='ana',s='mas';map.forEach(function(p){if(e.id==p[0].slice(1)||e.querySelector(p[0])){t=p[1];s=p[2]}});e.dataset.tab=t;e.dataset.sub=s});
  document.querySelectorAll('main > .grid').forEach(function(g){g.style.display='block'})}
 // ===== Menos a la vista =====
@@ -1671,7 +1682,7 @@ function setTab(t,s){if(!SUBS[t])t='inicio';if(t=='ia'&&(s=='wi'||s=='af'||s=='s
  renderSubnav();var h=document.querySelector('.hero');if(h)h.classList.toggle('compact',t!='inicio');if(t=='ia')renderFI();if(t=='mas')renderMas();heroUpd();if(t=='and')renderAndAll();else if(t=='cli')renderCli();else if(LZ[t])lazy(t);foldAll();window.scrollTo(0,0)}
 function setSub(s){SUB[TAB]=s;setTab(TAB)}
 // Menú "Más": todas las secciones de IA y Análisis en una cuadrícula, con una línea que dice para qué sirve cada una.
-var MASD={amap:'El recorrido del GPS en el mapa',aest:'Encender o apagar el lector y el GPS',aof:'Ofertas que evaluó el lector',azon:'Sectores donde ir con cuidado',acfg:'Tus límites y el diagnóstico',zona:'Dónde y si conviene trabajar hoy',cop:'Pregúntale a la IA sobre tu dinero',diag:'Tu salud financiera de 0 a 100',wi:'Qué pasa si cambias algo',af:'Antes de comprar algo',st:'Registrar con texto o voz',fc:'Cómo vas a cerrar el mes',au:'Qué pasó en un mes',ub:'Rendimiento por hora y km',ob:'Tus metas y su avance',ad:'Revisa errores y duplicados',me:'Lo que la IA recuerda de ti',cfg:'Clave y límites de la IA',tend:'Cómo te ha ido por semana y mes',horas:'Cuándo y dónde te pagan mejor',pdf:'Reporte semanal para guardar',resp:'Copia de seguridad e importar',mas:'Instalar la app y avisos'};
+var MASD={amap:'El recorrido del GPS en el mapa',aest:'Encender o apagar el lector y el GPS',aof:'Ofertas que evaluó el lector',ainc:'Retos de Uber: cuánto te falta',azon:'Sectores donde ir con cuidado',acfg:'Tus límites y el diagnóstico',zona:'Dónde y si conviene trabajar hoy',cop:'Pregúntale a la IA sobre tu dinero',diag:'Tu salud financiera de 0 a 100',wi:'Qué pasa si cambias algo',af:'Antes de comprar algo',st:'Registrar con texto o voz',fc:'Cómo vas a cerrar el mes',au:'Qué pasó en un mes',ub:'Rendimiento por hora y km',ob:'Tus metas y su avance',ad:'Revisa errores y duplicados',me:'Lo que la IA recuerda de ti',cfg:'Clave y límites de la IA',tend:'Cómo te ha ido por semana y mes',horas:'Cuándo y dónde te pagan mejor',pdf:'Reporte semanal para guardar',resp:'Copia de seguridad e importar',mas:'Instalar la app y avisos'};
 function renderMas(){var el=$('masm');if(!el)return;var b=function(t,x){return '<button data-t="'+t+'" data-s="'+x[0]+'" onclick="setTab(this.dataset.t,this.dataset.s)"><span>'+x[1]+'</span><small>'+(MASD[x[0]]||'')+'</small></button>'},lb={};SUBS.ia.forEach(function(x){lb[x[0]]=x[1]});
  el.innerHTML='<h2>Más</h2><p class="mhead">Inteligencia</p><div class="mgrid">'+IAG.map(function(q){return b('ia',[q[1][0],q[0]]).replace('</small>',q[1].length>1?' · '+q[1].map(function(k){return lb[k]}).join(', ')+'</small>':'</small>')}).join('')+'</div>'+
   '<p class="mhead">Análisis y respaldo</p><div class="mgrid">'+SUBS.ana.map(function(x){return b('ana',x)}).join('')+'</div>'}
@@ -2635,7 +2646,7 @@ function andOffers(day){var L=AND?andJ('offers')||[]:[];return day?L.filter(func
 var ANDV=[''+ic('x','no')+' No conviene',''+ic('alert','wn')+' Justo',''+ic('check','ok')+' Conviene'];
 function andOfferRows(L){return L.slice().reverse().slice(0,30).map(function(o){return '<div class="leg"><span>'+new Date(o.t).toLocaleTimeString('es-DO',{hour:'numeric',minute:'2-digit'})+' · '+rd(o.fare)+' · '+(o.pkm+o.tkm).toFixed(1)+' km · '+Math.round(o.pmin+o.tmin)+' min'+(o.mx!=null?' <small>(máx '+o.mx+')</small>':'')+(o.tq&&o.fare<o.tq?' <small style="color:var(--wr)">⏱ pide '+rd(o.tq)+'</small>':'')+andOfTags(o)+'</span><span>'+ANDV[o.v]+'<br><small>'+rd(o.npk)+'/km · '+rd(o.nph)+'/h</small></span></div>'}).join('')}
 // ===== Asistente de viajes (sección propia) =====
-function renderAndAll(){try{renderAndEst();renderAndOf();renderAndZn();renderAndCf();renderAndMap()}catch(e){}}
+function renderAndAll(){try{renderAndEst();renderAndOf();renderAndInc();renderAndZn();renderAndCf();renderAndMap()}catch(e){}}
 function renderAnd(){renderAndAll()}
 function andNoApp(el,t){el.innerHTML='<h2>'+t+'</h2><p class="sub">Esta sección funciona en la app de Mis Finanzas para Android: lee cada oferta de Uber, te dice en un segundo si conviene (tomando en cuenta tus zonas de cuidado) y graba el GPS en segundo plano. En el navegador puedes preparar tus zonas de cuidado y tus límites.</p>'}
 // Interruptor grande: título, estado y botón.
@@ -3334,12 +3345,12 @@ async function cliGeoFind(q){var L=[],seen={},add=function(x){var k=Math.round(x
  if(!L.length){var r2=await fetch('https://nominatim.openstreetmap.org/search?format=json&countrycodes=do&limit=5&accept-language=es&q='+encodeURIComponent(q));(await r2.json()).forEach(function(x){add({t:x.display_name,la:+x.lat,lo:+x.lon})})}
  return L}
 var CLIGT={},CLIGQ={};
-function cliGeoAuto(f){clearTimeout(CLIGT[f]);var q=($(f).value||'').trim(),out=$(f+'_r');if(q.length<4||CLIGM.test(q)&&q.length<12){if(out&&q.length<4)out.innerHTML='';return}
+function cliGeoAuto(f){clearTimeout(CLIGT[f]);var q=($(f).value||'').trim(),out=$(f+'_r');if(q.length<4||CLIGM.test(q)&&q.length<12){if(out&&q.length<4)out.innerHTML=q.length?'':cliLugHtml(f);return}
  CLIGT[f]=setTimeout(function(){if(($(f).value||'').trim()!=q||CLIGQ[f]==q)return;CLIGQ[f]=q;cliGeo(f)},600)}
 function cliShort(t){return String(t||'').split(',').slice(0,3).join(',').trim()}
-function cliGeoPick(f,i){var x=CLIGEO[f+'_L'][i];CLIGEO[f]={t:cliShort(x.t),la:x.la,lo:x.lo};$(f).value=CLIGEO[f].t;$(f+'_r').innerHTML='<small>'+ic('check','ok')+' Ubicación guardada</small>'}
+function cliGeoPick(f,i){var x=CLIGEO[f+'_L'][i];CLIGEO[f]={t:cliShort(x.t),la:x.la,lo:x.lo};$(f).value=CLIGEO[f].t;$(f+'_r').innerHTML=cliPickMsg(f,'Ubicación guardada')}
 async function cliGeoHere(f){var out=$(f+'_r');out.innerHTML='<small>Leyendo tu ubicación…</small>';var h=await cliHere();if(!h){out.innerHTML='<small>No pude leer tu ubicación. Revisa el permiso de ubicación.</small>';return}
- if(!$(f).value.trim())$(f).value='Mi ubicación';CLIGEO[f]={t:$(f).value.trim(),la:h.la,lo:h.lo};out.innerHTML='<small>'+ic('check','ok')+' Guardé el punto donde estás ahora</small>'}
+ if(!$(f).value.trim())$(f).value='Mi ubicación';CLIGEO[f]={t:$(f).value.trim(),la:h.la,lo:h.lo};out.innerHTML=cliPickMsg(f,'Guardé el punto donde estás ahora')}
 // Punto de un campo: el elegido de la lista o, si solo escribiste, el primer resultado de la búsqueda.
 async function cliPoint(f){var v=$(f).value.trim();if(!v)return null;if(CLIGEO[f]&&CLIGEO[f].la!=null)return {t:v,la:CLIGEO[f].la,lo:CLIGEO[f].lo};
  try{var L=await cliGeoFind(v);if(L[0]){var q={t:L[0].gm?cliShort(L[0].t):v,la:L[0].la,lo:L[0].lo,f:cliShort(L[0].t)};if(gHav({la:18.48,lo:-69.93},q)>60000)q.far=1;return q}}catch(e){}return {t:v}}
@@ -3373,9 +3384,10 @@ function cliPriceOf(km,min,r,com,M){M=M||uberModel();var pas=uberRaw(km,min,M.T)
 // ahora), OSRM (gratis, sin tránsito: el tiempo se estima por la hora pico) o, si nada responde, la línea recta.
 function cliPoly(e){var P=[],i=0,la=0,lo=0;while(i<e.length){for(var k=0;k<2;k++){var b,sh=0,r=0;do{b=e.charCodeAt(i++)-63;r|=(b&31)<<sh;sh+=5}while(b>=32);var d=r&1?~(r>>1):r>>1;if(k)lo+=d;else la+=d}P.push([la/1e5,lo/1e5])}return P}
 async function cliRouteFull(a,b,ts){var pt=function(x){return{location:{latLng:{latitude:x.la,longitude:x.lo}}}};
- if(ZCFG.gkey){try{var body={origin:pt(a),destination:pt(b),travelMode:'DRIVE',routingPreference:'TRAFFIC_AWARE'};if(ts>Date.now()+120000)body.departureTime=new Date(ts).toISOString();
-  var r=await fetch('https://routes.googleapis.com/directions/v2:computeRoutes',{method:'POST',headers:{'Content-Type':'application/json','X-Goog-Api-Key':ZCFG.gkey,'X-Goog-FieldMask':'routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline'},body:JSON.stringify(body)}),j=await r.json(),x=j.routes&&j.routes[0];
-  if(r.ok&&x&&x.polyline)return{s:parseFloat(x.duration),km:x.distanceMeters/1000,src:'Google, tránsito '+(body.departureTime?'a esa hora':'de ahora'),geo:cliPoly(x.polyline.encodedPolyline)}}catch(e){}}
+ if(ZCFG.gkey){try{var body={origin:pt(a),destination:pt(b),travelMode:'DRIVE',routingPreference:'TRAFFIC_AWARE',extraComputations:['TOLLS']};if(ts>Date.now()+120000)body.departureTime=new Date(ts).toISOString();
+  var r=await fetch('https://routes.googleapis.com/directions/v2:computeRoutes',{method:'POST',headers:{'Content-Type':'application/json','X-Goog-Api-Key':ZCFG.gkey,'X-Goog-FieldMask':'routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline,routes.travelAdvisory.tollInfo'},body:JSON.stringify(body)}),j=await r.json(),x=j.routes&&j.routes[0];
+  if(r.ok&&x&&x.polyline){var ti=x.travelAdvisory&&x.travelAdvisory.tollInfo,toll=ti?(ti.estimatedPrice||[]).reduce(function(a,m){return a+(+m.units||0)+(+m.nanos||0)/1e9},0):0;
+   return{s:parseFloat(x.duration),km:x.distanceMeters/1000,src:'Google, tránsito '+(body.departureTime?'a esa hora':'de ahora'),geo:cliPoly(x.polyline.encodedPolyline),tolls:!!ti,toll:Math.round(toll)}}}catch(e){}}
  if(ZCFG.mb){try{var r1=await fetch('https://api.mapbox.com/directions/v5/mapbox/driving-traffic/'+a.lo+','+a.la+';'+b.lo+','+b.la+'?overview=full&geometries=geojson&access_token='+encodeURIComponent(ZCFG.mb)),j1=await r1.json(),y=j1.routes&&j1.routes[0];
   if(r1.ok&&y)return{s:y.duration,km:y.distance/1000,src:'tráfico en vivo',geo:y.geometry.coordinates.map(function(c){return[c[1],c[0]]})}}catch(e){}}
  try{var r2=await fetch('https://router.project-osrm.org/route/v1/driving/'+a.lo+','+a.la+';'+b.lo+','+b.la+'?overview=full&geometries=geojson'),j2=await r2.json(),z=j2.routes&&j2.routes[0];
@@ -3396,13 +3408,16 @@ var CLIPQ=null;
 async function cliPriceUI(b){var out=$('clVpr');b.disabled=true;out.innerHTML='<small>Calculando la ruta…</small>';
  try{var o=await cliPoint('clVo'),ds=await cliPoint('clVd');if(o&&o.la!=null)CLIGEO.clVo=o;if(ds&&ds.la!=null)CLIGEO.clVd=ds;
   if(!o||o.la==null||!ds||ds.la==null){out.innerHTML='<small>Busca y elige la recogida y el destino para calcular el precio.</small>';return}
-  var ts=new Date(($('clVf').value||today())+'T'+($('clVh').value||'08:00')).getTime();CLIPQ={o:o,ds:ds,e:await cliRouteFull(o,ds,ts)};cliPriceShow()}
+  var ts=new Date(($('clVf').value||today())+'T'+($('clVh').value||'08:00')).getTime(),e=await cliRouteFull(o,ds,ts);CLIPQ={o:o,ds:ds,e:e,opt:{tipo:e.km>25?'vacio':'ida',peaje:e.toll||0,espera:0}};cliPriceShow()}
  catch(x){out.innerHTML='<small>No pude calcular la ruta.</small>'}finally{b.disabled=false}}
-function cliPriceShow(){var out=$('clVpr'),P=CLIPQ;if(!out||!P)return;var o=P.o,ds=P.ds,e=P.e,C=cliEns(),com=C.com/100,M=uberModel(),q=cliPriceOf(e.km,e.s/60,cliRates(),com,M),mn=Math.round(e.s/60);
- out.innerHTML='<div class="warn" style="background:var(--ac2);color:var(--tx)"><b>Precio sugerido: '+rd(q.pr)+'</b>'+(q.alta?' · <b>con tarifas altas: '+rd(q.alta)+'</b>':'')+
-  '<br><small>'+e.km.toFixed(1)+' km, unos '+mn+' min ('+e.src+'). En Uber el pasajero pagaría unos '+rd(q.pas)+' (tarifa normal, sin promociones) y a ti te llegarían unos '+rd(q.drv)+', porque Uber se queda el '+Math.round(com*100)+'%. Combustible y mantenimiento: '+rd(q.cost)+'; te quedan '+rd(q.net)+'.</small>'+
+function cliPriceShow(){var out=$('clVpr'),P=CLIPQ;if(!out||!P)return;var o=P.o,ds=P.ds,e=P.e,C=cliEns(),com=C.com/100,M=uberModel(),rt=cliRates(),q=cliPriceOf(e.km,e.s/60,rt,com,M),mn=Math.round(e.s/60),op=P.opt||{},X=cliTripPrice(e,q,M,op,rt.cpk);
+ var seg=[['ida','Solo ida'],['vacio','Regreso vacío'],['iv','Ida y vuelta']].map(function(x){var on=(op.tipo||'ida')==x[0];return '<button type="button" class="'+(on?'on':'')+'" aria-pressed="'+on+'" onclick="cliOpt(\'tipo\',\''+x[0]+'\')">'+x[1]+'</button>'}).join('');
+ out.innerHTML='<div class="seg" style="margin-bottom:8px">'+seg+'</div><div class="row"><label>Peajes de ida (RD$)<input type="number" inputmode="decimal" min="0" value="'+(+op.peaje||0)+'" onchange="cliOpt(\'peaje\',+this.value||0)"></label>'+(op.tipo=='iv'?'<label>Espera (min)<input type="number" inputmode="numeric" min="0" value="'+(+op.espera||0)+'" onchange="cliOpt(\'espera\',+this.value||0)"></label>':'')+'</div>'+
+  (e.tolls?'<small>'+ic('alert','wn')+' La ruta pasa por peaje'+(e.toll?' (Google calcula '+rd(e.toll)+')':': escribe cuánto cuesta')+'.</small>':'')+(e.km>25&&op.tipo=='ida'?'<small>'+ic('alert','wn')+' Viaje largo: si regresas vacío, elige «Regreso vacío» para no pagar tú la vuelta.</small>':'')+
+  '<div class="warn" style="background:var(--ac2);color:var(--tx)"><b>Precio sugerido: '+rd(X.total)+'</b>'+(X.alta?' · <b>con tarifas altas: '+rd(X.alta)+'</b>':'')+(X.peaje||X.extra?'<br><small>Ida '+rd(q.pas)+(X.peaje?' + peajes '+rd(X.peaje):'')+(X.extra?' + '+rd(X.extra)+'. '+X.why:'')+'</small>':'')+
+  '<br><small>'+e.km.toFixed(1)+' km, unos '+mn+' min ('+e.src+'). En Uber el pasajero pagaría unos '+rd(q.pas)+' (tarifa normal, sin promociones) y a ti te llegarían unos '+rd(q.drv)+', porque Uber se queda el '+Math.round(com*100)+'%. '+(function(){var two=op.tipo=='vacio'||op.tipo=='iv',cs=q.cost*(two?2:1)+(+op.peaje||0)*(two?2:1);return 'Combustible, mantenimiento y peajes'+(two?' (ida y vuelta)':'')+': '+rd(cs)+'; de los '+rd(X.total)+' te quedan '+rd(X.total-cs)})()+'.</small>'+
   '<br><small>'+(M.n?ic('check','ok')+' Ajustado con '+M.n+(M.n==1?' cotización tuya':' cotizaciones tuyas')+' de Uber'+(M.fit?' (base, km y minuto calculados con tus viajes)':'')+'.':'Calculado con la tarifa oficial de Uber de 2018 (puede estar desactualizada): compáralo con Uber y guarda abajo lo que te sale.')+(!M.n&&M.na?' Ya tengo '+M.na+(M.na==1?' cotización':' cotizaciones')+' con tarifas altas; guarda una sin tarifas altas para ajustar la tarifa normal.':'')+'</small>'+
-  '<div class="row"><button type="button" onclick="$(\'clVm\').value='+q.pr+'">Usar '+rd(q.pr)+'</button>'+(q.alta?'<button type="button" onclick="$(\'clVm\').value='+q.alta+'">Usar '+rd(q.alta)+'</button>':'')+'</div>'+
+  '<div class="row"><button type="button" onclick="$(\'clVm\').value='+X.total+'">Usar '+rd(X.total)+'</button>'+(X.alta?'<button type="button" onclick="$(\'clVm\').value='+X.alta+'">Usar '+rd(X.alta)+'</button>':'')+'</div>'+
   '<details style="margin-top:8px"><summary><small><b>¿Uber te sale distinto? Guarda su precio y ajusto los cálculos</b></small></summary>'+
   '<div class="row" style="margin-top:6px"><label>Precio de UberX en Uber (RD$)<input id="clVq" type="number" inputmode="decimal" min="0" placeholder="El tachado, sin créditos"></label></div>'+
   '<label class="cli-ck"><input type="checkbox" id="clVqa"> Uber decía «Tarifas altas»</label>'+
@@ -3473,11 +3488,12 @@ function cliBuild(){var a=$('cli_c');if(!a||a.dataset.b)return;a.dataset.b=1;
   '<small>En la Agenda, cada viaje que ya pasó tiene el botón <b>Recibo PDF</b>. Con «Solos, desde mi WhatsApp» el recibo sale solo al chat del cliente; si no, se abre la lista para compartirlo.</small>'+
   '<h3>Precios y cobros</h3><div class="row"><label class="vl">Comisión que te quita Uber (%)<input id="clWc" type="number" inputmode="numeric" min="0" max="60"></label></div>'+
   '<small>El precio sugerido es lo que Uber le cobraría al pasajero en UberX: tarifa base + minuto + km, con su tarifa mínima. Se ajusta con las cotizaciones de Uber que guardas al calcular un precio.</small><div id="cliUq"></div>'+
+  '<h3>Lugares guardados</h3><div id="cliLugL"></div>'+
   '<label class="cli-ck"><input type="checkbox" id="clWr"> Recordarme cobrar a los clientes que deben</label><div class="row"><label class="vl">Día<select id="clWd">'+[1,2,3,4,5,6,0].map(function(i){return '<option value="'+i+'">'+CLIWN[i]+'</option>'}).join('')+'</select></label><label class="vl">Hora<input id="clWh" type="time"></label></div>'+
   '<div class="row"><button class="pri" onclick="cliSaveW()">Guardar</button><button id="clWt" onclick="cliTestW(this)">Probar</button></div><div id="cli_wmsg" aria-live="polite"></div><div id="cli_wst"></div>';
  cliEditC(0);cliDiasUI();cliWFill();$('clVf').value=today();$('clPf').value=today()}
 function renderCli(){if(!$('cli_c'))return;cliEns();cliBuild();var vc=$('clVc'),pc=$('clPc');if(vc&&document.activeElement!=vc)vc.innerHTML=cliOpts(vc.value);if(pc&&document.activeElement!=pc)pc.innerHTML=cliOpts(pc.value);
- renderCliC();renderCliAg();renderCliP();cliWSt();cliAndSync()}
+ renderCliC();renderCliAg();renderCliP();cliWSt();cliAndSync();cliLugInit()}
 function renderCliC(){var C=cliEns(),el=$('cli_cl');if(!el)return;var A=C.c.filter(function(c){return !c.arch}),X=C.c.filter(function(c){return c.arch}),nx0=cliOcc(Date.now(),Date.now()+15*864e5);
  var h=A.length?'':'<p class="sub">Todavía no tienes clientes. Toca <b>Agregar cliente</b>.</p>';
  h+=A.map(function(c){var o=cliOwed(c.id),nx=nx0.filter(function(x){return x.c.id==c.id})[0],tel=cliTel(c.tel);
@@ -3559,7 +3575,7 @@ function cliEditV(id){var t=cliEns().v.filter(function(x){return x.id==id})[0];i
  $('clVo').value=(t.o&&t.o.t)||'';delete CLIGEO.clVo;if(t.o&&t.o.la!=null)CLIGEO.clVo=t.o;$('clVd').value=(t.ds&&t.ds.t)||'';delete CLIGEO.clVd;if(t.ds&&t.ds.la!=null)CLIGEO.clVd=t.ds;
  $('clVf').value=t.d;$('clVh').value=t.h;document.querySelector('input[name=clVr][value="'+(t.rec?1:0)+'"]').checked=true;cliRecUI();CLIDIAS=(t.dias&&t.dias.length?t.dias:[1,2,3,4,5]).slice();cliDiasUI();$('clVu').value=t.hasta||'';$('clVa').checked=t.av!==0;
  $('clVbr').hidden=true;$('clVpr').innerHTML='';$('clVsave').textContent='Guardar cambios';$('clVcancel').hidden=false;d.scrollIntoView({block:'start'})}
-function cliVReset(){CLIVED=0;if(!$('clVo'))return;['clVo','clVd','clVm','clVb','clVu'].forEach(function(f){$(f).value='';delete CLIGEO[f];var r=$(f+'_r');if(r)r.innerHTML=''});$('clVpr').innerHTML='';$('clVbr').hidden=false;$('clVsave').textContent='Guardar viaje';$('clVcancel').hidden=true;$('clVf').value=today()}
+function cliVReset(){CLIVED=0;if(!$('clVo'))return;['clVo','clVd','clVm','clVb','clVu'].forEach(function(f){$(f).value='';delete CLIGEO[f];var r=$(f+'_r');if(r)r.innerHTML=''});$('clVpr').innerHTML='';cliLugInit();$('clVbr').hidden=false;$('clVsave').textContent='Guardar viaje';$('clVcancel').hidden=true;$('clVf').value=today()}
 function cliEndV(b,id){tap2(b,'¿Terminar?',function(){var t=cliEns().v.filter(function(x){return x.id==id})[0];if(!t)return;var y=new Date();if(cliTs(t,today())>Date.now())y.setDate(y.getDate()-1);t.hasta=cliDs(y);save();renderCli()})}
 function cliDelV(b,id){tap2(b,'¿Borrar?',function(){var C=cliEns();C.v=C.v.filter(function(t){return t.id!=id});save();renderCli()})}
 function cliSkip(b,k){tap2(b,'¿Seguro?',function(){var id=+k.split('-')[0],ds=k.slice(String(id).length+1),t=cliEns().v.filter(function(x){return x.id==id})[0];if(!t)return;t.off=t.off||[];if(t.off.indexOf(ds)<0)t.off.push(ds);save();renderCli()})}
@@ -3581,7 +3597,7 @@ function cliWMode(){var m=$('clWo').value;$('clWsub').innerHTML=CLIWS[m];$('clWb
 function cliTplPrev(){var g=$('clWsg').checked,v={nombre:'Ana',hora:hm12(Date.now()+15*60000),lugar:'Plaza Central',min:'15'};
  $('clWprev').innerHTML='<b>Así le llega a una clienta llamada Ana (ahora):</b><br>En camino: '+esc(cliFillT($('clWts').value||CLIDEF.s,g,v))+'<br>Llegando: '+esc(cliFillT($('clWtl').value||CLIDEF.l,g,Object.assign({},v,{min:'3'})))}
 function cliTplReset(){$('clWts').value=CLIDEF.s;$('clWtl').value=CLIDEF.l;$('clWsg').checked=true;cliTplPrev()}
-function cliWFill(){var C=cliEns(),w=C.wa;try{cliUqSum()}catch(e){}try{$('clRa').checked=!!(C.rc&&C.rc.auto);$('clRn').value=(C.rc&&C.rc.n)||''}catch(e){}$('clWo').value=cliMode();cliWMode();$('clWsg').checked=w.g!==false;$('clWts').value=w.ts||CLIDEF.s;$('clWtl').value=w.tl||CLIDEF.l;cliTplPrev();$('clWu').value=w.url||'';$('clWk').value=w.key||'';$('clWm').value=w.me||'';$('clWy').checked=!!w.yo;$('clWs').checked=!!w.sal;$('clWl').checked=!!w.lleg;$('clWg').value=C.mg;
+function cliWFill(){var C=cliEns(),w=C.wa;try{cliUqSum();cliLugList()}catch(e){}try{$('clRa').checked=!!(C.rc&&C.rc.auto);$('clRn').value=(C.rc&&C.rc.n)||''}catch(e){}$('clWo').value=cliMode();cliWMode();$('clWsg').checked=w.g!==false;$('clWts').value=w.ts||CLIDEF.s;$('clWtl').value=w.tl||CLIDEF.l;cliTplPrev();$('clWu').value=w.url||'';$('clWk').value=w.key||'';$('clWm').value=w.me||'';$('clWy').checked=!!w.yo;$('clWs').checked=!!w.sal;$('clWl').checked=!!w.lleg;$('clWg').value=C.mg;
  $('clWc').value=C.com;$('clWr').checked=!!C.cob.on;$('clWd').value=C.cob.dia;$('clWh').value=C.cob.h||'18:00';if($('clWa'))$('clWa').checked=cliAuto()}
 function cliSaveW(){var C=cliEns(),u=$('clWu').value.trim();if(u&&!/^https:\/\//.test(u)){$('cli_wmsg').innerHTML='<div class="warn">La dirección del bot debe empezar con https://</div>';return}
  C.wa={modo:$('clWo').value,url:u,key:$('clWk').value.trim(),me:$('clWm').value.trim(),yo:$('clWy').checked,sal:$('clWs').checked,lleg:$('clWl').checked,g:$('clWsg').checked,ts:cliTplV('clWts','s'),tl:cliTplV('clWtl','l')};C.mg=Math.max(0,Math.min(30,+$('clWg').value||0));
@@ -3824,6 +3840,7 @@ function renderHoras(){var el=$('hzc');if(!el)return;var O=AND?andOffers():[],A=
    '<small>RD$ por hora que dejaban las ofertas (después del costo del carro), % que convenían y cuántas fueron. Más oscuro = paga mejor.</small>'}
  var Z=Object.keys(A.Z).map(function(k){var z=A.Z[k];return{k:k,n:z.n,nph:z.nph/z.n,ok:z.ok/z.n}}).filter(function(z){return z.n>=3}).sort(function(a,b){return b.nph-a.nph});
  h+='<h3>Por zona</h3>'+(Z.length?'<p class="sub" style="margin:0 0 6px">Dónde estabas cuando te llegó la oferta.</p>'+Z.slice(0,10).map(function(z,i){return '<div class="leg"><span>'+(i<3?ic('star','ok')+' ':'')+esc(z.k)+' <small>'+z.n+' ofertas</small></span><span><b>'+rd(z.nph)+'/h</b><br><small>'+Math.round(z.ok*100)+'% buenas</small></span></div>'}).join(''):'<p><small>Todavía no hay ofertas con ubicación (la app 3.0 la guarda al llegar cada oferta).</small></p>');
+ h+=platHtml(O);
  el.innerHTML=h}
 
 // ===== Tarjetas de crédito (Dinero → Deudas → Tarjetas) =====
@@ -4024,6 +4041,7 @@ function supRcHtml(){var R=supEns(),M=supMonths(),h='<div class="row" style="mar
   '<button style="margin-top:6px" onclick="supAI()">Consejo de la IA</button><div id="supai"></div>';
  var cats=Object.keys(c.cat).sort(function(a,b){return c.cat[b]-c.cat[a]}),mx=cats.length?c.cat[cats[0]]:1;
  h+='<h3>En qué se va · '+supMes(c.m)+'</h3>'+cats.map(function(k){return '<div class="leg"><span>'+SUPC[k]+(SUPEV.indexOf(k)>=0?' <span class="tag r">Evitable</span>':'')+'</span><span>'+rd(c.cat[k])+'</span></div><div class="bar" aria-hidden="true"><i style="width:'+Math.max(3,Math.round(c.cat[k]/mx*100))+'%'+(SUPEV.indexOf(k)>=0?';background:var(--wr)':'')+'"></i></div>'}).join('');
+ h+=supExtrasHtml();
  if(M.length>1)h+='<h3>Mes a mes</h3>'+M.slice(-6).reverse().map(function(m){return '<div class="leg"><span>'+supMes(m.m)+' <small>'+m.n+(m.n==1?' factura':' facturas')+'</small></span><span><b>'+rd(m.tot)+'</b> <br><small>evitable '+rd(m.ev)+'</small></span></div>'}).join('');
  if(L.length)h+='<h3>Precios que cambiaron</h3>'+L.slice().sort(function(a,b){return Math.abs(b.ch)-Math.abs(a.ch)}).slice(0,15).map(function(x){var col=x.ch>0.005?'var(--rd)':x.ch<-0.005?'var(--ac)':'var(--mu)';
   return '<div class="leg"><span>'+esc(x.k)+' <br><small>'+supMes(x.from)+' → '+supMes(x.to)+(x.first!=x.from?' · desde '+supMes(x.first).toLowerCase()+': '+(x.ch0>=0?'+':'')+Math.round(x.ch0*100)+'%':'')+'</small></span><span>'+rd(x.pa)+' → <b>'+rd(x.pb)+'</b> <br><small style="color:'+col+'">'+(x.ch>=0?'+':'')+Math.round(x.ch*100)+'%</small></span></div>'}).join('');
@@ -4031,6 +4049,142 @@ function supRcHtml(){var R=supEns(),M=supMonths(),h='<div class="row" style="mar
  return h}
 function supAI(){var M=supMonths(),L=supPrices();fiAIInto('supai','Revisa las compras de supermercado del usuario: qué productos subieron o bajaron de precio, qué compras evitables pesan más y 3 cambios concretos para gastar menos sin comer peor (marcas más baratas, tamaños más grandes, dejar refrescos o snacks). Usa solo estas cifras.',
  {meses:M.slice(-4).map(function(m){return{mes:m.m,total:Math.round(m.tot),evitable:Math.round(m.ev),por_categoria:m.cat,evitables:m.evk}}),precios:L.slice(0,25).map(function(x){return{producto:x.k,antes:Math.round(x.pa*100)/100,ahora:Math.round(x.pb*100)/100,cambio_pct:Math.round(x.ch*100)}}),canasta:supBasket(L)},'super')}
+
+// ===== Lugares guardados (Agenda de clientes): casa, aeropuerto, la oficina del cliente… con un toque =====
+// C.lug = [{n: nombre corto, t: dirección, la, lo}] (como mucho 20).
+var CLILF=['clVo','clVd','clD'];
+function cliLugHtml(f){var L=cliEns().lug||[];if(!L.length)return '';return '<div class="lug" role="group" aria-label="Lugares guardados">'+L.map(function(p,i){return '<button type="button" class="chip" onclick="cliLugUse(\''+f+'\','+i+')">'+ic('star')+' '+esc(p.n)+'</button>'}).join('')+'</div>'}
+function cliLugInit(){CLILF.forEach(function(f){var r=$(f+'_r'),i=$(f);if(r&&i&&!r.innerHTML.trim()&&!i.value.trim())r.innerHTML=cliLugHtml(f)})}
+function cliLugUse(f,i){var p=(cliEns().lug||[])[i];if(!p)return;CLIGEO[f]={t:p.t,la:p.la,lo:p.lo};$(f).value=p.t;CLIGQ[f]=p.t;$(f+'_r').innerHTML='<small>'+ic('check','ok')+' '+esc(p.n)+': '+esc(cliShort(p.t))+'</small>'}
+function cliLugAsk(f){var r=$(f+'_r');if(!r||$(f+'_ln'))return;r.insertAdjacentHTML('beforeend','<div class="row" style="margin-top:6px"><label>Nombre del lugar<input id="'+f+'_ln" maxlength="30" placeholder="Ej.: Casa, Aeropuerto, Oficina de Ana…"></label><button type="button" class="pri" onclick="cliLugSave(\''+f+'\')">Guardar lugar</button></div>');$(f+'_ln').focus()}
+function cliLugSave(f){var n=($(f+'_ln')||{}).value,g=CLIGEO[f];n=(n||'').trim();if(!n){$(f+'_ln').focus();return}if(!g||g.la==null)return;var C=cliEns();
+ C.lug=(C.lug||[]).filter(function(p){return p.n.toLowerCase()!=n.toLowerCase()}).concat([{n:n.slice(0,30),t:g.t||$(f).value.trim(),la:g.la,lo:g.lo}]).slice(-20);save();$(f+'_r').innerHTML='<small>'+ic('check','ok')+' Guardado como «'+esc(n)+'». Ya aparece al tocar un campo de dirección vacío.</small>';cliLugList()}
+function cliLugDel(i){var C=cliEns();(C.lug||[]).splice(i,1);save();cliLugList();cliLugInit()}
+function cliLugList(){var el=$('cliLugL');if(!el)return;var L=cliEns().lug||[];el.innerHTML=L.length?L.map(function(p,i){return '<div class="leg"><span>'+ic('star')+' <b>'+esc(p.n)+'</b><br><small>'+esc(cliShort(p.t))+'</small></span><span><button class="x" aria-label="Borrar '+esc(p.n)+'" onclick="tap2(this,\'¿Borrar?\',function(){cliLugDel('+i+')})">✕</button></span></div>'}).join(''):'<small>Todavía no hay lugares. Al elegir una dirección en la Agenda toca «Guardar como lugar».</small>'}
+function cliPickMsg(f,t){return '<small>'+ic('check','ok')+' '+t+'</small> <button type="button" class="lnk" onclick="cliLugAsk(\''+f+'\')"><small>'+ic('star')+' Guardar como lugar</small></button>'}
+
+// ===== Precio de clientes: peajes, ida y vuelta, y viajes largos =====
+// Tipos: «ida» (solo ida), «vacio» (ida y tú regresas vacío: se cobra el combustible, los peajes y el tiempo del regreso a tu
+// mínimo por hora del asistente) y «iv» (ida y vuelta con el cliente: los dos tramos más la espera, al precio por minuto de Uber).
+function cliTripPrice(e,q,M,opt,cpk){var p=+opt.peaje||0,t=opt.tipo||'ida',r={leg:q.pas,peaje:p,extra:0,why:''};
+ if(t=='vacio'){var hr=+(andNums().hrMin)||250,mn=e.s/60,back=e.km*cpk+mn/60*hr;r.extra=back+p;r.why='Regreso vacío: '+rd(e.km*cpk)+' de combustible + '+Math.round(mn)+' min de tu tiempo a '+rd(hr)+'/h'+(p?' + '+rd(p)+' de peajes':'')+'.'}
+ else if(t=='iv'){var w=+opt.espera||0;r.uber2=q.pas+w*M.T.mn;r.extra=r.uber2+p;r.why='Vuelta con el cliente: '+rd(q.pas)+(w?' + '+w+' min de espera a '+rd(M.T.mn)+'/min':'')+(p?' + '+rd(p)+' de peajes del regreso':'')+'.'}
+ // Con «Tarifas altas» sube solo lo que es tarifa de Uber; peajes y regreso vacío quedan igual.
+ r.total=Math.ceil((r.leg+r.peaje+r.extra)/10)*10;r.alta=M.fa?Math.ceil(((r.leg+(r.uber2||0))*M.fa+r.peaje+r.extra-(r.uber2||0))/10)*10:0;return r}
+function cliOpt(k,v){if(!CLIPQ)return;CLIPQ.opt=CLIPQ.opt||{};CLIPQ.opt[k]=v;cliPriceShow()}
+
+// ===== Súper: lista inteligente y comparar supermercados (con tus facturas) =====
+function supStore(t){var s=nz(t||'').replace(/\b(supermercados?|hipermercados?|super|s\.?\s?r\.?\s?l\.?|s\.?\s?a\.?s?|tienda|factura)\b/g,' ').replace(/[^a-z0-9ñ ]/g,' ').replace(/\s+/g,' ').trim();return s||'otro'}
+// Lo que compras seguido (en 2 o más facturas de los últimos 120 días): cantidad típica, último precio y cuánto saldría.
+function supList(){var R=supEns().filter(function(r){return r.d>=fiAdd(today(),-120)}),P={};
+ R.forEach(function(r){var seen={};r.items.forEach(function(i){if(!i.k||i.t<=0||seen[i.k])return;seen[i.k]=1;var x=P[i.k]||(P[i.k]={k:i.k,n:0,q:[],last:null,c:i.c,e:i.e});x.n++;x.q.push(i.q||1);if(!x.last||r.d>=x.last.d)x.last={d:r.d,p:i.p,un:i.un,tienda:r.tienda}})});
+ var L=Object.keys(P).map(function(k){return P[k]}).filter(function(x){return x.n>=2||R.length<=2&&x.n>=1&&R.length>0&&x.n==R.length}).map(function(x){var q=uberMed(x.q);return{k:x.k,q:q,p:x.last.p,t:q*x.last.p,c:x.c,e:x.e,n:x.n,un:x.last.un}});
+ return L.sort(function(a,b){return a.e-b.e||a.c.localeCompare(b.c)||b.t-a.t})}
+// Mismo producto en distintos supermercados: el último precio por unidad en cada uno.
+function supStores(){var P={},names={};supEns().slice().sort(function(a,b){return a.d<b.d?-1:1}).forEach(function(r){var s=supStore(r.tienda);names[s]=r.tienda||s;r.items.forEach(function(i){if(!(i.p>0)||i.t<=0||!i.k)return;(P[i.k]=P[i.k]||{})[s]={p:i.p,d:r.d}})});
+ var rows=Object.keys(P).filter(function(k){return Object.keys(P[k]).length>=2}).map(function(k){var S2=Object.keys(P[k]).map(function(s){return{s:s,p:P[k][s].p}}).sort(function(a,b){return a.p-b.p});return{k:k,best:S2[0],worst:S2[S2.length-1],all:S2,diff:S2[S2.length-1].p-S2[0].p}}).filter(function(r){return r.diff>0.5});
+ var wins={};rows.forEach(function(r){wins[r.best.s]=(wins[r.best.s]||0)+1});return{rows:rows.sort(function(a,b){return b.diff-a.diff}),wins:wins,names:names}}
+function supShareList(){var L=supList().filter(function(x){return !x.e});if(!L.length)return;var t='Lista del súper:\n'+L.map(function(x){return '• '+x.k+(x.q!=1?' ×'+x.q:'')}).join('\n')+'\nAprox. '+rd(L.reduce(function(a,x){return a+x.t},0));window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank')}
+function supExtrasHtml(){var L=supList(),C=supStores(),h='';if(!L.length&&!C.rows.length)return '';
+ if(L.length){var B=L.filter(function(x){return !x.e}),E=L.filter(function(x){return x.e}),tb=B.reduce(function(a,x){return a+x.t},0),te=E.reduce(function(a,x){return a+x.t},0);
+  h+='<h3>Tu lista del súper</h3><p class="sub" style="margin:0 0 6px">Lo que compras seguido, con la cantidad de siempre y el último precio que pagaste.</p>'+
+   B.map(function(x){return '<div class="leg"><span>'+esc(x.k)+'<br><small>'+(x.q!=1?x.q+' '+esc(x.un||'ud')+' · ':'')+rd(x.p)+' c/u · en '+x.n+' facturas</small></span><span>'+rd(x.t)+'</span></div>'}).join('')+
+   '<p style="margin:8px 0 0"><b>Aprox. '+rd(tb)+'</b>'+(te?' <small>· más '+rd(te)+' en cosas evitables que sueles comprar ('+E.map(function(x){return esc(x.k)}).slice(0,3).join(', ')+')</small>':'')+'</p>'+
+   '<div class="row" style="margin-top:6px"><button onclick="supShareList()">Mandar la lista por WhatsApp</button></div>'}
+ if(C.rows.length){var save=0,lk={};L.forEach(function(x){lk[x.k]=x.q});C.rows.forEach(function(r){if(lk[r.k])save+=r.diff*lk[r.k]});
+  h+='<h3>Comparar supermercados</h3>'+(save>0?'<div class="warn ok">Comprando cada cosa donde te sale más barata ahorrarías unos <b>'+rd(save)+'</b> por compra.</div>':'')+
+   C.rows.slice(0,15).map(function(r){return '<div class="leg"><span>'+esc(r.k)+'<br><small>Más barato en <b>'+esc(C.names[r.best.s])+'</b> ('+rd(r.best.p)+') · en '+esc(C.names[r.worst.s])+' '+rd(r.worst.p)+'</small></span><span><small style="color:var(--ac)">−'+rd(r.diff)+'</small></span></div>'}).join('')+
+   '<small>Según el último precio que pagaste en cada lugar. Se compara el mismo producto (mismo nombre genérico).</small>'}
+ else if(supEns().length)h+='<h3>Comparar supermercados</h3><p><small>Cuando tengas facturas del mismo producto en dos supermercados distintos, aquí verás dónde sale más barato.</small></p>';
+ return h}
+
+// ===== Uber, DiDi e InDrive comparados (con las ofertas que leyó el lector) =====
+function platAgg(O){var P={};O.forEach(function(o){var k=o.pl||'u',x=P[k]||(P[k]={k:k,n:0,ok:0,nph:0,npk:0,fare:0,B:{}});x.n++;if(o.v==2)x.ok++;x.nph+=+o.nph||0;x.npk+=+o.npk||0;x.fare+=+o.fare||0;
+  var b=hzBlock(new Date(o.t).getHours()),y=x.B[b]||(x.B[b]={n:0,nph:0});y.n++;y.nph+=+o.nph||0});
+ return Object.keys(P).map(function(k){var x=P[k],best=Object.keys(x.B).filter(function(b){return x.B[b].n>=3}).sort(function(a,b){return x.B[b].nph/x.B[b].n-x.B[a].nph/x.B[a].n})[0];
+  return{k:k,n:x.n,ok:x.ok/x.n,nph:x.nph/x.n,npk:x.npk/x.n,fare:x.fare/x.n,best:best!=null?HZB[+best][1]:''}}).sort(function(a,b){return b.nph-a.nph})}
+function platHtml(O){var A=platAgg(O);if(!A.length)return '';var h='<h3>Por plataforma</h3>';
+ if(A.length<2)h+='<p class="sub" style="margin:0 0 6px">Solo hay ofertas de '+andPlName(A[0].k)+'. Marca DiDi o InDrive en Viajes → Ajustes → «Apps que lee el lector» para compararlas.</p>';
+ return h+A.map(function(x,i){return '<div class="leg"><span>'+(i==0&&A.length>1?ic('star','ok')+' ':'')+'<b>'+andPlName(x.k)+'</b> <small>'+x.n+' ofertas · '+Math.round(x.ok*100)+'% buenas'+(x.best?' · mejor: '+x.best:'')+'</small></span><span><b>'+rd(x.nph)+'/h</b><br><small>'+rd(x.npk)+'/km · pago medio '+rd(x.fare)+'</small></span></div>'}).join('')}
+
+// ===== Incentivos de Uber (Viajes → Uber → Incentivos) =====
+// S.inc = [{id, n, meta (viajes), bono (RD$), desde, hasta, extra (viajes que la app no captó)}]
+function incEns(){if(!Array.isArray(S.inc))S.inc=[];return S.inc}
+function incDone(x){var a=new Date(x.desde+'T00:00').getTime(),b=new Date(x.hasta+'T23:59:59').getTime(),cap=andTrips().filter(function(t){return t.t1>=a&&t.t1<=b}).length,
+  lg=S.logs.filter(function(l){return l.d>=x.desde&&l.d<=x.hasta}).reduce(function(s,l){return s+(+l.v||0)},0);return Math.max(cap,lg)+(+x.extra||0)}
+// Viajes por día trabajado de las últimas 4 semanas (lo mayor entre lo anotado y lo captado cada día).
+function incPace(){var lim=fiAdd(today(),-28),D={};S.logs.forEach(function(l){if(l.d>=lim&&!l.off&&+l.v>0)D[l.d]=(D[l.d]||0)+ +l.v});
+ var cnt={};andTrips(new Date(lim+'T00:00').getTime()).forEach(function(t){var d=ds(new Date(t.t1));cnt[d]=(cnt[d]||0)+1});Object.keys(cnt).forEach(function(d){D[d]=Math.max(D[d]||0,cnt[d])});
+ var v=Object.keys(D).map(function(d){return D[d]}).filter(function(n){return n>0});return v.length?v.reduce(function(a,b){return a+b},0)/v.length:0}
+function renderAndInc(){var el=$('and_inc');if(!el)return;var L=incEns(),t=today(),pace=incPace(),h='<h2>Incentivos de Uber</h2><p class="sub">Anota el reto que te ofrece Uber («30 viajes antes del domingo = RD$1,500») y te digo cuánto te falta, cuántos viajes por día necesitas y si lo logras a tu ritmo. Cuento los viajes que capta la app y los que anotas en tus registros.</p>';
+ L.slice().sort(function(a,b){return a.hasta<b.hasta?1:-1}).forEach(function(x){var done=incDone(x),f=Math.max(0,x.meta-done),days=Math.max(0,dayDiff(t,x.hasta)+1),act=x.desde<=t&&x.hasta>=t,past=x.hasta<t,ok=done>=x.meta,need=days?Math.ceil(f/days):f,p=Math.min(1,done/Math.max(1,x.meta));
+  h+='<div class="arow" style="margin-top:10px"><div style="display:flex;justify-content:space-between;gap:8px"><b>'+esc(x.n||'Incentivo')+'</b><span><b>'+rd(x.bono)+'</b></span></div>'+
+   '<small>'+fdate(x.desde)+' → '+fdate(x.hasta)+(past?' · terminó':act?' · '+days+(days==1?' día':' días')+' para terminar':' · empieza '+fdate(x.desde))+'</small>'+
+   '<div class="bar" aria-label="'+done+' de '+x.meta+' viajes" style="margin-top:6px"><i style="width:'+Math.round(p*100)+'%'+(ok?'':'')+'"></i></div>'+
+   '<div class="fi-l"><span>'+ic(ok?'check':'car',ok?'ok':'')+'</span><span>'+(ok?'<b>¡Lo lograste!</b> '+done+' de '+x.meta+' viajes: te toca el bono de '+rd(x.bono)+'.':'<b>'+done+' de '+x.meta+'</b> viajes · faltan <b>'+f+'</b>'+(act&&days?': unos <b>'+need+' por día</b>'+(pace?' (tu ritmo: '+pace.toFixed(1)+' por día'+(pace>=need?' '+ic('check','ok')+' lo logras':' '+ic('alert','wn')+' necesitas más horas')+')':''):past?' — no se logró.':'')+'.')+'</span></div>'+
+   (!ok&&f&&!past?'<div class="fi-l"><span>'+ic('cash')+'</span><span>Cada viaje que te falta vale unos <b>'+rd(x.bono/f)+'</b> extra además de la tarifa: '+(x.bono/f>=150?'buen momento para aceptar viajes cortos.':'no hace falta forzarlo.')+'</span></div>':'')+
+   '<div class="row" style="margin-top:6px"><label>Viajes que la app no captó<input type="number" inputmode="numeric" min="0" value="'+(+x.extra||0)+'" onchange="incSet('+x.id+',\'extra\',+this.value||0)"></label><button class="x" style="width:auto;padding:6px 12px" onclick="tap2(this,\'¿Borrar?\',function(){incDel('+x.id+')})">Borrar</button></div></div>'});
+ h+=foldHtml('inc-add','Agregar un incentivo','El reto que te muestra Uber','<div class="row"><label>Nombre<input id="incN" placeholder="Ej.: Reto de la semana"></label><label>Viajes<input id="incM" type="number" inputmode="numeric" min="1" placeholder="30"></label><label>Bono (RD$)<input id="incB" type="number" inputmode="decimal" min="0" placeholder="1500"></label></div>'+
+  '<div class="row"><label>Desde<input id="incD" type="date" value="'+t+'"></label><label>Hasta<input id="incH" type="date" value="'+fiAdd(t,6)+'"></label></div><div class="row"><button class="pri" onclick="incAdd()">Agregar</button></div><div id="incmsg"></div>');
+ el.innerHTML=h}
+function incAdd(){var m=+$('incM').value,b=+$('incB').value,d=$('incD').value,hh=$('incH').value;if(!(m>0)||!(b>0)||!d||!hh||hh<d){$('incmsg').innerHTML='<div class="warn">Escribe los viajes, el bono y las fechas (la de fin después de la de inicio).</div>';return}
+ var L=incEns();L.push({id:L.reduce(function(a,x){return Math.max(a,x.id)},0)+1,n:$('incN').value.trim()||'Incentivo',meta:m,bono:b,desde:d,hasta:hh,extra:0});save();renderAndInc()}
+function incSet(id,k,v){var x=incEns().filter(function(i){return i.id==id})[0];if(!x)return;x[k]=v;save();renderAndInc()}
+function incDel(id){S.inc=incEns().filter(function(i){return i.id!=id});save();renderAndInc()}
+
+// ===== Carta de ingresos en PDF (Análisis → Reporte PDF) =====
+function incMonths(n){var M={},t=today();S.logs.forEach(function(l){var m=l.d.slice(0,7),o=M[m]||(M[m]={m:m,g:0,n:0,d:{}});o.g+=(grossOf(l)||0)+(extrasOf(l)||0);o.n+=netOf(l);if(!l.off&&grossOf(l)>0||extrasOf(l)>0)o.d[l.d]=1});
+ var out=[],d=new Date(t.slice(0,7)+'-15T12:00');for(var i=0;i<n;i++){var m=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),o=M[m]||{m:m,g:0,n:0,d:{}};out.unshift({m:m,g:o.g,n:o.n,dias:Object.keys(o.d).length,parcial:i==0});d.setMonth(d.getMonth()-1)}return out}
+async function makeIncLetter(){var msg=$('ilmsg'),J=window.jspdf&&window.jspdf.jsPDF;if(!J){msg.innerHTML='<div class="warn">No cargó el generador de PDF (revisa el internet).</div>';return}
+ var name=($('ilN').value||'').trim(),n=+$('ilM').value||6,M=incMonths(n+1),full=M.filter(function(x){return !x.parcial}),use=full.filter(function(x){return x.g>0});if(!name){$('ilN').focus();msg.innerHTML='<div class="warn">Escribe tu nombre completo.</div>';return}
+ if(!use.length){msg.innerHTML='<div class="warn">No hay registros de ingresos en los últimos meses.</div>';return}try{var C=cliEns();C.rc=C.rc||{};if(!C.rc.n)C.rc.n=name.split(' ')[0];localStorage.setItem('mf-ilN',name)}catch(e){}
+ var avgG=use.reduce(function(a,x){return a+x.g},0)/use.length,avgN=use.reduce(function(a,x){return a+x.n},0)/use.length,doc=new J({unit:'mm',format:'a4'}),W=210,Mg=20,G=[16,58,43],G2=[30,122,82],GOLD=[198,150,64],INK=[18,32,26],MU=[110,124,117],LINE=[226,232,228],SOFT=[243,247,245],y;
+ var col=function(f,c){doc['set'+f+'Color'].apply(doc,c)},txt=function(t,x,yy,sz,b,c,al){doc.setFont('helvetica',b?'bold':'normal');doc.setFontSize(sz);col('Text',c||INK);doc.text(String(t),x,yy,al?{align:al}:undefined)},R=function(v){return 'RD$ '+Math.round(v).toLocaleString('es-DO')};
+ col('Fill',G);doc.rect(0,0,W,46,'F');col('Fill',G2);doc.circle(W-8,4,34,'F');col('Fill',G);doc.circle(W-8,4,24,'F');col('Fill',GOLD);doc.rect(Mg,17,14,1,'F');
+ txt('CONSTANCIA DE INGRESOS',Mg,13,9,1,[205,226,214]);txt(name,Mg,28,20,1,[255,255,255]);txt('Conductor independiente · Santo Domingo, República Dominicana',Mg,37,10,0,[205,226,214]);
+ y=60;doc.setFont('helvetica','normal');doc.setFontSize(10.5);col('Text',INK);
+ var p1=doc.splitTextToSize('Hago constar que trabajo como conductor independiente en plataformas de transporte. Según mis registros diarios de ingresos y gastos, estos son mis ingresos de los últimos '+full.length+' meses completos:',W-2*Mg);doc.text(p1,Mg,y);y+=p1.length*5+6;
+ col('Fill',SOFT);doc.roundedRect(Mg,y,W-2*Mg,10,2,2,'F');var cx=[Mg+4,Mg+70,W-Mg-58,W-Mg-4];txt('Mes',cx[0],y+6.5,9,1,MU);txt('Días trabajados',cx[1],y+6.5,9,1,MU,'center');txt('Ingreso bruto',cx[2],y+6.5,9,1,MU,'right');txt('Neto',cx[3],y+6.5,9,1,MU,'right');y+=10;
+ full.forEach(function(x){y+=8;txt(supMes(x.m),cx[0],y,10,0,INK);txt(x.dias,cx[1],y,10,0,INK,'center');txt(R(x.g),cx[2],y,10,1,INK,'right');txt(R(x.n),cx[3],y,10,0,INK,'right');col('Draw',LINE);doc.setLineWidth(0.3);doc.line(Mg,y+3,W-Mg,y+3)});
+ y+=14;col('Fill',G);doc.roundedRect(Mg,y,W-2*Mg,26,3,3,'F');txt('PROMEDIO MENSUAL',Mg+6,y+8,8.5,1,[205,226,214]);txt(R(avgG),Mg+6,y+19,18,1,[255,255,255]);txt('bruto',Mg+6+doc.getTextWidth(R(avgG))+3,y+19,10,0,[205,226,214]);
+ txt(R(avgN)+' neto',W-Mg-6,y+19,12,1,[255,255,255],'right');txt('(después de combustible y gastos del día)',W-Mg-6,y+8,8,0,[205,226,214],'right');y+=36;
+ doc.setFont('helvetica','normal');doc.setFontSize(9.5);var p2=doc.splitTextToSize('El ingreso bruto es lo cobrado en las plataformas y a clientes particulares; el neto descuenta combustible, comida y otros gastos de trabajo de cada día. Meses con pocos días trabajados bajan el promedio.',W-2*Mg);doc.setFont('helvetica','normal');doc.setFontSize(9.5);col('Text',MU);doc.text(p2,Mg,y);y+=p2.length*4.6+22;
+ col('Draw',INK);doc.setLineWidth(0.4);doc.line(Mg,y,Mg+70,y);txt(name,Mg,y+5.5,10,1,INK);txt('Firma',Mg,y+10.5,8.5,0,MU);txt('Santo Domingo, '+new Date().toLocaleDateString('es-DO',{day:'numeric',month:'long',year:'numeric'}),W-Mg,y+5.5,10,0,INK,'right');
+ col('Fill',SOFT);doc.rect(0,282,W,15,'F');txt('Documento preparado por el titular con su app de finanzas personales a partir de sus propios registros. No es un documento oficial de ninguna plataforma ni institución.',W/2,290,7.5,0,MU,'center');
+ var r=await saveBlob('Constancia de ingresos '+name+'.pdf',doc.output('blob'),'application/pdf');if(r=='download'||r===undefined)msg.innerHTML='<div class="warn ok">Constancia lista'+(AND?': está en Descargas/Mis Finanzas.':'.')+'</div>'}
+function incLetterHtml(){var nm='';try{nm=localStorage.getItem('mf-ilN')||''}catch(e){}var M=incMonths(7).filter(function(x){return !x.parcial&&x.g>0});
+ return '<h3>Carta de ingresos</h3><p class="sub" style="margin:0 0 8px">Una constancia en PDF con tus ingresos de cada mes y tu promedio mensual (bruto y neto), para pedir un préstamo, alquilar o abrir una cuenta. La hacen tus propios registros: mientras más días registres, más completa sale.</p>'+
+  '<div class="row"><label>Tu nombre completo<input id="ilN" value="'+esc(nm||(cliEns().rc||{}).n||'')+'" placeholder="Como sale en tu cédula"></label><label>Meses<select id="ilM"><option value="3">Últimos 3</option><option value="6" selected>Últimos 6</option><option value="12">Últimos 12</option></select></label></div>'+
+  '<div class="row"><button class="pri" onclick="makeIncLetter()">Descargar carta de ingresos</button></div><div id="ilmsg"></div>'+(M.length?'':'<small>Todavía no hay meses completos con ingresos registrados.</small>')}
+
+// ===== Resumen semanal (Hoy → Resumen): la semana pasada contra la anterior; la IA lo comenta una vez por semana =====
+function wkStart(d){var x=new Date(d+'T12:00');x.setDate(x.getDate()-((x.getDay()+6)%7));return ds(x)}
+function wkStats(a){var b=fiAdd(a,6),L=S.logs.filter(function(l){return l.d>=a&&l.d<=b}),E={};EX.forEach(function(c){E[c[0]]=L.reduce(function(s,l){return s+(+(l.e||{})[c[0]]||0)},0)});
+ var sp=supEns().filter(function(r){return r.d>=a&&r.d<=b});return{a:a,b:b,g:L.reduce(function(s,l){return s+(grossOf(l)||0)+(extrasOf(l)||0)},0),n:L.reduce(function(s,l){return s+netOf(l)},0),h:L.reduce(function(s,l){return s+(+l.h||0)},0),
+  v:L.reduce(function(s,l){return s+(+l.v||0)},0),dias:Object.keys(L.filter(function(l){return !l.off}).reduce(function(o,l){o[l.d]=1;return o},{})).length,E:E,sup:sp.reduce(function(s,r){return s+r.total},0),
+  ev:sp.reduce(function(s,r){return s+r.items.filter(function(i){return i.e}).reduce(function(q,i){return q+i.t},0)},0)}}
+function wsumData(){var a=fiAdd(wkStart(today()),-7);return{cur:wkStats(a),prev:wkStats(fiAdd(a,-7)),wk:a}}
+function wsumTips(D){var c=D.cur,p=D.prev,T=[],pct=function(x,y){return y?Math.round((x-y)/y*100):0};
+ if(!c.dias){T.push('La semana pasada no registraste días de trabajo.');return T}
+ T.push('Trabajaste '+c.dias+(c.dias==1?' día':' días')+(c.h?' ('+Math.round(c.h)+' h)':'')+': '+rd(c.g)+' bruto y <b>'+rd(c.n)+' neto</b>'+(p.n?' ('+(c.n>=p.n?'+':'')+pct(c.n,p.n)+'% contra la semana anterior)':'')+'.');
+ if(c.h&&p.h)T.push('Por hora: '+rd(c.n/c.h)+' neto, antes '+rd(p.n/p.h)+'.');
+ var up=EX.map(function(x){return{k:x[1],d:c.E[x[0]]-p.E[x[0]],v:c.E[x[0]]}}).filter(function(x){return x.d>0}).sort(function(a,b){return b.d-a.d})[0];if(up&&up.d>=200)T.push('Gastaste '+rd(up.d)+' más en '+up.k+' ('+rd(up.v)+' en total).');
+ if(c.sup)T.push('Súper: '+rd(c.sup)+(c.ev?', de eso '+rd(c.ev)+' en cosas evitables':'')+'.');
+ return T}
+var WSB=0,WST=0;
+async function wsumAI(){var D=wsumData();if(!aiReady()||WSB)return;WSB=1;renderWsum();
+ try{var r=await fiAIAns('Haz un resumen corto de la semana pasada del conductor: qué mejoró, qué empeoró, qué gasto vigilar y una sugerencia concreta para esta semana. Usa solo estas cifras.',{semana_pasada:D.cur,semana_anterior:D.prev},'semana');S.wsum={wk:D.wk,t:r.t,recs:r.recs||[],at:Date.now()};save()}
+ catch(e){S.wsum={wk:D.wk,err:String(e.message||e),at:Date.now()}}WSB=0;renderWsum()}
+function renderWsum(){var el=$('wsum');if(!el)return;var D=wsumData(),c=D.cur,p=D.prev,W=S.wsum&&S.wsum.wk==D.wk?S.wsum:null,K=function(b,t){return '<div class="kpi"><b>'+b+'</b><span>'+t+'</span></div>'},dl=function(x,y){if(!y)return '';var d=Math.round((x-y)/Math.abs(y)*100);return ' <small style="color:'+(d>=0?'var(--ac)':'var(--rd)')+'">'+(d>=0?'+':'')+d+'%</small>'};
+ var h='<h2>Tu semana</h2><p class="sub">Del '+fdate(c.a)+' al '+fdate(c.b)+', comparada con la anterior.</p>';
+ h+='<div class="kpis">'+K(rd(c.n)+dl(c.n,p.n),'Neto')+K(rd(c.g)+dl(c.g,p.g),'Bruto')+K((c.h?Math.round(c.h)+' h':'—'),'Horas · '+c.dias+' días')+K(c.v||'—','Viajes')+'</div>';
+ h+=wsumTips(D).map(function(t){return '<div class="fi-l"><span>•</span><span>'+t+'</span></div>'}).join('');
+ if(W&&W.t)h+='<div class="msg a" style="max-width:none;margin-top:10px">'+fiFmt(W.t,1)+fiRecsHtml(W.recs||[],[])+'<div class="meta">Resumen de la IA con tus datos</div></div>';
+ else if(WSB)h+=fiLoading('La IA está revisando tu semana');
+ else if(aiReady()&&c.dias)h+='<button style="margin-top:8px" onclick="wsumAI()">Que la IA comente mi semana</button>'+(W&&W.err?'<div class="fi-err">'+esc(W.err)+'</div>':'');
+ el.innerHTML=h;
+ // Una vez por semana, al abrir la app, la IA lo comenta sola (una sola consulta).
+ if(!W&&!WSB&&!WST&&aiReady()&&c.dias&&TAB=='inicio'){WST=1;setTimeout(wsumAI,2500)}}
 
 window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();PWA.ev=e;renderPwa()});
 window.addEventListener('appinstalled',function(){PWA.ev=null;renderPwa()});
