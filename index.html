@@ -356,6 +356,8 @@ details summary{color:var(--tx);text-decoration:underline;text-underline-offset:
 details.fold{border:1px solid var(--bd);border-radius:14px;margin-top:10px;background:var(--card)}
 details.fold>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:10px 14px;min-height:56px;text-decoration:none;color:var(--tx);font-size:inherit;font-weight:400}
 details.fold>summary::-webkit-details-marker{display:none}
+/* Sin resumen bajo el título de cada apartado: lo ves al abrirlo. */
+details.fold>summary .ft small{display:none}
 details.fold>summary::after{content:"";flex:none;width:9px;height:9px;border-right:2px solid var(--mu);border-bottom:2px solid var(--mu);transform:rotate(-45deg);transition:transform .2s;margin-right:4px}
 details.fold[open]>summary::after{transform:rotate(45deg)}
 details.fold>summary .ft{flex:1;min-width:0}.ft b{display:block;font-size:15.5px;font-weight:600}
@@ -560,7 +562,7 @@ items:[
 {id:9,name:"Ahorro mínimo diario",amt:100,freq:"d",total:0,prio:3,sv:1}],
 split:[{k:"res",n:"Fondo para días malos (hasta su meta)",p:12.5},{k:"extra",n:"Abono extra a deudas (tarjeta primero)",p:42.5},{k:"ahorro",n:"Ahorro",p:15},{k:"super",n:"Supermercado de la casa",p:20},{k:"pers",n:"Personal / ocio",p:10}],
 logs:[]}}
-var HNAV=false,SCHEMA=6,_sm=null,_nosnap=false,PAGEV='mf-v56';
+var HNAV=false,SCHEMA=6,_sm=null,_nosnap=false,PAGEV='mf-v57';
 var S;
 try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 function upgrade(){if(S&&S.items&&(S.v||0)<SCHEMA){try{localStorage.setItem(KEY+'-bak-'+(S.v||0)+'-'+Date.now(),JSON.stringify(S));pruneBak()}catch(e){}}
@@ -2791,7 +2793,7 @@ function renderAndZn(){var el=$('and_zn');if(!el)return;var Z=S.dz||[],n=Z.filte
  Object.keys(DZG).forEach(function(g){var L=Z.map(function(x,i){return{x:x,i:i}}).filter(function(o){return o.x.z==g});if(!L.length)return;
   h+=foldHtml('dz-'+g,DZG[g],L.length+(g=='seg'?' lugares':' sectores · '+L.filter(function(o){return o.x.lv=='e'}).length+' para evitar'),L.map(function(o){var x=o.x;return '<div class="dzr"><div><b>'+esc(x.n)+'</b><small>'+esc(x.nota||'')+'</small></div><select aria-label="Nivel de '+esc(x.n)+'" onchange="S.dz['+o.i+'].lv=this.value;save();renderAndZn()">'+lvs.map(function(v){return '<option value="'+v[0]+'"'+(x.lv==v[0]?' selected':'')+'>'+v[1]+'</option>'}).join('')+'</select><button class="x" aria-label="Quitar '+esc(x.n)+'" onclick="S.dz.splice('+o.i+',1);save();renderAndZn()">✕</button></div>'}).join(''))});
  h+=foldHtml('dz-add','Agregar un sector','Escribe el nombre tal como aparece en Uber','<div class="row"><label>Sector<input id="dzn" placeholder="Ej.: Los Alcarrizos…"></label><label>Zona<select id="dzz">'+Object.keys(DZG).map(function(g){return '<option value="'+g+'">'+DZG[g]+'</option>'}).join('')+'</select></label><label>Qué evaluar<input id="dznt" placeholder="Opcional…"></label><label>Nivel<select id="dzl">'+lvs.slice(0,3).map(function(v){return '<option value="'+v[0]+'">'+v[1]+'</option>'}).join('')+'</select></label><button class="pri" onclick="dzAdd()">Agregar</button></div>');
- h+='<p style="margin-top:12px"><small>'+n+' sectores activos.</small> <button class="x" style="width:auto;padding:6px 12px" onclick="tap2(this,\'¿Restaurar?\',function(){S.dz=dzDef();save();renderAndZn()})">Restaurar la lista original</button></p>';
+ h+='<p style="margin-top:12px"><button class="x" style="width:auto;padding:6px 12px" onclick="tap2(this,\'¿Restaurar?\',function(){S.dz=dzDef();save();renderAndZn()})">Restaurar la lista original</button></p>';
  el.innerHTML=h}
 function dzAdd(){var n=$('dzn').value.trim();if(!n)return;S.dz.push({n:n,z:$('dzz').value,nota:$('dznt').value.trim(),lv:$('dzl').value});save();renderAndZn()}
 function renderAndCf(){var el=$('and_cf');if(!el)return;var N=andNums(),I=AND?andJ('info')||{}:{};
