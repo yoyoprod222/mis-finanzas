@@ -558,7 +558,7 @@ items:[
 {id:9,name:"Ahorro mínimo diario",amt:100,freq:"d",total:0,prio:3,sv:1}],
 split:[{k:"res",n:"Fondo para días malos (hasta su meta)",p:12.5},{k:"extra",n:"Abono extra a deudas (tarjeta primero)",p:42.5},{k:"ahorro",n:"Ahorro",p:15},{k:"super",n:"Supermercado de la casa",p:20},{k:"pers",n:"Personal / ocio",p:10}],
 logs:[]}}
-var HNAV=false,SCHEMA=6,_sm=null,_nosnap=false,PAGEV='mf-v47';
+var HNAV=false,SCHEMA=6,_sm=null,_nosnap=false,PAGEV='mf-v48';
 var S;
 try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 function upgrade(){if(S&&S.items&&(S.v||0)<SCHEMA){try{localStorage.setItem(KEY+'-bak-'+(S.v||0)+'-'+Date.now(),JSON.stringify(S));pruneBak()}catch(e){}}
@@ -2400,10 +2400,19 @@ function zMBGet(prof,rt,key){var c=new AbortController(),t=setTimeout(function()
  function(e){clearTimeout(t);return{ok:0,st:0,err:e.name=='AbortError'?'Mapbox tardó demasiado':navigator.onLine?'no se pudo conectar con Mapbox (bloqueo de red o del navegador)':'sin internet'}})}
 function zMBRoute(rt,key){return Promise.all([zMBGet('driving-traffic',rt,key),zMBGet('driving',rt,key)]).then(function(a){var L=a[0],F=a[1];if(!L.ok)return L;if(!F.ok)return F;
  return{ok:1,r:Math.min(1,F.s/L.s),cur:L.m/L.s*3.6,free:L.m/F.s*3.6,min:L.s/60,cl:false}})}
+// Google Routes (con tu clave de Google Maps): «duration» con el tránsito de ahora y «staticDuration» sin tránsito.
+function zGRoute(rt,key){var c=new AbortController(),t=setTimeout(function(){c.abort()},9000),pt=function(a,b){return{location:{latLng:{latitude:a,longitude:b}}}};
+ return fetch('https://routes.googleapis.com/directions/v2:computeRoutes',{method:'POST',signal:c.signal,cache:'no-store',headers:{'Content-Type':'application/json','X-Goog-Api-Key':key,'X-Goog-FieldMask':'routes.duration,routes.staticDuration,routes.distanceMeters'},
+  body:JSON.stringify({origin:pt(rt[0],rt[1]),destination:pt(rt[2],rt[3]),travelMode:'DRIVE',routingPreference:'TRAFFIC_AWARE'})}).then(function(r){clearTimeout(t);return r.json().then(function(j){var x=j&&j.routes&&j.routes[0];
+  if(r.ok&&x){var L=parseFloat(x.duration),F=parseFloat(x.staticDuration),m=+x.distanceMeters;if(L>0&&F>0&&m>0)return{ok:1,r:Math.min(1,F/L),cur:m/L*3.6,free:m/F*3.6,min:L/60,cl:false,src:'google'}}
+  return{ok:0,st:r.status,err:r.status==403||r.status==400?'Google rechazó la clave para el tránsito (activa Routes API)':r.status==429?'llegaste al límite de Google':'Google no encontró la ruta',det:String(j&&j.error&&j.error.message||'')}})},
+  function(e){clearTimeout(t);return{ok:0,st:0,err:e.name=='AbortError'?'Google tardó demasiado':'no se pudo conectar con Google'}})}
 var ZTTERR='';
-async function zTraffic(){if(!ZCFG.mb)return null;var out={},errs=[];ZTTERR='';
- await Promise.all(ZK.map(function(k){return Promise.all(ZONAS[k].rt.map(function(p){return zMBRoute(p,ZCFG.mb)})).then(function(a){a.forEach(function(x){if(!x.ok)errs.push(x.err)});a=a.filter(function(x){return x.ok});if(a.length)out[k]={r:fiSum(a,function(x){return x.r})/a.length,cl:false}})}));
- if(!Object.keys(out).length){ZTTERR=errs[0]||'sin respuesta';throw new Error('Mapbox: '+ZTTERR)}return out}
+async function zTraffic(){if(!ZCFG.mb&&!ZCFG.gkey)return null;var out={},errs=[];ZTTERR='';
+ // Con clave de Google se usa Google; si no responde (o no hay clave), Mapbox.
+ var rt=function(p){return ZCFG.gkey?zGRoute(p,ZCFG.gkey).then(function(x){return x.ok||!ZCFG.mb?x:zMBRoute(p,ZCFG.mb)}):zMBRoute(p,ZCFG.mb)};
+ await Promise.all(ZK.map(function(k){return Promise.all(ZONAS[k].rt.map(rt)).then(function(a){a.forEach(function(x){if(!x.ok)errs.push(x.err)});a=a.filter(function(x){return x.ok});if(a.length)out[k]={r:fiSum(a,function(x){return x.r})/a.length,cl:false}})}));
+ if(!Object.keys(out).length){ZTTERR=errs[0]||'sin respuesta';throw new Error((ZCFG.gkey?'Tránsito':'Mapbox')+': '+ZTTERR)}return out}
 // Botón "Probar conexión": usa el token escrito en el campo (aunque no esté guardado) y prueba las avenidas de cada zona.
 async function zTTTest(){var m=$('zttm'),key=($('zc_mb')&&$('zc_mb').value||'').replace(/\s+/g,'');if(!m)return;
  if(!key){m.innerHTML='<div class="warn">Primero pega tu token de Mapbox en el campo.</div>';return}
@@ -2420,8 +2429,9 @@ async function gTest(){var m=$('ggm'),key=($('zc_gg')&&$('zc_gg').value||'').rep
  try{var p=await gPlaces('Ágora Mall',key);R.push([1,'Buscar lugares',p.length?'encontré «'+esc(cliShort(p[0].t))+'»':'responde, sin resultados'])}catch(e){R.push([0,'Buscar lugares',esc(e.message)])}
  try{var r=await fetch('https://weather.googleapis.com/v1/currentConditions:lookup?key='+encodeURIComponent(key)+'&location.latitude=18.48&location.longitude=-69.93&languageCode=es'),j=await r.json();
   if(!r.ok)throw new Error((j.error&&j.error.message)||('HTTP '+r.status));R.push([1,'Clima',Math.round((j.temperature||{}).degrees)+' °C, '+esc(((j.weatherCondition||{}).description||{}).text||'')+' en Santo Domingo'])}catch(e){R.push([0,'Clima',esc(e.message)])}
+ try{var tr=await zGRoute(ZONAS.dn.rt[0],key);if(!tr.ok)throw new Error(tr.err+(tr.det?' ('+tr.det.slice(0,90)+')':''));R.push([1,'Tránsito',esc(ZONAS.dn.rt[0][4])+': '+Math.round(tr.cur)+' km/h ahora (sin tránsito '+Math.round(tr.free)+')'])}catch(e){R.push([0,'Tránsito',esc(e.message)])}
  var ok=R.filter(function(x){return x[0]}).length;
- m.innerHTML='<div class="warn'+(ok?' ok':'')+'">'+(ok==2?'¡La clave funciona para las dos cosas! Toca «Guardar».':ok?'La clave funciona solo para una parte (la otra sigue con el servicio de siempre). Toca «Guardar».':'Google rechazó la clave. Revisa que esté completa y que en Google Cloud estén activadas <b>Places API (New)</b> y <b>Weather API</b>.')+'</div>'+
+ m.innerHTML='<div class="warn'+(ok?' ok':'')+'">'+(ok==R.length?'¡La clave funciona para todo! Toca «Guardar».':ok?'La clave funciona para una parte; lo demás sigue con el servicio de siempre. Toca «Guardar».':'Google rechazó la clave. Revisa que esté completa y que en Google Cloud estén activadas <b>Places API (New)</b>, <b>Weather API</b> y <b>Routes API</b>.')+'</div>'+
   R.map(function(x){return '<div style="font-size:13px;margin-top:6px">'+ic(x[0]?'check':'x',x[0]?'ok':'no')+' <b>'+x[1]+'</b>: <span class="sub">'+x[2]+'</span></div>'}).join('')}
 // Tu historial por zona: neto (bruto − gastos) por jornada y por hora.
 // Historial por zona. Las jornadas recientes pesan más (la mitad cada 6 semanas) y se separa por tipo de día
@@ -2905,7 +2915,7 @@ async function zRun(force){if(ZST.busy)return;var old=zGet();if(old&&!force){zRe
  z.W=R[0].status=='fulfilled'?R[0].value:null;z.src.clima=z.W?'ok':'Sin datos del clima ('+(navigator.onLine?'Open-Meteo no respondió':'sin internet')+')';
  z.hol=R[1].status=='fulfilled'?R[1].value.n:null;z.src.feriados=R[1].status=='fulfilled'?R[1].value.src:'No se pudo consultar';
  z.T=R[2].status=='fulfilled'?R[2].value:null;z.TE=z.T?null:zTrafEst(day,z.hol,new Date().getHours());
- z.src.transito=z.T?'ok · en vivo (Mapbox)':'estimado por horas pico'+(ZCFG.mb?' (Mapbox falló: '+(ZTTERR||'sin respuesta')+'; usa “Probar conexión” en Ajustes)':' · para tránsito en vivo, añade tu token gratis de Mapbox en Ajustes');
+ z.src.transito=z.T?'ok · en vivo ('+(ZCFG.gkey?'Google':'Mapbox')+')':'estimado por horas pico'+(ZCFG.mb||ZCFG.gkey?' (el tránsito en vivo falló: '+(ZTTERR||'sin respuesta')+'; usa “Probar conexión” en Ajustes)':' · para tránsito en vivo, añade tu token gratis de Mapbox en Ajustes');
  z.src.historial=z.H.A.c?z.H.A.c+' jornadas con zona':'Sin jornadas con zona todavía';
  zScore(z);z.src.noticias=aiReady()&&navigator.onLine?'Consultando…':'No disponible ('+(navigator.onLine?'configura la IA':'sin internet')+')';zPut(z);ZST.msg=aiReady()&&navigator.onLine?'Buscando noticias de hoy con Gemini':'';zRender();
  if(aiReady()&&navigator.onLine){try{z.ai=await zNews(z);zScore(z);z.src.noticias=z.ai.web?'ok · búsqueda web':'IA sin búsqueda web (solo interpreta el clima)'}catch(e){z.src.noticias='No disponible: '+(e.message||'error')}zPut(z)}
@@ -2949,7 +2959,7 @@ function zR_full(){var el=$('fi_zona');if(!el)return;var z=zGet(),h=zCard(false)
   '<div class="row" style="margin-top:8px"><label>Km Santiago → Mao<input type="number" id="zc_km2" value="'+ZCFG.kmMao+'"></label><label>Km Mao → SD (vacío)<input type="number" id="zc_kmv" value="'+ZCFG.kmV+'"></label><label>Horas Mao → SD<input type="number" step="0.5" id="zc_hv" value="'+ZCFG.horasV+'"></label><label>Peajes Mao → SD (RD$)<input type="number" id="zc_pjv" value="'+ZCFG.peajeV+'"></label></div>'+
   '<div class="row" style="margin-top:8px"><label style="flex:3">Desde dónde sales a trabajar (para el costo de llegar a cada zona)<select id="zc_casa"><option value="">Sin indicar</option>'+ZK.map(function(k){return '<option value="'+k+'"'+(ZCFG.casa==k?' selected':'')+'>'+ZONAS[k].n+'</option>'}).join('')+'</select></label></div>'+
   '<div class="row" style="margin-top:8px"><label style="flex:3">Token de Mapbox (opcional, tránsito en vivo)<input type="password" id="zc_mb" value="'+esc(ZCFG.mb)+'" placeholder="pk.… · gratis en account.mapbox.com…" autocomplete="off"></label><button style="flex:1" onclick="zTTTest()">Probar conexión</button><button class="pri" style="flex:1" onclick="zCfgSave()">Guardar</button></div><div id="zttm"></div>'+
-  '<div class="row" style="margin-top:8px"><label style="flex:3">Clave de Google Maps (opcional: buscar lugares y clima más precisos)<input type="password" id="zc_gg" value="'+esc(ZCFG.gkey||'')+'" placeholder="AIza…" autocomplete="off"></label><button style="flex:1" onclick="gTest()">Probar Google</button><button class="pri" style="flex:1" onclick="zCfgSave()">Guardar</button></div><div id="ggm"></div><small>Registra la <b>zona</b> de cada jornada en Registrar: con unas 6 jornadas el agente empieza a usar tu rendimiento real por zona.</small><div id="zcm"></div></details>';
+  '<div class="row" style="margin-top:8px"><label style="flex:3">Clave de Google Maps (opcional: lugares, clima y tránsito más precisos)<input type="password" id="zc_gg" value="'+esc(ZCFG.gkey||'')+'" placeholder="AIza…" autocomplete="off"></label><button style="flex:1" onclick="gTest()">Probar Google</button><button class="pri" style="flex:1" onclick="zCfgSave()">Guardar</button></div><div id="ggm"></div><small>Registra la <b>zona</b> de cada jornada en Registrar: con unas 6 jornadas el agente empieza a usar tu rendimiento real por zona.</small><div id="zcm"></div></details>';
  el.innerHTML=h}
 function zCfgSave(){var n=function(i,d,mx){var v=+$(i).value;return isFinite(v)&&v>=0?Math.min(mx,v):d};ZCFG.on=$('zc_on').checked;ZCFG.auto=$('zc_auto').checked;ZCFG.web=$('zc_web').checked;ZCFG.familia=$('zc_fam').checked;ZCFG.rem=$('zc_rem').checked;
  ZCFG.km=n('zc_km',151,400);ZCFG.kmMao=n('zc_km2',54,300);ZCFG.kmV=n('zc_kmv',205,500);ZCFG.horasV=n('zc_hv',3,10);ZCFG.peajeV=n('zc_pjv',200,5000);ZCFG.peaje=n('zc_pj',200,5000);ZCFG.horas=n('zc_hr',2.5,8);ZCFG.glpkm=n('zc_gk',5,50);ZCFG.mb=$('zc_mb').value.replace(/\s+/g,'');if($('zc_gg'))ZCFG.gkey=$('zc_gg').value.replace(/\s+/g,'');ZCFG.casa=$('zc_casa').value;zSaveCfg();var z=zGet();if(z){zScore(z);zPut(z)}zRender();var m=$('zcm');if(m)m.innerHTML='<div class="warn ok">Ajustes guardados. Toca “Actualizar” para volver a analizar.</div>'}
@@ -3290,7 +3300,7 @@ function cliAndSent(){if(!AND||!AND.cliSent)return;try{var o=JSON.parse(AND.cliS
 
 // --- Buscar direcciones: Mapbox (si hay token) y, si no encuentra, OpenStreetMap. Solo República Dominicana.
 async function cliGeo(f){var q=$(f).value.trim(),out=$(f+'_r');if(q.length<3){out.innerHTML='<small>Escribe al menos 3 letras.</small>';return}out.innerHTML='<small>Buscando…</small>';
- try{var L=await cliGeoFind(q);CLIGEO[f+'_L']=L;out.innerHTML=L.length?L.map(function(x,i){return '<button type="button" class="chip" onclick="cliGeoPick(\''+f+'\','+i+')">'+esc(cliShort(x.t))+'</button>'}).join(''):'<small>No encontré ese lugar. Prueba con el sector o un lugar conocido cerca (ej. «Ágora Mall»), o búscalo en Google Maps, toca <b>Compartir → Copiar enlace</b> y pégalo aquí.</small>'}
+ try{var L=await cliGeoFind(q);if(($(f).value||'').trim()!=q)return;CLIGEO[f+'_L']=L;out.innerHTML=L.length?L.map(function(x,i){return '<button type="button" class="chip" onclick="cliGeoPick(\''+f+'\','+i+')">'+esc(cliShort(x.t))+'</button>'}).join(''):'<small>No encontré ese lugar. Prueba con el sector o un lugar conocido cerca (ej. «Ágora Mall»), o búscalo en Google Maps, toca <b>Compartir → Copiar enlace</b> y pégalo aquí.</small>'}
  catch(e){out.innerHTML=e&&e.message=='GMAPS'?'<small>No pude abrir ese enlace de Google Maps. Copia el enlace otra vez desde «Compartir» del lugar.</small>':'<small>No se pudo buscar (¿sin internet?).</small>'}}
 // Búsqueda de lugares para la Agenda de clientes:
 // 1) Un enlace de Google Maps (Compartir → Copiar enlace) o coordenadas pegadas: el punto exacto (el enlace corto lo abre la nube).
@@ -3317,6 +3327,9 @@ async function cliGeoFind(q){var L=[],seen={},add=function(x){var k=Math.round(x
    (j1.features||[]).forEach(function(x){add({t:x.properties.full_address||x.properties.name,la:x.geometry.coordinates[1],lo:x.geometry.coordinates[0]})})}catch(e){}}
  if(!L.length){var r2=await fetch('https://nominatim.openstreetmap.org/search?format=json&countrycodes=do&limit=5&accept-language=es&q='+encodeURIComponent(q));(await r2.json()).forEach(function(x){add({t:x.display_name,la:+x.lat,lo:+x.lon})})}
  return L}
+var CLIGT={},CLIGQ={};
+function cliGeoAuto(f){clearTimeout(CLIGT[f]);var q=($(f).value||'').trim(),out=$(f+'_r');if(q.length<4||CLIGM.test(q)&&q.length<12){if(out&&q.length<4)out.innerHTML='';return}
+ CLIGT[f]=setTimeout(function(){if(($(f).value||'').trim()!=q||CLIGQ[f]==q)return;CLIGQ[f]=q;cliGeo(f)},600)}
 function cliShort(t){return String(t||'').split(',').slice(0,3).join(',').trim()}
 function cliGeoPick(f,i){var x=CLIGEO[f+'_L'][i];CLIGEO[f]={t:cliShort(x.t),la:x.la,lo:x.lo};$(f).value=CLIGEO[f].t;$(f+'_r').innerHTML='<small>'+ic('check','ok')+' Ubicación guardada</small>'}
 async function cliGeoHere(f){var out=$(f+'_r');out.innerHTML='<small>Leyendo tu ubicación…</small>';var h=await cliHere();if(!h){out.innerHTML='<small>No pude leer tu ubicación. Revisa el permiso de ubicación.</small>';return}
@@ -3353,15 +3366,15 @@ function cliOpts(sel){var A=cliEns().c.filter(function(c){return !c.arch||c.id==
 function cliBuild(){var a=$('cli_c');if(!a||a.dataset.b)return;a.dataset.b=1;
  a.innerHTML='<h2>Clientes</h2><p class="sub">Clientes que te contratan por fuera de Uber. Con su WhatsApp, les llega un aviso cuando vas en camino y cuando estás llegando.</p>'+
   '<details id="cli_cf"><summary>Agregar cliente</summary><div class="row"><label class="vl">Nombre<input id="clN" autocomplete="off"></label><label class="vl">WhatsApp<input id="clT" type="tel" inputmode="tel" autocomplete="off" placeholder="809 555 1234"></label></div>'+
-  '<div class="row"><label class="vl" style="flex:1 1 100%">Dirección habitual de recogida (opcional)<input id="clD" autocomplete="off" oninput="delete CLIGEO.clD" placeholder="Lugar, dirección o enlace de Google Maps"></label></div>'+
+  '<div class="row"><label class="vl" style="flex:1 1 100%">Dirección habitual de recogida (opcional)<input id="clD" autocomplete="off" oninput="delete CLIGEO.clD;cliGeoAuto(this.id)" placeholder="Lugar, dirección o enlace de Google Maps"></label></div>'+
   '<div class="row"><button type="button" onclick="cliGeo(\'clD\')">Buscar</button><button type="button" onclick="cliGeoHere(\'clD\')">Estoy aquí</button></div><div id="clD_r" class="geo" aria-live="polite"></div>'+
   '<div class="row"><label class="vl" style="flex:1 1 100%">Nota (opcional)<input id="clO" autocomplete="off"></label></div>'+
   '<div class="row"><button class="pri" id="clSave" onclick="cliSaveC(this)">Guardar cliente</button><button type="button" onclick="cliEditC(0)">Cancelar</button></div></details><div id="cli_cl"></div>';
  $('cli_v').innerHTML='<h2>Agenda de viajes</h2><p class="sub">Viajes con tus clientes. La app calcula a qué hora salir según dónde estás y el tráfico, y te avisa para llegar a la hora acordada.</p>'+
   '<details id="cli_nv"><summary>Nuevo viaje</summary><div class="row"><label class="vl">Cliente<select id="clVc" onchange="cliPrefill()"></select></label><label class="vl">Precio del viaje (RD$)<input id="clVm" type="number" inputmode="decimal" min="0"></label></div>'+
-  '<div class="row"><label class="vl" style="flex:1 1 100%">Punto de recogida<input id="clVo" autocomplete="off" oninput="delete CLIGEO.clVo" placeholder="Lugar, dirección o enlace de Google Maps"></label></div>'+
+  '<div class="row"><label class="vl" style="flex:1 1 100%">Punto de recogida<input id="clVo" autocomplete="off" oninput="delete CLIGEO.clVo;cliGeoAuto(this.id)" placeholder="Lugar, dirección o enlace de Google Maps"></label></div>'+
   '<div class="row"><button type="button" onclick="cliGeo(\'clVo\')">Buscar</button><button type="button" onclick="cliGeoHere(\'clVo\')">Estoy aquí</button></div><div id="clVo_r" class="geo" aria-live="polite"></div>'+
-  '<div class="row"><label class="vl" style="flex:1 1 100%">Destino<input id="clVd" autocomplete="off" oninput="delete CLIGEO.clVd" placeholder="Lugar, dirección o enlace de Google Maps"></label></div>'+
+  '<div class="row"><label class="vl" style="flex:1 1 100%">Destino<input id="clVd" autocomplete="off" oninput="delete CLIGEO.clVd;cliGeoAuto(this.id)" placeholder="Lugar, dirección o enlace de Google Maps"></label></div>'+
   '<div class="row"><button type="button" onclick="cliGeo(\'clVd\')">Buscar</button></div><div id="clVd_r" class="geo" aria-live="polite"></div>'+
   '<div class="row"><button type="button" onclick="cliPriceUI(this)">Calcular precio sugerido</button></div><div id="clVpr" aria-live="polite"></div>'+
   '<div class="row"><label class="vl">Fecha (o desde cuándo)<input id="clVf" type="date"></label><label class="vl">Hora de recogida<input id="clVh" type="time" value="07:30"></label></div>'+
@@ -3812,16 +3825,36 @@ function renderLogros(){var el=$('logros');if(!el)return;var L=lgList(),X=L.pop(
 
 // ===== Recibo en PDF para el cliente (Viajes → Clientes → Agenda) =====
 function cliRcSet(){var C=cliEns();C.rc={auto:$('clRa').checked?1:0,n:$('clRn').value.trim().slice(0,40)};save()}
+// Recibo de viaje (PDF de 90 mm de ancho, como un ticket): encabezado verde con el número y la fecha, el total en grande
+// con su estado (pagado o pendiente), la ruta con un punto de recogida y uno de destino unidos por una línea, los
+// detalles del viaje y un pie de agradecimiento. Solo jsPDF (sin fuentes externas).
 function cliRcPdf(o,paid,num){var J=window.jspdf&&window.jspdf.jsPDF;if(!J)throw new Error('No cargó el generador de PDF (revisa el internet).');
- var C=cliEns(),doc=new J({unit:'mm',format:[80,150]}),y=14,W=80,INK=[13,42,34],MU=[106,119,112],AC=[30,122,82],
-  tx=function(t,s,b,col,al){doc.setFont('helvetica',b?'bold':'normal');doc.setFontSize(s);doc.setTextColor.apply(doc,col||INK);var L=doc.splitTextToSize(String(t),W-16);doc.text(L,al=='c'?W/2:8,y,{align:al=='c'?'center':'left'});y+=L.length*s*0.42+2},
-  ln=function(){doc.setDrawColor(220,226,222);doc.line(8,y,W-8,y);y+=5};
- tx('RECIBO DE VIAJE',13,1,INK,'c');tx('No. '+String(num).padStart(4,'0'),9,0,MU,'c');y+=2;ln();
- tx('Cliente',8,0,MU);tx(o.c.n,11,1);tx('Fecha',8,0,MU);tx(fdate(o.ds)+' · '+hm12(o.ts),10);
- tx('Desde',8,0,MU);tx(cliPlace(o),10);if(o.t.ds&&o.t.ds.t){tx('Hasta',8,0,MU);tx(o.t.ds.t,10)}ln();
- tx('Total',9,0,MU);tx('RD$'+Number(o.t.m||0).toLocaleString('es-DO',{minimumFractionDigits:2,maximumFractionDigits:2}),20,1);
- tx(paid?'PAGADO':'PENDIENTE DE PAGO',10,1,paid?AC:[178,106,0]);ln();
- if(C.rc&&C.rc.n)tx('Conductor: '+C.rc.n,9,0,MU);tx('¡Gracias por viajar conmigo!',9,0,MU,'c');
+ var C=cliEns(),W=90,M=8,IW=W-2*M,G=[16,58,43],G2=[30,122,82],GOLD=[198,150,64],INK=[18,32,26],MU=[110,124,117],LINE=[226,232,228],SOFT=[243,247,245],OR=[224,122,40],
+  from=cliPlace(o),to=o.t.ds&&o.t.ds.t?o.t.ds.t:'',probe=new J({unit:'mm',format:[W,200]});probe.setFont('helvetica','bold');probe.setFontSize(10);
+ var fl=probe.splitTextToSize(from,IW-16),tl=to?probe.splitTextToSize(to,IW-16):[],rh=9+fl.length*4.4+(to?7+tl.length*4.4:0),rows=4+(C.rc&&C.rc.n?1:0),H=73+rh+10+rows*6.2+11+14+7,doc=new J({unit:'mm',format:[W,H]}),
+  col=function(f,c){doc['set'+f+'Color'].apply(doc,c)},txt=function(t,x,y,sz,b,c,al){doc.setFont('helvetica',b?'bold':'normal');doc.setFontSize(sz);col('Text',c||INK);doc.text(String(t),x,y,al?{align:al}:undefined)},
+  amt='RD$ '+Number(o.t.m||0).toLocaleString('es-DO',{minimumFractionDigits:2,maximumFractionDigits:2}),y;
+ // Fondo y encabezado
+ col('Fill',[255,255,255]);doc.rect(0,0,W,H,'F');col('Fill',G);doc.rect(0,0,W,40,'F');col('Fill',G2);doc.circle(W-6,6,22,'F');col('Fill',G);doc.circle(W-6,6,15,'F');
+ col('Fill',GOLD);doc.rect(M,11,10,0.9,'F');
+ txt('RECIBO DE VIAJE',M,9,7.5,1,[205,226,214]);txt(C.rc&&C.rc.n?C.rc.n:'Viaje privado',M,19,14,1,[255,255,255]);
+ txt('No. '+String(num).padStart(4,'0'),M,27,8.5,0,[205,226,214]);txt(fdate(o.ds)+' · '+hm12(o.ts),M,32.5,8.5,0,[205,226,214]);
+ // Tarjeta del total, montada sobre el encabezado
+ y=34;col('Fill',[255,255,255]);col('Draw',LINE);doc.setLineWidth(0.3);doc.roundedRect(M,y,IW,28,3.5,3.5,'FD');
+ txt('Total',M+5,y+7,8,0,MU);txt(amt,M+5,y+17.5,19,1,INK);
+ var pl=paid?'PAGADO':'PENDIENTE',pc=paid?G2:OR,pw=paid?21:25;col('Fill',pc);doc.roundedRect(M+5,y+20.5,pw,5.2,2.6,2.6,'F');txt(pl,M+5+pw/2,y+24.1,6.8,1,[255,255,255],'center');
+ // Ruta
+ y=70;txt('RUTA',M,y,7,1,MU);y+=3;col('Fill',SOFT);doc.roundedRect(M,y,IW,rh,3,3,'F');
+ var yy=y+7;col('Fill',G2);doc.circle(M+6,yy-1.2,1.8,'F');col('Fill',[255,255,255]);doc.circle(M+6,yy-1.2,0.7,'F');
+ txt('Recogida',M+11,yy-1,7,0,MU);doc.setFont('helvetica','bold');doc.setFontSize(10);col('Text',INK);doc.text(fl,M+11,yy+3.6);
+ if(to){var y2=yy+fl.length*4.4+6.5;col('Draw',[190,202,196]);doc.setLineWidth(0.5);doc.setLineDashPattern([0.8,0.9],0);doc.line(M+6,yy+1,M+6,y2-3.4);doc.setLineDashPattern([],0);
+  col('Fill',OR);doc.roundedRect(M+4.3,y2-3,3.4,3.4,0.8,0.8,'F');txt('Destino',M+11,y2-1,7,0,MU);doc.setFont('helvetica','bold');doc.setFontSize(10);col('Text',INK);doc.text(tl,M+11,y2+3.6)}
+ // Detalles
+ y+=rh+8;txt('DETALLES',M,y,7,1,MU);y+=2;
+ [['Cliente',o.c.n],['Fecha',fdate(o.ds)],['Hora de recogida',hm12(o.ts)],['Estado',paid?'Pagado':'Pendiente de pago']].concat(C.rc&&C.rc.n?[['Conductor',C.rc.n]]:[]).forEach(function(r){
+  y+=6.2;txt(r[0],M,y,8.5,0,MU);txt(String(r[1]).slice(0,34),W-M,y,8.5,1,INK,'right');col('Draw',LINE);doc.setLineWidth(0.25);doc.line(M,y+2.3,W-M,y+2.3)});
+ // Pie
+ y+=11;col('Fill',SOFT);doc.roundedRect(M,y,IW,14,3,3,'F');txt('¡Gracias por viajar conmigo!',W/2,y+6.2,9.5,1,G,'center');txt('Guarda este recibo como comprobante del viaje.',W/2,y+10.8,7,0,MU,'center');
  return doc.output('datauristring').split(',')[1]}
 async function cliRc(k,b){var C=cliEns(),o=cliFind(k);if(!o){cliSay('No encontré ese viaje.');return}var tel=cliTel(o.c.tel),am=cliAmt(o);o=Object.assign({},o,{t:Object.assign({},o.t,{m:am})});
  var paid=C.p.some(function(p){return p.ok==k}),num=(C.rcn||0)+1,b64,name='Recibo '+cliFirst(o.c.n)+' '+o.ds+'.pdf',cap=cliSaludo(Date.now())+', '+cliFirst(o.c.n)+'. Aquí tienes el recibo de tu viaje ('+rd(o.t.m||0)+'). ¡Gracias!';
