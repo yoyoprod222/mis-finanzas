@@ -558,7 +558,7 @@ items:[
 {id:9,name:"Ahorro mínimo diario",amt:100,freq:"d",total:0,prio:3,sv:1}],
 split:[{k:"res",n:"Fondo para días malos (hasta su meta)",p:12.5},{k:"extra",n:"Abono extra a deudas (tarjeta primero)",p:42.5},{k:"ahorro",n:"Ahorro",p:15},{k:"super",n:"Supermercado de la casa",p:20},{k:"pers",n:"Personal / ocio",p:10}],
 logs:[]}}
-var HNAV=false,SCHEMA=6,_sm=null,_nosnap=false,PAGEV='mf-v42';
+var HNAV=false,SCHEMA=6,_sm=null,_nosnap=false,PAGEV='mf-v43';
 var S;
 try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 function upgrade(){if(S&&S.items&&(S.v||0)<SCHEMA){try{localStorage.setItem(KEY+'-bak-'+(S.v||0)+'-'+Date.now(),JSON.stringify(S));pruneBak()}catch(e){}}
@@ -1038,6 +1038,12 @@ function runTests(){var T=[],saved=S,near=function(a,b){return Math.abs(a-b)<0.0
    var o=andModeNums({}),p1=andPeakNow(new Date(2026,2,2,7,0)),p2=andPeakNow(new Date(2026,2,3,7,0)),p3=andPeakNow(new Date(2026,2,6,18,0));
    return o.pU==1&&o.pD==1&&o.pI==0&&o.tb==1&&o.tbMax==15&&near(o.tbA1,6.5)&&near(o.tbB1,9)&&near(o.tbA2,17)&&o.tbDays==34&&o.pm==1&&o.pmKm==2&&o.pmMin==5&&o.ftH==4&&p1&&!p2&&p3}
   finally{var k=JSON.parse(k0);for(var x in k)ANDCFG[x]=k[x]}});
+ t('Súper: limpia la factura que lee la IA (montos, categorías y evitables)',function(){var r=supClean({tienda:'La Sirena',fecha:'2026-03-04',total:1000,items:[{n:'ARROZ 10LB',k:'Arroz 10 lb',q:1,p:420,t:420,c:'basicos',e:false},{n:'COCA COLA 2L',k:'refresco 2 lt',q:2,p:95,c:'refrescos'},{n:'DORITOS',k:'snack',t:150,c:'snacks'},{n:'DESC',t:-20,c:'otros'},{n:'raro',t:0},{n:'JABON',k:'jabon de cuaba',q:3,t:240,c:'xx'}]});
+  return r&&r.items.length==5&&r.items[1].t==190&&r.items[1].e&&r.items[2].p==150&&r.items[2].e&&!r.items[3].e&&r.items[4].c=='otros'&&near(r.items[4].p,80)&&r.items[0].k=='arroz 10 lb'&&r.sum==980&&r.total==1000&&r.d=='2026-03-04'});
+ t('Súper: precios mes a mes, canasta y compras evitables',function(){return run(mk([],[],{spr:[{id:1,d:'2026-01-10',total:700,items:[{k:'arroz 10 lb',q:1,p:400,t:400,c:'basicos'},{k:'aceite 1 gal',q:1,p:200,t:200,c:'basicos'},{k:'huevos 30',q:1,p:100,t:100,c:'proteinas'}]},
+   {id:2,d:'2026-02-12',total:950,items:[{k:'arroz 10 lb',q:2,p:440,t:880,c:'basicos'},{k:'aceite 1 gal',q:1,p:190,t:190,c:'basicos'},{k:'huevos 30',q:1,p:100,t:100,c:'proteinas'},{k:'refresco 2 lt',q:1,p:95,t:95,c:'refrescos',e:true}]}]}),function(){
+   var L=supPrices(),a=L.filter(function(x){return x.k=='arroz 10 lb'})[0],o=L.filter(function(x){return x.k=='aceite 1 gal'})[0],B=supBasket(L),M=supMonths();
+   return L.length==3&&near(a.ch,0.1)&&near(o.ch,-0.05)&&B&&near(B.ch,30/700)&&M.length==2&&M[1].ev==95&&M[1].evk['refresco 2 lt']==95&&supTips().length>=3})});
  t('Recibo: arma el PDF del viaje del cliente',function(){if(!window.jspdf)return false;var b=cliRcPdf({c:{n:'Ana Pérez'},ds:'2026-03-05',ts:new Date(2026,2,5,8,0).getTime(),t:{m:450,o:{t:'Naco'},ds:{t:'Gazcue'}}},true,7);return /^JVBER/.test(b)&&b.length>1000});
  return T}
 function renderVT(){var T=runTests(),ok=T.filter(function(q){return q[1]}).length;$('vt').innerHTML='<h2>Verificaci\u00f3n del motor financiero</h2><p class="sub">Estas pruebas se ejecutan al abrir la p\u00e1gina y comprueban que el reparto, las prioridades, el fondo y los pendientes calculen bien.</p><div class="warn" style="'+(ok==T.length?'background:var(--ac2);color:var(--ac)':'')+'">'+ok+' de '+T.length+' pruebas correctas.</div>'+T.map(function(q){return '<div class="leg"><span>'+q[0]+'</span><span>'+(q[1]?'Correcta':'FALLA')+'</span></div>'}).join('')}
@@ -1305,7 +1311,7 @@ function renderGoals(){var T=totals(S.logs),F=sim().st,dT=0,dP=0,n=0;
  if(pot>0.5)h+='<div class="warn" style="background:var(--ac2);color:var(--ac)">Ahorro sin asignar a ninguna meta: '+rd(pot)+'</div>';
  $("goals").innerHTML=h+'<button onclick="addGoal()" style="margin-top:8px">+ Agregar meta de ahorro</button>'}
 function addSp(){var v=+$("spm").value;if(!(v>0))return;S.sp.push({d:today(),v:v,n:$("spn").value});save();all()}
-function delSp(i){S.sp.splice(i,1);save();all()}
+function delSp(i){var r=S.sp[i]&&S.sp[i].rid;S.sp.splice(i,1);if(r)S.spr=supEns().filter(function(x){return x.id!=r});save();all()}
 function addLi(){var c=+$("lic").value,n=$("lin").value.trim();if(!n)return;S.list.push({n:n,c:c||0});save();all()}
 function delLi(i){S.list.splice(i,1);save();all()}
 function renderSup(){var T=totals(S.logs),asg=T.ssuper||0,sp=0,est=0;S.sp.forEach(function(v){sp+=v.v});S.list.forEach(function(l){est+=l.c});var av=asg-sp;
@@ -1313,13 +1319,14 @@ function renderSup(){var T=totals(S.logs),asg=T.ssuper||0,sp=0,est=0;S.sp.forEac
  if(av<0)h+='<div class="warn">Te pasaste '+rd(-av)+' del dinero apartado. Los próximos días buenos lo van reponiendo.</div>';
  h+='<div class="row" style="margin-top:10px"><input type="number" id="spm" placeholder="Monto de la compra…"><input id="spn" placeholder="Nota (opcional)…"><button class="pri" onclick="addSp()">Registrar compra</button></div>';
  for(var i=S.sp.length-1,c=0;i>=0&&c<5;i--,c++)h+='<div class="leg"><span>'+S.sp[i].d+' '+esc(S.sp[i].n||"")+'</span><span>'+rd(S.sp[i].v)+' <button class="x" onclick="delSp('+i+')" aria-label="Quitar">✕</button></span></div>';
+ h+=supRcHtml();
  h+='<hr style="border:0;border-top:1px solid var(--bd);margin:12px 0"><b>Mi lista recurrente</b>';
  S.list.forEach(function(l,i){h+='<div class="leg"><span>'+esc(l.n)+'</span><span>'+rd(l.c)+' <button class="x" onclick="delLi('+i+')" aria-label="Quitar">✕</button></span></div>'});
  h+='<div class="row" style="margin-top:8px"><input id="lin" placeholder="Producto o compra recurrente…"><input type="number" id="lic" placeholder="Costo aprox."><button onclick="addLi()">+ Agregar</button></div>';
  if(S.list.length)h+='<p style="margin:8px 0 0">Tu lista cuesta aprox. <b>'+rd(est)+'</b>. '+(av>=est?'Con lo disponible ya te alcanza.':'Te faltan '+rd(est-Math.max(0,av))+' para cubrirla completa.')+'</p>';
  $("sup").innerHTML=h}
 function ens3(){if(!S.pay)S.pay=[];if(!S.npay)S.npay=S.pay.reduce(function(m,p){return Math.max(m,p.id)},0)+1;S.items.forEach(function(i){if(i.apr==null)i.apr=/tarjeta|cr[e\u00e9]dito/i.test(i.name)&&i.total>0?60:0;if(i.apr>0&&!i.start)i.start=today()});if(!S.acc){S.acc=[{id:1,type:'cash',name:'Efectivo',entity:'',num:'',bal0:0}];S.nacc=2}if(!S.mov)S.mov=[];if(!S.nmov)S.nmov=1;if(!S.nacc)S.nacc=S.acc.reduce(function(m,a){return Math.max(m,a.id)},0)+1}
-function ens2(){ens3();if(!S.lim)S.lim={comida:400,hormiga:200};if(!S.cal)S.cal=[];if(!S.cob)S.cob=[];if(S.apr==null)S.apr=60;if(S.cut==null)S.cut=0;if(!S.zp||typeof S.zp!='object')S.zp={};if(!Array.isArray(S.dz))S.dz=dzDef();dzMig();if(!Array.isArray(S.dzn))S.dzn=[19,6];if(!Array.isArray(S.tc))S.tc=[];gpsPrune()}
+function ens2(){ens3();if(!S.lim)S.lim={comida:400,hormiga:200};if(!S.cal)S.cal=[];if(!S.cob)S.cob=[];if(S.apr==null)S.apr=60;if(S.cut==null)S.cut=0;if(!S.zp||typeof S.zp!='object')S.zp={};if(!Array.isArray(S.dz))S.dz=dzDef();dzMig();if(!Array.isArray(S.dzn))S.dzn=[19,6];if(!Array.isArray(S.tc))S.tc=[];if(!Array.isArray(S.spr))S.spr=[];gpsPrune()}
 function svPaid(T){var t=0;S.items.forEach(function(i){if(i.sv)t+=T["i"+i.id]||0});return t}
 function itOf(k){var f=function(a){return a.filter(function(i){return 'i'+i.id==k})[0]},r=f(S.items),c=S.cfg||[];if(r)return r;for(var j=c.length-1;j>=0;j--){r=f(c[j].c.i);if(r)return r}}
 function oldRows(T){var cur={};rowsOf(0).forEach(function(c){cur[c.key]=1});return Object.keys(T).filter(function(k){return k[0]=='i'&&!cur[k]&&T[k]>0.005}).map(function(k,i){var it=itOf(k);return{key:k,name:(it?it.name:'Obligaci\u00f3n anterior')+' (anterior)',v:T[k]}}).map(grpCol)}
@@ -3755,7 +3762,98 @@ function mfShared(){if(!AND||!AND.shared)return;var s='';try{s=AND.shared()}catc
  setTab('ia','cop');setTimeout(function(){try{fiR_st()}catch(e){}var el=$('fi_st');if(el)el.scrollIntoView({block:'start'});
   if(j.type=='img')fiReceiptUrl('data:'+(j.mime||'image/jpeg')+';base64,'+j.b64);
   else if(j.type=='txt'&&$('staiin')){$('staiin').value=String(j.text||'').slice(0,1500);AIP='st';runAI()}
-  else if($('staiout'))$('staiout').innerHTML='<div class="warn">Recibí un PDF. Por ahora leo fotos y textos: toma una captura de la parte con el monto y compártela a Mis Finanzas.</div>'},350)}
+  else if(j.type=='pdf'){setTab('hog','sup');supB64(j.b64)}},350)}
+
+// ===== Facturas del súper (Hogar → Súper) =====
+// Subes la factura (PDF o foto) y queda cada producto con su precio y su categoría. El texto del PDF se saca en el
+// teléfono (pdf.js) y la IA solo lo ordena; un PDF escaneado sin texto se manda como imagen (necesita Gemini).
+// S.spr = [{id, d, tienda, total, items:[{n, k (nombre genérico: «arroz 10 lb»), q, un, p (precio unitario), t (total), c, e (evitable)}]}]
+// y la compra también va a S.sp (con rid) para que el apartado del súper la descuente como siempre.
+var SUPC={basicos:'Básicos (arroz, aceite, granos)',proteinas:'Carnes, pollo y huevos',frutas:'Frutas y vegetales',lacteos:'Lácteos y pan',limpieza:'Limpieza del hogar',higiene:'Higiene personal',
+ bebidas:'Agua y jugos',refrescos:'Refrescos y bebidas azucaradas',snacks:'Snacks, dulces y galletas',alcohol:'Alcohol y cigarrillos',bebe:'Bebé',mascotas:'Mascotas',otros:'Otros'};
+var SUPEV=['refrescos','snacks','alcohol'],SUPD=null,SUPST={busy:'',err:''};
+function supEns(){if(!Array.isArray(S.spr))S.spr=[];return S.spr}
+var PDFJS='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+function supLoadPdf(){if(window.pdfjsLib)return Promise.resolve(window.pdfjsLib);return new Promise(function(ok,ko){var s=document.createElement('script');s.src=PDFJS+'pdf.min.js';
+ s.onload=async function(){try{var t=await (await fetch(PDFJS+'pdf.worker.min.js')).text();pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(new Blob([t],{type:'text/javascript'}))}catch(e){pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS+'pdf.worker.min.js'}ok(pdfjsLib)};
+ s.onerror=function(){ko(new Error('No pude cargar el lector de PDF. Revisa el internet e inténtalo otra vez.'))};document.head.appendChild(s)})}
+// Texto del PDF línea por línea (junta lo que está a la misma altura). Casi sin texto = escaneado: fotos de hasta 3 páginas.
+async function supPdf(buf){var L=await supLoadPdf(),doc=await L.getDocument({data:buf}).promise,txt=[],img=[],p;
+ for(p=1;p<=Math.min(doc.numPages,8);p++){var pg=await doc.getPage(p),tc=await pg.getTextContent(),rows={};
+  tc.items.forEach(function(it){if(!it.str||!it.str.trim())return;var y=Math.round(it.transform[5]/3)*3;(rows[y]=rows[y]||[]).push(it)});
+  Object.keys(rows).sort(function(a,b){return b-a}).forEach(function(y){txt.push(rows[y].sort(function(a,b){return a.transform[4]-b.transform[4]}).map(function(i){return i.str}).join(' ').replace(/\s+/g,' ').trim())})}
+ var t=txt.filter(Boolean).join('\n');
+ if(t.replace(/\s/g,'').length<80)for(p=1;p<=Math.min(doc.numPages,3);p++){var g=await doc.getPage(p),vp=g.getViewport({scale:1.6}),c=document.createElement('canvas');c.width=vp.width;c.height=vp.height;
+  await g.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;img.push(c.toDataURL('image/jpeg',0.8))}
+ return{t:t,img:img}}
+var SUPSYS='Lees facturas de supermercado de República Dominicana (montos en RD$). Responde SOLO un JSON: {"tienda":"nombre o null","fecha":"YYYY-MM-DD o null","total":total final pagado o null,"items":[{"n":"descripción tal como sale","k":"nombre genérico corto en minúscula, sin marca y con el tamaño (ej. arroz 10 lb, aceite de soya 1 gal, refresco 2 lt, pollo entero lb)","q":cantidad,"un":"ud|lb|kg|oz|lt|gal|paq","p":precio por unidad,"t":total de la línea,"c":"'+Object.keys(SUPC).join('|')+'","e":true o false}]}. '+
+ '"e" es true si el producto no ayuda a las finanzas de la casa: refrescos, dulces, snacks, galletas, alcohol, cigarrillos, comida chatarra o caprichos caros; false para comida básica, limpieza, higiene y bebé. '+
+ 'Un producto por línea de la factura, con los montos tal como salen. Los descuentos van como una línea con "t" negativo y "c":"otros". No incluyas subtotales, ITBIS, cambio ni formas de pago como productos. No inventes: si algo no se lee, omítelo.';
+// Normaliza lo que devuelve la IA: números válidos, categoría conocida, evitable por categoría, total.
+function supClean(j){if(!j||!Array.isArray(j.items))return null;var I=[];
+ j.items.forEach(function(x){if(!x)return;var q=+x.q>0?+x.q:1,t=+x.t,p=+x.p;if(!isFinite(t)||!t)t=p>0?p*q:0;if(!(p>0))p=t>0?t/q:0;if(!t)return;
+  var c=SUPC[x.c]?x.c:'otros',n=String(x.n||x.k||'Producto').trim().slice(0,60),k=nz(String(x.k||n)).replace(/[^a-z0-9ñ. ]+/g,' ').replace(/\s+/g,' ').trim().slice(0,40);
+  I.push({n:n,k:k,q:Math.round(q*1000)/1000,un:String(x.un||'ud').slice(0,4),p:Math.round(p*100)/100,t:Math.round(t*100)/100,c:c,e:t>0&&(x.e===true||SUPEV.indexOf(c)>=0)})});
+ if(!I.length)return null;var sum=I.reduce(function(a,i){return a+i.t},0),tot=+j.total>0?+j.total:sum,f=validDate(j.fecha);
+ return{tienda:typeof j.tienda=='string'&&j.tienda!='null'?j.tienda.slice(0,40):'',d:f&&f<=today()?f:today(),total:Math.round(tot*100)/100,sum:Math.round(sum*100)/100,items:I}}
+// Facturas largas: el texto va por partes para que la respuesta no se corte.
+async function supRead(src){var o={json:1,nocache:1,max:4000,temp:0},J=[];
+ if(src.t){var L=src.t.split('\n'),ch=[],cur='';L.forEach(function(l){if(cur.length+l.length>3500){ch.push(cur);cur=''}cur+=l+'\n'});if(cur.trim())ch.push(cur);
+  for(var i=0;i<ch.length;i++)J.push(jsonOf(await aiAsk(SUPSYS,'Factura (texto sacado del PDF'+(ch.length>1?', parte '+(i+1)+' de '+ch.length:'')+'). Hoy es '+today()+'.\n\n'+ch[i],o)))}
+ else{if(AIS.prov!='gemini')throw new Error('Este PDF es una imagen escaneada: leerlo necesita la IA de OpenRouter con un modelo con visión (Gemini).');
+  J.push(jsonOf(await aiAsk(SUPSYS,[{type:'text',text:'Lee esta factura. Hoy es '+today()+'.'}].concat(src.img.map(function(u){return{type:'image_url',image_url:{url:u}}})),o)))}
+ var all={tienda:null,fecha:null,total:null,items:[]};J.forEach(function(j){if(!j)return;all.tienda=all.tienda||j.tienda;all.fecha=all.fecha||j.fecha;if(+j.total>0)all.total=+j.total;all.items=all.items.concat(j.items||[])});
+ var r=supClean(all);if(!r)throw new Error('No encontré productos en la factura. Prueba con otra foto o regístrala a mano.');return r}
+async function supGo(getSrc){if(!aiReady()){SUPST={busy:'',err:'Leer facturas necesita la IA. Configura tu clave de OpenRouter en Ajustes IA.'};renderSup();return}
+ SUPST={busy:'Leyendo la factura',err:''};SUPD=null;renderSup();var el=$('sup');if(el)el.scrollIntoView({block:'start'});
+ try{SUPD=await supRead(await getSrc());SUPST={busy:'',err:''}}catch(e){SUPST={busy:'',err:(e&&e.message)||'No se pudo leer la factura.'}}renderSup()}
+function supFile(inp){var f=inp.files&&inp.files[0];inp.value='';if(!f)return;
+ supGo(async function(){if(/pdf/i.test(f.type)||/\.pdf$/i.test(f.name))return supPdf(await f.arrayBuffer());return{t:'',img:[await fiImg(f,1600)]}})}
+function supB64(b64){supGo(function(){var bin=atob(b64),u=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return supPdf(u.buffer)})}
+function supDraftHtml(){var D=SUPD;if(!D)return '';var ev=D.items.filter(function(i){return i.e}).reduce(function(a,i){return a+i.t},0),off=Math.abs(D.sum-D.total)>Math.max(5,D.total*0.03);
+ return '<div class="arow" style="margin-top:10px"><b>Borrador: '+esc(D.tienda||'Supermercado')+'</b> · '+D.items.length+' productos<div class="row" style="margin-top:6px"><label>Fecha<input type="date" value="'+D.d+'" max="'+today()+'" onchange="SUPD.d=this.value||today()"></label><label>Total pagado (RD$)<input type="number" inputmode="decimal" value="'+D.total+'" onchange="SUPD.total=+this.value||SUPD.sum;renderSup()"></label></div>'+
+  (off?'<div class="warn">La suma de los productos ('+rd(D.sum)+') no cuadra con el total ('+rd(D.total)+'). Revisa el total antes de guardar.</div>':'')+
+  (ev>0?'<p style="margin:6px 0"><span class="tag r">Evitable</span> '+rd(ev)+' en cosas que no ayudan a tus finanzas ('+Math.round(ev/Math.max(1,D.sum)*100)+'% de la compra).</p>':'')+
+  D.items.map(function(i,x){return '<div class="leg"><span>'+esc(i.n)+(i.e?' <span class="tag r">Evitable</span>':'')+'<br><small>'+(i.q!=1?i.q+' '+esc(i.un)+' × '+rd(i.p)+' · ':'')+'<select aria-label="Categoría de '+esc(i.n)+'" onchange="supCat('+x+',this.value)" style="font-size:12px;padding:2px 4px">'+Object.keys(SUPC).map(function(k){return '<option value="'+k+'"'+(k==i.c?' selected':'')+'>'+SUPC[k]+'</option>'}).join('')+'</select></small></span><span>'+rd(i.t)+'</span></div>'}).join('')+
+  '<div class="row" style="margin-top:8px"><button class="pri" onclick="supSave()">Guardar compra de '+rd(D.total)+'</button><button onclick="SUPD=null;renderSup()">Descartar</button></div></div>'}
+function supCat(x,c){var i=SUPD&&SUPD.items[x];if(!i)return;i.c=c;i.e=i.t>0&&SUPEV.indexOf(c)>=0;renderSup()}
+function supSave(){var D=SUPD;if(!D)return;var R=supEns(),id=R.reduce(function(a,r){return Math.max(a,r.id)},0)+1;ens();
+ R.push({id:id,d:D.d,tienda:D.tienda,total:D.total,items:D.items});S.sp.push({d:D.d,v:D.total,n:(D.tienda||'Súper')+' · factura',rid:id});SUPD=null;save();all()}
+function supDelR(id){S.spr=supEns().filter(function(r){return r.id!=id});S.sp=S.sp.filter(function(s){return s.rid!=id})}
+// Meses: total, evitable y por categoría.
+function supMonths(){var M={};supEns().forEach(function(r){var m=r.d.slice(0,7),o=M[m]||(M[m]={m:m,tot:0,ev:0,n:0,cat:{},evk:{}});o.n++;o.tot+=r.total;
+ r.items.forEach(function(i){if(i.t<=0)return;o.cat[i.c]=(o.cat[i.c]||0)+i.t;if(i.e){o.ev+=i.t;o.evk[i.k]=(o.evk[i.k]||0)+i.t}})});return Object.keys(M).sort().map(function(k){return M[k]})}
+// Precio de cada producto (mismo nombre genérico) en el último mes que lo compraste contra el mes anterior en que lo compraste.
+function supPrices(){var P={};supEns().forEach(function(r){var m=r.d.slice(0,7);r.items.forEach(function(i){if(!(i.p>0)||i.t<=0||!i.k)return;var x=P[i.k]||(P[i.k]={}),y=x[m]||(x[m]={s:0,q:0,n:i.n});y.s+=i.p*i.q;y.q+=i.q})});
+ return Object.keys(P).map(function(k){var ms=Object.keys(P[k]).sort();if(ms.length<2)return null;var a=P[k][ms[ms.length-2]],b=P[k][ms[ms.length-1]],pa=a.s/a.q,pb=b.s/b.q,f=P[k][ms[0]],p0=f.s/f.q;
+  return{k:k,n:b.n,from:ms[ms.length-2],to:ms[ms.length-1],pa:pa,pb:pb,ch:(pb-pa)/pa,first:ms[0],ch0:(pb-p0)/p0}}).filter(Boolean)}
+// Canasta: lo que comprarías hoy de lo que compraste el mes anterior (mismos productos y cantidades), con los precios nuevos.
+function supBasket(L){L=L||supPrices();var a=0,b=0,n=0;L.forEach(function(x){if(Math.abs(x.ch)>1.5)return;a+=x.pa;b+=x.pb;n++});return n>=3?{ch:(b-a)/a,n:n}:null}
+function supMes(m){var s=new Date(m+'-15T12:00').toLocaleDateString('es-DO',{month:'long',year:'numeric'});return s.charAt(0).toUpperCase()+s.slice(1)}
+function supTips(){var M=supMonths(),L=supPrices(),T=[];if(!M.length)return T;var c=M[M.length-1],p=M.length>1?M[M.length-2]:null;
+ if(c.ev>0){var top=Object.keys(c.evk).sort(function(a,b){return c.evk[b]-c.evk[a]}).slice(0,3);T.push('En '+supMes(c.m).toLowerCase()+' gastaste <b>'+rd(c.ev)+'</b> ('+Math.round(c.ev/Math.max(1,c.tot)*100)+'% del súper) en cosas que no ayudan a tus finanzas: '+top.map(function(k){return esc(k)+' ('+rd(c.evk[k])+')'}).join(', ')+'. Al año serían unos '+rd(c.ev*12)+'.')}
+ else T.push('En '+supMes(c.m).toLowerCase()+' no compraste cosas evitables. Bien hecho.');
+ if(p)T.push('Gastaste '+rd(c.tot)+' en el súper, '+(c.tot>p.tot?'<b>'+rd(c.tot-p.tot)+' más</b>':rd(p.tot-c.tot)+' menos')+' que en '+supMes(p.m).toLowerCase()+'.');
+ var up=L.filter(function(x){return x.ch>=0.05}).sort(function(a,b){return b.ch-a.ch}),dn=L.filter(function(x){return x.ch<=-0.05}).sort(function(a,b){return a.ch-b.ch}),B=supBasket(L);
+ if(B)T.push('Lo mismo que compras te sale '+(B.ch>=0?'<b>'+Math.round(B.ch*100)+'% más caro</b>':Math.round(-B.ch*100)+'% más barato')+' que el mes anterior en que lo compraste ('+B.n+' productos comparados).');
+ if(up.length)T.push('Subieron: '+up.slice(0,3).map(function(x){return esc(x.k)+' '+rd(x.pa)+' → '+rd(x.pb)+' (+'+Math.round(x.ch*100)+'%)'}).join('; ')+'.');
+ if(dn.length)T.push('Bajaron: '+dn.slice(0,3).map(function(x){return esc(x.k)+' '+rd(x.pa)+' → '+rd(x.pb)+' ('+Math.round(x.ch*100)+'%)'}).join('; ')+'. Buen momento para comprarlos.');
+ return T}
+function supRcHtml(){var R=supEns(),M=supMonths(),h='<div class="row" style="margin-top:10px"><label class="fbtn pri">'+ic('doc')+' Subir factura PDF<input type="file" accept=".pdf,application/pdf" hidden onchange="supFile(this)"></label><label class="fbtn">'+ic('camera')+' Foto de la factura<input type="file" accept="image/*" capture="environment" hidden onchange="supFile(this)"></label></div>'+
+  '<small>Guardo cada producto con su precio para decirte mes a mes qué sube, qué baja y qué compras no te convienen.</small>';
+ if(SUPST.busy)h+=fiLoading(SUPST.busy);if(SUPST.err)h+='<div class="fi-err">'+esc(SUPST.err)+'</div>';h+=supDraftHtml();
+ if(!R.length)return h;var c=M[M.length-1],T=supTips(),L=supPrices();
+ h+='<h3>Tus compras del súper</h3>'+T.map(function(t){return '<div class="fi-l"><span>•</span><span>'+t+'</span></div>'}).join('')+
+  '<button style="margin-top:6px" onclick="supAI()">Consejo de la IA</button><div id="supai"></div>';
+ var cats=Object.keys(c.cat).sort(function(a,b){return c.cat[b]-c.cat[a]}),mx=cats.length?c.cat[cats[0]]:1;
+ h+='<h3>En qué se va · '+supMes(c.m)+'</h3>'+cats.map(function(k){return '<div class="leg"><span>'+SUPC[k]+(SUPEV.indexOf(k)>=0?' <span class="tag r">Evitable</span>':'')+'</span><span>'+rd(c.cat[k])+'</span></div><div class="bar" aria-hidden="true"><i style="width:'+Math.max(3,Math.round(c.cat[k]/mx*100))+'%'+(SUPEV.indexOf(k)>=0?';background:var(--wr)':'')+'"></i></div>'}).join('');
+ if(M.length>1)h+='<h3>Mes a mes</h3>'+M.slice(-6).reverse().map(function(m){return '<div class="leg"><span>'+supMes(m.m)+' <small>'+m.n+(m.n==1?' factura':' facturas')+'</small></span><span><b>'+rd(m.tot)+'</b> <br><small>evitable '+rd(m.ev)+'</small></span></div>'}).join('');
+ if(L.length)h+='<h3>Precios que cambiaron</h3>'+L.slice().sort(function(a,b){return Math.abs(b.ch)-Math.abs(a.ch)}).slice(0,15).map(function(x){var col=x.ch>0.005?'var(--rd)':x.ch<-0.005?'var(--ac)':'var(--mu)';
+  return '<div class="leg"><span>'+esc(x.k)+' <br><small>'+supMes(x.from)+' → '+supMes(x.to)+(x.first!=x.from?' · desde '+supMes(x.first).toLowerCase()+': '+(x.ch0>=0?'+':'')+Math.round(x.ch0*100)+'%':'')+'</small></span><span>'+rd(x.pa)+' → <b>'+rd(x.pb)+'</b> <br><small style="color:'+col+'">'+(x.ch>=0?'+':'')+Math.round(x.ch*100)+'%</small></span></div>'}).join('');
+ h+='<h3>Facturas guardadas</h3>'+R.slice().reverse().slice(0,12).map(function(r){return '<div class="leg"><span>'+fdate(r.d)+' · '+esc(r.tienda||'Súper')+' <small>'+r.items.length+' productos</small></span><span>'+rd(r.total)+' <button class="x" aria-label="Borrar factura" onclick="tap2(this,\'¿Borrar?\',function(){supDelR('+r.id+');save();all()})">✕</button></span></div>'}).join('');
+ return h}
+function supAI(){var M=supMonths(),L=supPrices();fiAIInto('supai','Revisa las compras de supermercado del usuario: qué productos subieron o bajaron de precio, qué compras evitables pesan más y 3 cambios concretos para gastar menos sin comer peor (marcas más baratas, tamaños más grandes, dejar refrescos o snacks). Usa solo estas cifras.',
+ {meses:M.slice(-4).map(function(m){return{mes:m.m,total:Math.round(m.tot),evitable:Math.round(m.ev),por_categoria:m.cat,evitables:m.evk}}),precios:L.slice(0,25).map(function(x){return{producto:x.k,antes:Math.round(x.pa*100)/100,ahora:Math.round(x.pb*100)/100,cambio_pct:Math.round(x.ch*100)}}),canasta:supBasket(L)},'super')}
 
 window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();PWA.ev=e;renderPwa()});
 window.addEventListener('appinstalled',function(){PWA.ev=null;renderPwa()});
