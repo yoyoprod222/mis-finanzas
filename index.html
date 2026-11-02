@@ -427,6 +427,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px color-mix(in srgb,v
 @media(min-width:621px){.rtb{display:none}}
 .tblw{overflow-x:auto;margin:8px 0}table.hz{width:100%;border-collapse:separate;border-spacing:3px;font-size:13px}table.hz th,table.hz td{padding:6px 4px;text-align:center;border-radius:8px;vertical-align:middle}table.hz th[scope=row]{text-align:left;white-space:nowrap;font-weight:600}table.hz td small{color:var(--mu)}
 .cli-map{height:240px;border-radius:14px;overflow:hidden;margin-top:10px;border:1px solid var(--bd)}a.btnlnk{flex:1;display:flex;align-items:center;justify-content:center;min-height:44px;border:1px solid var(--bd);border-radius:12px;color:var(--tx);text-decoration:none;font-weight:600;font-size:14px;background:var(--card)}
+:root{--rain:#2f7fd1}@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--rain:#5aa6f0}}:root[data-theme=dark]{--rain:#5aa6f0}table.rz{border-collapse:separate;border-spacing:3px;width:100%;min-width:0;table-layout:fixed;font-size:12.5px}table.rz th{font-weight:600;color:var(--mu);padding:2px 4px;text-align:center}table.rz th[scope=row]{width:84px;text-align:left;color:var(--tx);font-weight:500;white-space:nowrap}table.rz tr.rz-now th{color:var(--ac);font-weight:700}table.rz td{height:26px;border-radius:6px;cursor:pointer;padding:0 2px;text-align:center;font-variant-numeric:tabular-nums;color:var(--tx)}table.rz td.rz-na{background:transparent;color:var(--mu)}.rz-leg{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mu);margin-top:6px}.rz-grad{display:inline-block;width:90px;height:10px;border-radius:5px;background:linear-gradient(90deg,var(--card),var(--rain))}
 </style>
 </head>
 <body>
@@ -559,7 +560,7 @@ items:[
 {id:9,name:"Ahorro mínimo diario",amt:100,freq:"d",total:0,prio:3,sv:1}],
 split:[{k:"res",n:"Fondo para días malos (hasta su meta)",p:12.5},{k:"extra",n:"Abono extra a deudas (tarjeta primero)",p:42.5},{k:"ahorro",n:"Ahorro",p:15},{k:"super",n:"Supermercado de la casa",p:20},{k:"pers",n:"Personal / ocio",p:10}],
 logs:[]}}
-var HNAV=false,SCHEMA=6,_sm=null,_nosnap=false,PAGEV='mf-v51';
+var HNAV=false,SCHEMA=6,_sm=null,_nosnap=false,PAGEV='mf-v52';
 var S;
 try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 function upgrade(){if(S&&S.items&&(S.v||0)<SCHEMA){try{localStorage.setItem(KEY+'-bak-'+(S.v||0)+'-'+Date.now(),JSON.stringify(S));pruneBak()}catch(e){}}
@@ -1617,7 +1618,7 @@ function foldCard(card){var t=card.dataset.tab,s=card.dataset.sub;if(!t||(FOLDX[
   b.onclick=function(){k.classList.toggle('open');FOLD[kk]=k.classList.contains('open')?1:0;try{localStorage.setItem('fin-fold',JSON.stringify(FOLD))}catch(e){}lab()};k.after(b)})}
 // Tablas en el teléfono: las de 4 columnas o menos se ajustan al ancho; las de 5 o más se vuelven tarjetas
 // (cada dato con su etiqueta) y muestran 6 filas con «Ver más». En pantallas anchas siguen siendo tablas.
-function tblFit(){document.querySelectorAll('main table').forEach(function(t){var hr=null;for(var i=0;i<t.rows.length;i++){if(t.rows[i].querySelector('th')){hr=t.rows[i];break}}
+function tblFit(){document.querySelectorAll('main table').forEach(function(t){if(t.classList.contains('nofit'))return;var hr=null;for(var i=0;i<t.rows.length;i++){if(t.rows[i].querySelector('th')){hr=t.rows[i];break}}
  var cols=hr?hr.cells.length:(t.rows[0]?t.rows[0].cells.length:0);if(!cols)return;
  // Pocas columnas: se ajusta; si aun así no cabe (encabezados largos), pasa a tarjetas.
  if(cols<=4&&!t.classList.contains('rt')){t.classList.add('tfit');var pw=(t.closest('.scroll')||t.parentNode).clientWidth;if(!(t.offsetWidth&&window.innerWidth<=620&&t.scrollWidth>pw+2))return;t.classList.remove('tfit')}
@@ -2380,16 +2381,16 @@ async function zWeatherG(day,key){var now=day==today()?new Date().getHours():0,o
   var r={prob:0,mm:0,mmh:0,storm:false,heavy:false,wind:0,tmax:null,rainH:0,dry:null,hrs:0,src:'google'},best=0,cur=0,st=0;
   j.forecastHours.forEach(function(x){var d=x.displayDateTime||{},ds2=d.year+'-'+String(d.month).padStart(2,'0')+'-'+String(d.day).padStart(2,'0'),hr=+d.hours||0;if(ds2!=day||hr<Math.max(6,now)||hr>22)return;
    var pr=x.precipitation||{},p=+(pr.probability||{}).percent||0,mm=+(pr.qpf||{}).quantity||0,ty=String((x.weatherCondition||{}).type||''),w=+((x.wind||{}).speed||{}).value||0,tp=(x.temperature||{}).degrees,th=+x.thunderstormProbability||0;r.hrs++;
-   r.prob=Math.max(r.prob,p);r.mm+=mm;r.mmh=Math.max(r.mmh,mm);var sh=/THUNDER/.test(ty)||th>=50;if(sh)r.storm=true;if(mm>=8||/HEAVY/.test(ty))r.heavy=true;r.wind=Math.max(r.wind,w);if(tp!=null)r.tmax=r.tmax==null?tp:Math.max(r.tmax,tp);if(mm>=0.5)r.rainH++;
-   if(mm<0.3&&p<50&&!sh){if(!cur)st=hr;cur++;if(cur>best){best=cur;r.dry=[st,hr+1]}}else cur=0});
+   r.prob=Math.max(r.prob,p);r.mm+=mm;r.mmh=Math.max(r.mmh,mm);var sh=/THUNDER/.test(ty)||th>=40,sp=Math.max(th,/THUNDER/.test(ty)?p:0);if(sh){r.stP=Math.max(r.stP||0,sp);if(sp>=40)r.storm=true;else r.stLow=true}if((mm>=8||/HEAVY/.test(ty))&&p>=40)r.heavy=true;(r.hr=r.hr||[]).push({h:hr,p:p,mm:mm,st:sh?sp:0});r.wind=Math.max(r.wind,w);if(tp!=null)r.tmax=r.tmax==null?tp:Math.max(r.tmax,tp);if(mm>=0.5)r.rainH++;
+   if(mm<0.3&&p<50&&!(sh&&sp>=40)){if(!cur)st=hr;cur++;if(cur>best){best=cur;r.dry=[st,hr+1]}}else cur=0});
   out[k]=r}));return out}
 async function zWeather(day){if(ZCFG.gkey){try{return await zWeatherG(day,ZCFG.gkey)}catch(e){ZST.gw=String(e.message||e)}}return zWeatherOM(day)}
 async function zWeatherOM(day){var u='https://api.open-meteo.com/v1/forecast?latitude='+ZK.map(function(k){return ZONAS[k].lat}).join(',')+'&longitude='+ZK.map(function(k){return ZONAS[k].lon}).join(',')+'&hourly=precipitation_probability,precipitation,weather_code,wind_speed_10m,temperature_2m&timezone=America%2FSanto_Domingo&forecast_days=2',
   j=await fetchT(u,9000),arr=Array.isArray(j)?j:[j],out={},now=day==today()?new Date().getHours():0;
  ZK.forEach(function(k,ix){var h=arr[ix]&&arr[ix].hourly;if(!h)return;var r={prob:0,mm:0,mmh:0,storm:false,heavy:false,wind:0,tmax:null,rainH:0,dry:null,hrs:0},best=0,cur=0,st=0;
   h.time.forEach(function(t,i){var hr=+t.slice(11,13);if(t.slice(0,10)!=day||hr<Math.max(6,now)||hr>22)return;var p=+h.precipitation_probability[i]||0,mm=+h.precipitation[i]||0,c=+h.weather_code[i]||0,w=+h.wind_speed_10m[i]||0,tp=h.temperature_2m[i];r.hrs++;
-   r.prob=Math.max(r.prob,p);r.mm+=mm;r.mmh=Math.max(r.mmh,mm);if(c>=95)r.storm=true;if(mm>=8||c==65||c==82)r.heavy=true;r.wind=Math.max(r.wind,w);if(tp!=null)r.tmax=r.tmax==null?tp:Math.max(r.tmax,tp);if(mm>=0.5)r.rainH++;
-   if(mm<0.3&&p<50&&c<95){if(!cur)st=hr;cur++;if(cur>best){best=cur;r.dry=[st,hr+1]}}else cur=0});
+   r.prob=Math.max(r.prob,p);r.mm+=mm;r.mmh=Math.max(r.mmh,mm);if(c>=95){r.stP=Math.max(r.stP||0,p);if(p>=40)r.storm=true;else r.stLow=true}if((mm>=8||c==65||c==82)&&p>=40)r.heavy=true;(r.hr=r.hr||[]).push({h:hr,p:p,mm:mm,st:c>=95?p:0});r.wind=Math.max(r.wind,w);if(tp!=null)r.tmax=r.tmax==null?tp:Math.max(r.tmax,tp);if(mm>=0.5)r.rainH++;
+   if(mm<0.3&&p<50&&!(c>=95&&p>=40)){if(!cur)st=hr;cur++;if(cur>best){best=cur;r.dry=[st,hr+1]}}else cur=0});
   out[k]=r});return out}
 // Feriados de RD. Reyes, Duarte, Trabajo y Constitución se trasladan a lunes (Ley 139-97):
 // martes o miércoles → lunes anterior; jueves o viernes → lunes siguiente.
@@ -2491,7 +2492,7 @@ function zScore(z){var day=z.d,dt=new Date(day+'T00:00'),dow=dt.getDay(),dd=+day
  var common=[],cb=0;if(dd>=14&&dd<=16||dd>=last-1||dd==1){cb+=6;common.push('+ Quincena: la gente sale más')}if(dow==5||dow==6){cb+=5;common.push('+ '+(dow==5?'Viernes':'Sábado')+': más salidas de noche')}if(dow==0){cb-=4;common.push('− Domingo: mañana floja')}
  if(z.hol)common.push('• Feriado ('+z.hol+'): menos viajes al trabajo y más de ocio');
  ZK.forEach(function(k){var s=75+cb,why=common.slice(),w=z.W&&z.W[k],t=z.T&&z.T[k],h=H.Z[k];
-  if(w){if(w.storm){s-=45;why.push('− Tormenta eléctrica prevista ('+w.prob+'% de lluvia)')}else if(w.heavy){s-=18;why.push('− Lluvia fuerte (hasta '+w.mmh.toFixed(1)+' mm/h): sube la demanda, pero hay riesgo de inundación y tapones')}else if(w.rainH>=2){s+=5;why.push('+ Lluvia moderada ('+w.rainH+' h): suele subir la demanda')}else why.push('+ Sin lluvia importante ('+w.prob+'% máx.)');
+  if(w){var sp=w.stP!=null?w.stP:w.prob;if(w.storm){var pen=Math.round(20+25*Math.min(1,Math.max(0,(sp-40)/50)));s-=pen;why.push('− Tormenta eléctrica probable ('+sp+'%): −'+pen)}else if(w.stLow){s-=5;why.push('− Tormenta aislada posible, poco probable ('+sp+'%): vigila el cielo');if(w.rainH>=2){s+=5;why.push('+ Lluvia moderada ('+w.rainH+' h): suele subir la demanda')}}else if(w.heavy){s-=18;why.push('− Lluvia fuerte (hasta '+w.mmh.toFixed(1)+' mm/h): sube la demanda, pero hay riesgo de inundación y tapones')}else if(w.rainH>=2){s+=5;why.push('+ Lluvia moderada ('+w.rainH+' h): suele subir la demanda')}else why.push('+ Sin lluvia importante ('+w.prob+'% máx.)');
    if(w.wind>=50){s-=35;why.push('− Viento muy fuerte ('+Math.round(w.wind)+' km/h)')}else if(w.wind>=35){s-=10;why.push('− Viento fuerte ('+Math.round(w.wind)+' km/h)')}}
   if(t){if(t.r<0.5){s-=12;why.push('− Tránsito muy lento ahora ('+Math.round(t.r*100)+'% de la velocidad normal)')}else if(t.r<0.7){s-=5;why.push('− Tránsito lento ('+Math.round(t.r*100)+'%)')}else why.push('+ Tránsito fluido ('+Math.round(t.r*100)+'%)');if(t.cl){s-=10;why.push('− Cierre de vía detectado')}}
   else if(z.TE&&z.TE[k])why.push('• Tránsito estimado '+(z.d==today()?'ahora':'a esta hora')+': '+z.TE[k].tx+' (horario típico, no es en vivo)');
@@ -2939,7 +2940,7 @@ async function zRun(force){if(ZST.busy)return;var old=zGet();if(old&&!force){zRe
  zLog(z);ZST.busy=0;ZST.msg='';zRender();try{fiSummary();regZoneDefault();renderJor()}catch(e){}zRemind()}
 function zBoot(){if(!ZCFG.on)return zRender();if(ZCFG.auto&&!zGet())zRun();else{zRender();setTimeout(zRemind,3000)}}
 function zRender(){var el=$('zona');if(el)el.innerHTML=zCard(true);heroUpd();if(TAB=='ia'&&subOf('ia')=='zona')zR_full()}
-function zIcon(w){return !w?''+ic('help')+'':w.storm?''+ic('storm')+'':w.heavy?''+ic('rain')+'':w.rainH>=2?''+ic('sunrain')+'':''+ic('sun','wn')+''}
+function zIcon(w){return !w?''+ic('help')+'':w.storm||w.stLow&&w.rainH>=2?''+ic('storm')+'':w.heavy?''+ic('rain')+'':w.rainH>=2?''+ic('sunrain')+'':''+ic('sun','wn')+''}
 function zCard(compact){var z=zGet(),h='<div class="row" style="align-items:center"><div style="flex:3;min-width:200px"><span class="fi-ey">Zona del día'+(z&&z.d!=today()?' · mañana':'')+'</span>';
  if(!ZCFG.on)return h+'<h2 style="margin:0">Agente desactivado</h2></div><button style="flex:none;min-width:0" onclick="ZCFG.on=true;zSaveCfg();zRun(1)">Activar</button></div>';
  if(!z)return h+'<h2 style="margin:0">'+(ZST.busy?'Analizando tu día…':'¿Dónde conviene trabajar hoy?')+'</h2></div>'+(ZST.busy?'':'<button class="pri" style="flex:none;min-width:0" onclick="zRun(1)">Analizar</button>')+'</div>'+(ZST.busy?fiLoading(ZST.msg):'');
@@ -2954,8 +2955,21 @@ function zCard(compact){var z=zGet(),h='<div class="row" style="align-items:cent
  if(ZST.busy)h+=fiLoading(ZST.msg);
  h+='<div class="row" style="margin-top:10px;align-items:center"><small style="flex:3">Actualizado '+new Date(z.ts).toLocaleTimeString('es-DO',{hour:'numeric',minute:'2-digit'})+' · Clima '+(z.src.clima=='ok'?'✔':'✖')+' · Noticias '+(z.src.noticias&&z.src.noticias.indexOf('ok')==0?'✔':'✖')+' · Tránsito '+(z.T?'✔':'≈ estimado')+'</small>'+(compact?'<button style="flex:none;min-width:0" onclick="setTab(\'ia\',\'zona\')">Detalle</button>':'')+'<button style="flex:none;min-width:0" onclick="zRun(1)"'+(ZST.busy?' disabled':'')+'>Actualizar</button></div>';
  return h}
+// Probabilidad de lluvia por hora en cada zona: más azul = más probable; el punto = lluvia de verdad (0.5 mm o más);
+// el rayo = tormenta posible. Al tocar una celda se ve el detalle. La línea marca la hora actual.
+function zRainChart(z){var W=z&&z.W;if(!W)return '';var have=ZK.filter(function(k){return W[k]&&W[k].hr&&W[k].hr.length});
+ if(!have.length)return '<p class="sub" style="margin-top:12px">Toca «Actualizar» para ver el gráfico de lluvia por hora.</p>';
+ var H=[];for(var x=6;x<=22;x++)H.push(x);var nowH=z.d==today()?new Date().getHours():-1,code=function(k){return k=='stgo'?'Stgo':ZONAS[k].c};
+ var cell=function(k,x){var o=(W[k].hr||[]).filter(function(q){return q.h==x})[0];if(!o)return '<td class="rz-na">—</td>';var a=Math.round(Math.min(100,o.p)*0.85),t=ZONAS[k].c+', '+zH(x)+': '+o.p+'% de lluvia · '+o.mm.toFixed(1)+' mm'+(o.st?' · tormenta posible ('+o.st+'%)':'');
+  return '<td style="background:color-mix(in srgb,var(--rain) '+a+'%,var(--card))'+(o.p>=55?';color:#fff':'')+'" title="'+t+'" tabindex="0" onclick="zRainTip(this)" data-t="'+esc(t)+'"><span class="sr">'+t+'</span><span aria-hidden="true">'+o.p+'%'+(o.st?' ⚡':o.mm>=0.5?' •':'')+'</span></td>'};
+ return '<div id="zrain"><b style="display:block;margin-top:16px">Lluvia por zona y hora</b><p class="sub" style="margin:2px 0 8px">'+(z.d==today()?'Hoy':'Mañana')+': probabilidad de lluvia de cada hora. • = lloverá (0.5 mm o más) · ⚡ = tormenta posible. Toca una hora para ver los milímetros.</p>'+
+  '<div id="rztip" class="sub" aria-live="polite" style="min-height:18px;margin-bottom:4px"></div>'+
+  '<table class="rz nofit"><caption class="sr">Probabilidad de lluvia por hora en cada zona</caption><tr><th></th>'+have.map(function(k){return '<th scope="col">'+code(k)+'</th>'}).join('')+'</tr>'+
+  H.map(function(x){return '<tr'+(x==nowH?' class="rz-now"':'')+'><th scope="row">'+zH(x)+(x==nowH?' · ahora':'')+'</th>'+have.map(function(k){return cell(k,x)}).join('')+'</tr>'}).join('')+'</table>'+
+  '<div class="rz-leg"><span>0%</span><i class="rz-grad" aria-hidden="true"></i><span>100%</span></div></div>'}
+function zRainTip(td){var el=$('rztip');if(el)el.textContent=td.dataset.t||''}
 function zR_full(){var el=$('fi_zona');if(!el)return;var z=zGet(),h=zCard(false);
- if(z){h+='<b style="display:block;margin-top:16px">Comparación de zonas</b>'+ZK.map(function(k){var o=z.Z[k],w=z.W&&z.W[k];return '<details class="arow" style="margin-top:8px"'+(z.rec.k==k?' open':'')+'><summary style="color:var(--tx)">'+zIcon(w)+' <b>'+ZONAS[k].n+'</b> · '+o.s+'/100'+(o.exp!=null?' · neto estimado '+rd(o.exp):'')+'</summary>'+bar(o.s,7)+(w?'<small>Lluvia máx. '+w.prob+'% · '+w.mm.toFixed(1)+' mm en el día · viento '+Math.round(w.wind)+' km/h'+(w.tmax!=null?' · '+Math.round(w.tmax)+'°C':'')+'</small>':'')+o.why.map(function(x){return '<div style="font-size:13px;margin-top:4px">'+esc(x)+'</div>'}).join('')+(o.I?zIdxHtml(o.I):'')+'</details>'}).join('');
+ if(z){h+=zRainChart(z);h+='<b style="display:block;margin-top:16px">Comparación de zonas</b>'+ZK.map(function(k){var o=z.Z[k],w=z.W&&z.W[k];return '<details class="arow" style="margin-top:8px"'+(z.rec.k==k?' open':'')+'><summary style="color:var(--tx)">'+zIcon(w)+' <b>'+ZONAS[k].n+'</b> · '+o.s+'/100'+(o.exp!=null?' · neto estimado '+rd(o.exp):'')+'</summary>'+bar(o.s,7)+(w?'<small>Lluvia máx. '+w.prob+'% · '+w.mm.toFixed(1)+' mm en el día · viento '+Math.round(w.wind)+' km/h'+(w.tmax!=null?' · '+Math.round(w.tmax)+'°C':'')+'</small>':'')+o.why.map(function(x){return '<div style="font-size:13px;margin-top:4px">'+esc(x)+'</div>'}).join('')+(o.I?zIdxHtml(o.I):'')+'</details>'}).join('');
   var C=z.cost,st=z.Z.stgo,bk=ZSD.slice().sort(function(a,b){return z.Z[b].s-z.Z[a].s})[0];
   h+='<b style="display:block;margin-top:16px">¿Ir a Santiago?</b><p class="sub" style="margin:4px 0">Ruta: '+esc(zStgoRuta())+'.</p>'+
    '<div class="leg"><span>GLP ('+C.km+' km a RD$'+C.fk.toFixed(1)+'/km)</span><span>'+rd(C.fuel)+'</span></div><div class="leg"><span>Peajes</span><span>'+rd(C.toll)+'</span></div>'+
