@@ -558,7 +558,7 @@ items:[
 {id:9,name:"Ahorro mínimo diario",amt:100,freq:"d",total:0,prio:3,sv:1}],
 split:[{k:"res",n:"Fondo para días malos (hasta su meta)",p:12.5},{k:"extra",n:"Abono extra a deudas (tarjeta primero)",p:42.5},{k:"ahorro",n:"Ahorro",p:15},{k:"super",n:"Supermercado de la casa",p:20},{k:"pers",n:"Personal / ocio",p:10}],
 logs:[]}}
-var HNAV=false,SCHEMA=6,_sm=null,_nosnap=false,PAGEV='mf-v43';
+var HNAV=false,SCHEMA=6,_sm=null,_nosnap=false,PAGEV='mf-v44';
 var S;
 try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 function upgrade(){if(S&&S.items&&(S.v||0)<SCHEMA){try{localStorage.setItem(KEY+'-bak-'+(S.v||0)+'-'+Date.now(),JSON.stringify(S));pruneBak()}catch(e){}}
@@ -2525,7 +2525,7 @@ function zIdxAdj(z,k){var H=z.H,h=H.Z[k]||{},A=H.A||{},o=z.Z[k],s=0,why=[];
 // Dentro de la app Android (window.MFAndroid) la página puede: grabar el GPS en segundo plano durante la jornada,
 // usar el lector de ofertas de Uber (accesibilidad) y guardar archivos en Descargas. En el navegador nada de esto existe
 // y la página funciona igual que siempre.
-var AND=window.MFAndroid||null,ANDCFG={on:true,tts:false,drive:true,lvl:'n',mk:'',mh:'',cpk:'',pmx:'',mnt:'',tton:true,tt:null,cap:true,shift:'off',kw_on:'',kw_off:'',kw_acc:'',kw_end:'',pl:{u:1,d:0,i:0},tb:false,tbMax:20,tbH:['06:30','09:30','16:30','19:30'],tbDays:[1,2,3,4,5],pm:false,pmKm:2,pmMin:5,pmPeak:false,ft:true,ftH:4,ftDay:10,ftBrk:15,live:null,liveN:''},ANDLAST='';
+var AND=window.MFAndroid||null,ANDCFG={on:true,tts:false,drive:true,lvl:'n',mk:'',mh:'',cpk:'',pmx:'',mnt:'',tton:true,tt:null,cap:true,shift:'off',kw_on:'',kw_off:'',kw_acc:'',kw_end:'',pl:{u:1,d:0,i:0},tb:false,tbMax:20,tbH:['06:30','09:30','16:30','19:30'],tbDays:[1,2,3,4,5],pm:false,pmKm:2,pmMin:5,pmPeak:false,ft:true,ftH:4,ftDay:10,ftBrk:15,live:null,liveN:'',liveDay:true},ANDLAST='';
 try{var ac0=JSON.parse(localStorage.getItem('fin-and')||'{}');for(var ak0 in ac0)if(ak0 in ANDCFG)ANDCFG[ak0]=ac0[ak0]}catch(e){}ANDCFG.shift='off';
 function andJ(f){try{return JSON.parse(AND[f]()||'null')}catch(e){return null}}
 // Límites del lector. Una oferta no incluye la espera ni los km vacíos que vienen después, así que para mantener
@@ -3611,7 +3611,8 @@ function liveSum(){var L=ANDCFG.live;return !L||!L.id?'Apagado':L.on?'Encendido 
 function liveHtml(){var L=ANDCFG.live,u=liveLink(),I=AND?andJ('info')||{}:{};
  var h='<p class="sub" style="margin:0 0 8px">Mándale un enlace a alguien de confianza: mientras tengas la jornada en curso verá en un mapa por dónde vas y desde cuándo, sin que tengas que escribirle. En pausa dice «en pausa»; al terminar la jornada deja de mostrar dónde estás.</p>';
  if(!fbAuth())return h+'<div class="warn">Necesitas entrar a tu cuenta de la nube (Más → Respaldo → Cuenta y nube) para crear el enlace.</div>';
- h+='<label>Nombre que verá<input value="'+esc(ANDCFG.liveN||'')+'" placeholder="Ej.: Yoyo" maxlength="40" onchange="ANDCFG.liveN=this.value.trim();andKeep();if(ANDCFG.live&&ANDCFG.live.id)liveOn(false)"></label>';
+ h+='<label>Nombre que verá<input value="'+esc(ANDCFG.liveN||'')+'" placeholder="Ej.: Yoyo" maxlength="40" onchange="ANDCFG.liveN=this.value.trim();andKeep();if(ANDCFG.live&&ANDCFG.live.id)liveOn(false)"></label>'+
+  '<label class="cli-ck" style="margin-top:8px"><input type="checkbox"'+(ANDCFG.liveDay!==false?' checked':'')+' onchange="liveDay(this.checked)"> Mostrar también los viajes, las horas conectado y lo ganado hoy (bruto y neto)</label><small>Salen de los viajes de Uber que la app capta. Neto = bruto menos los km del GPS por tu costo del carro por km.</small>';
  if(!L||!L.id)h+='<button class="pri" style="margin-top:8px" onclick="liveOn(false,this)">Crear mi enlace</button>';
  else{h+='<div class="arow" style="margin-top:8px;word-break:break-all"><small>Tu enlace</small><div><b>'+esc(u)+'</b></div></div>'+
   '<div class="row" style="margin-top:8px"><button class="pri" onclick="liveShare()">Mandarlo por WhatsApp</button><button onclick="liveCopy(this)">Copiar</button><button onclick="window.open(\''+u+'\',\'_blank\')">Verlo</button></div>'+
@@ -3622,9 +3623,10 @@ function liveHtml(){var L=ANDCFG.live,u=liveLink(),I=AND?andJ('info')||{}:{};
  return h+(LIVEMSG?'<div class="warn" style="margin-top:8px">'+LIVEMSG+'</div>':'')}
 async function liveOn(nuevo,b){if(b)b.disabled=true;LIVEMSG='';
  try{var j=await fbCall('POST','/live',{name:ANDCFG.liveN||'',nuevo:!!nuevo});ANDCFG.live={id:j.id,on:true};andKeep();
-  if(AND&&AND.setLive)AND.setLive(JSON.stringify({on:true,url:fbCfg().url,id:j.id,key:j.key}))}
+  if(AND&&AND.setLive)AND.setLive(JSON.stringify({on:true,url:fbCfg().url,id:j.id,key:j.key,day:ANDCFG.liveDay!==false}))}
  catch(e){LIVEMSG='No se pudo: '+esc((typeof FBERR!='undefined'&&FBERR[e.message])||e.message)}
  renderAndCf()}
+function liveDay(v){ANDCFG.liveDay=v;andKeep();if(AND&&AND.setLive)AND.setLive(JSON.stringify({on:!!(ANDCFG.live&&ANDCFG.live.on),day:v}))}
 function liveSet(on){if(!ANDCFG.live)return;ANDCFG.live.on=on;andKeep();if(AND&&AND.setLive)AND.setLive(JSON.stringify({on:on}));renderAndCf()}
 async function liveDel(){try{await fbCall('DELETE','/live')}catch(e){}if(AND&&AND.setLive)AND.setLive('{"on":false}');ANDCFG.live=null;andKeep();renderAndCf()}
 function liveShare(){var t='Este es mi enlace para que veas por dónde voy mientras trabajo (se actualiza solo): '+liveLink();
