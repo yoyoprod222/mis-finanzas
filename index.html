@@ -574,6 +574,12 @@ button.tile:hover{background:var(--vidrio)!important;filter:brightness(1.06)}
  #nav button.on{background:var(--menta)!important;color:var(--asfalto);padding:0 16px 0 13px}
  #nav button.on .nl{display:inline}
  #nav button.on::after{display:none}}
+/* Barra de 8: iconos del mismo ancho; el activo se rellena en menta (los nombres los lee el lector de pantalla). */
+@media(max-width:979px){
+ #nav .in{max-width:480px;padding:6px;gap:2px}
+ #nav button{flex:1 1 0;min-width:0;padding:0;justify-content:center}
+ #nav button.on{padding:0}
+ #nav button.on .nl,#nav button .nl{display:none}}
 </style>
 </head>
 <body>
@@ -697,7 +703,7 @@ items:[
 {id:9,name:"Ahorro mínimo diario",amt:100,freq:"d",total:0,prio:3,sv:1}],
 split:[{k:"res",n:"Fondo para días malos (hasta su meta)",p:12.5},{k:"extra",n:"Abono extra a deudas (tarjeta primero)",p:42.5},{k:"ahorro",n:"Ahorro",p:15},{k:"super",n:"Supermercado de la casa",p:20},{k:"pers",n:"Personal / ocio",p:10}],
 logs:[]}}
-var HNAV=false,SCHEMA=6,_sm=null,_nosnap=false,PAGEV='mf-v61';
+var HNAV=false,SCHEMA=6,_sm=null,_nosnap=false,PAGEV='mf-v63';
 var S;
 try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 function upgrade(){if(S&&S.items&&(S.v||0)<SCHEMA){try{localStorage.setItem(KEY+'-bak-'+(S.v||0)+'-'+Date.now(),JSON.stringify(S));pruneBak()}catch(e){}}
@@ -1808,8 +1814,8 @@ var GRPS={din:DING};
 function subOf(t){var s=SUB[t];return SUBS[t].some(function(x){return x[0]==s})?s:SUBS[t][0][0]}
 // Barra de abajo con 6 pestañas (Hoy, Registrar, Viajes, Clientes, Dinero, Más) de al menos 44 px. Las secciones internas
 // (TABS/SUBS) no cambian: "Dinero" agrupa Cuentas, Deudas y Hogar, y "Más" abre un menú con la IA y Análisis. Así todos los setTab('ia',…) y enlaces existentes siguen funcionando.
-var NAVT=[['inicio',TABS[0][1],'Hoy',['inicio']],['and','<svg viewBox="0 0 24 24"><path d="M5 16.5V12l1.8-4.6A2 2 0 0 1 8.7 6h6.6a2 2 0 0 1 1.9 1.4L19 12v4.5"/><path d="M3.5 12h17v4.5h-17z"/><circle cx="7.5" cy="16.5" r="1.6"/><circle cx="16.5" cy="16.5" r="1.6"/></svg>','Viajes',['and']],['reg',TABS[2][1],'Registrar',['reg']],['din',TABS[3][1],'Dinero',['cta','deu','hog']],
- ['mas','<svg viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18.5" cy="12" r="1.6"/></svg>','Más',['mas','ana','ia','cli','cfg']]];
+var NAVT=[['inicio',TABS[0][1],'Hoy',['inicio']],['and','<svg viewBox="0 0 24 24"><path d="M5 16.5V12l1.8-4.6A2 2 0 0 1 8.7 6h6.6a2 2 0 0 1 1.9 1.4L19 12v4.5"/><path d="M3.5 12h17v4.5h-17z"/><circle cx="7.5" cy="16.5" r="1.6"/><circle cx="16.5" cy="16.5" r="1.6"/></svg>','Viajes',['and']],['reg',TABS[2][1],'Registrar',['reg']],['cli','<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><circle cx="17" cy="9.2" r="2.6"/><path d="M15.6 14.3A4.6 4.6 0 0 1 21 18.8"/></svg>','Clientes',['cli']],['ia',TABS[1][1],'Inteligencia',['ia']],['din',TABS[3][1],'Dinero',['cta','deu','hog']],
+ ['mas','<svg viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18.5" cy="12" r="1.6"/></svg>','Más',['mas','ana']],['cfg','<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>','Ajustes',['cfg']]];
 function navOf(t){return NAVT.filter(function(x){return x[3].indexOf(t)>=0})[0]||NAVT[0]}
 function navGo(k){var d,v;try{d=localStorage.getItem('fin-din');v=localStorage.getItem('fin-via')}catch(e){}if(k=='ia')setTab('ia','cop');else if(k=='mas')setTab('mas','menu');else if(k=='and')setTab('and');else if(k=='din')setTab(['cta','deu','hog'].indexOf(TAB)>=0?TAB:(d||'cta'));else setTab(k)}
 function vencN(){var n=0;try{sorted().forEach(function(i){if(!i.sv&&i.freq!='d'&&oblStatus(i).st=='Vencida')n++})}catch(e){}return n}
@@ -1835,7 +1841,7 @@ function setSub(s){SUB[TAB]=s;setTab(TAB)}
 // Menú "Más": todas las secciones de IA y Análisis en una cuadrícula, con una línea que dice para qué sirve cada una.
 var MASD={amap:'El recorrido del GPS en el mapa',aest:'Encender o apagar el lector y el GPS',aof:'Ofertas que evaluó el lector',ainc:'Retos de Uber: cuánto te falta',azon:'Sectores donde ir con cuidado',acfg:'Tus límites y el diagnóstico',zona:'Dónde y si conviene trabajar hoy',cop:'Pregúntale a la IA sobre tu dinero',diag:'Tu salud financiera de 0 a 100',wi:'Qué pasa si cambias algo',af:'Antes de comprar algo',st:'Registrar con texto o voz',fc:'Cómo vas a cerrar el mes',au:'Qué pasó en un mes',ub:'Rendimiento por hora y km',ob:'Tus metas y su avance',ad:'Revisa errores y duplicados',me:'Lo que la IA recuerda de ti',cfg:'Clave y límites de la IA',tend:'Cómo te ha ido por semana y mes',horas:'Cuándo y dónde te pagan mejor',pdf:'Reporte semanal para guardar',resp:'Copia de seguridad e importar',mas:'Instalar la app y avisos',ayuda:'Cómo funciona cada opción y cada cálculo',clis:'Agenda, pagos y avisos',gen:'País, claves, cuenta y respaldo'};
 function renderMas(){var el=$('masm');if(!el)return;var b=function(t,x){return '<button data-t="'+t+'" data-s="'+x[0]+'" onclick="setTab(this.dataset.t,this.dataset.s)"><span>'+x[1]+'</span><small>'+(MASD[x[0]]||'')+'</small></button>'},lb={};SUBS.ia.forEach(function(x){lb[x[0]]=x[1]});
- el.innerHTML='<h2>Más</h2><div class="mgrid">'+b('ia',['cop','Inteligencia'])+b('cli',['clis','Clientes'])+b('cfg',['gen','Ajustes'])+'</div><p class="mhead">Análisis</p><div class="mgrid">'+SUBS.ana.map(function(x){return b('ana',x)}).join('')+'</div>'+
+ el.innerHTML='<h2>Más</h2><p class="mhead">Análisis</p><div class="mgrid">'+SUBS.ana.map(function(x){return b('ana',x)}).join('')+'</div>'+
   '<p class="mhead">Ayuda</p><div class="mgrid">'+b('mas',['ayuda','Ayuda'])+'</div>'}
 // Ayuda: aquí va toda la explicación de cada opción y cada cálculo; las pantallas quedan sin textos largos.
 var HELP=[
@@ -3092,6 +3098,11 @@ function dzMig(){if((S.dzv||0)>=2)return;var have={};S.dz.forEach(function(x){ha
 // Calles de OpenStreetMap (se descargan solo las imágenes del mapa de la zona que miras; el recorrido no sale del teléfono).
 // «En vivo» muestra lo que el GPS lleva grabado y se actualiza cada 20 s; los días guardados usan el trazado del registro.
 var AMAP={sel:'',map:null,lay:null,tm:0,ll:0,key:''};
+// Capa de mapa: Mapbox (estilo de navegación, de noche o de día según el tema) si hay token; si no, OpenStreetMap.
+function mapTiles(m){var dark=document.documentElement.dataset.theme=='dark'||(!document.documentElement.dataset.theme&&matchMedia('(prefers-color-scheme: dark)').matches);
+ if(ZCFG.mb)L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/navigation-'+(dark?'night':'day')+'-v1/tiles/256/{z}/{x}/{y}@2x?access_token='+encodeURIComponent(ZCFG.mb),{maxZoom:19,attribution:'© Mapbox © OpenStreetMap'}).addTo(m);
+ else L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(m)}
+function mapCredit(){return ZCFG.mb?'Mapa © Mapbox © OpenStreetMap':'Mapa © colaboradores de OpenStreetMap'}
 // No se llama «leaflet»: la librería, al cargarse, crea window.leaflet y pisaría la función.
 function lfLoad(cb){if(window.L&&L.map)return cb(true);if(AMAP.ll){setTimeout(function(){lfLoad(cb)},300);return}AMAP.ll=1;
  var c=document.createElement('link');c.rel='stylesheet';c.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';document.head.appendChild(c);
@@ -3159,10 +3170,10 @@ function renderAndMap(){var el=$('and_map');if(!el)return;clearInterval(AMAP.tm)
  if(AMAP.map){AMAP.map.remove();AMAP.map=null}
  el.innerHTML='<h2>Mapa del recorrido</h2><label>Recorrido<select onchange="AMAP.sel=this.value;AMAP.key=\'\';renderAndMap()">'+opts.map(function(o){return '<option value="'+o[0]+'"'+(o[0]==AMAP.sel?' selected':'')+'>'+esc(o[1])+'</option>'}).join('')+'</select></label>'+
   '<div id="amapv" class="amapv" role="img" aria-label="Mapa del recorrido"></div>'+'<div id="amaps">'+stats+'</div>'+(g?gSum(g,true,!!stats):'<p><small>'+(AND?(live?'El GPS todavía no tiene suficientes puntos para el trazado.':'Sin recorrido todavía: empieza la jornada o enciende el GPS en Viajes → Estado.'):'Los recorridos se graban con la app Android.')+'</small></p>')+
-  '<p><small>Mapa © colaboradores de OpenStreetMap</small></p>';
+  '<p><small>'+mapCredit()+'</small></p>';
  lfLoad(function(ok){var box=$('amapv');if(!box)return;if(!ok){if(g)box.outerHTML=gMap(g);else box.innerHTML='<p style="padding:16px"><small>No se pudo cargar el mapa (sin internet).</small></p>';return}
   var cs=getComputedStyle(document.documentElement),ac=cs.getPropertyValue('--ac').trim()||'#137a43',wr=cs.getPropertyValue('--wr').trim()||'#8a5a00',tx=cs.getPropertyValue('--tx').trim()||'#111';
-  var m=AMAP.map=L.map(box,{zoomControl:true,attributionControl:false});L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(m);
+  var m=AMAP.map=L.map(box,{zoomControl:true,attributionControl:false});mapTiles(m);
   // Sin recorrido: Santo Domingo y, si el teléfono da la ubicación, dónde estás.
   if(!g){var hz=null;try{hz=AND&&AND.here?JSON.parse(AND.here()||'null'):null}catch(e){}if(hz){m.setView(hz,14);L.circleMarker(hz,{radius:8,color:'#fff',weight:3,fillColor:tx,fillOpacity:1}).addTo(m).bindPopup('Aquí estás');setTimeout(function(){m.invalidateSize()},150);return}m.setView(SDC,12);try{navigator.geolocation.getCurrentPosition(function(p){if(AMAP.map!==m)return;var ll=[p.coords.latitude,p.coords.longitude];m.setView(ll,14);L.circleMarker(ll,{radius:8,color:'#fff',weight:3,fillColor:tx,fillOpacity:1}).addTo(m).bindPopup('Aquí estás')},function(){},{timeout:8000,maximumAge:120000})}catch(e){}setTimeout(function(){m.invalidateSize()},150);return}
   var pts=g.pts.map(function(p){return[p[0],p[1]]}),line=L.polyline(pts,{color:ac,weight:5,opacity:.9}).addTo(m);
@@ -3745,10 +3756,7 @@ async function cliRouteFull(a,b,ts){var pt=function(x){return{location:{latLng:{
 var CLIMAP=null;
 function cliRouteMap(o,ds,geo){var box=$('clVmap');if(!box)return;if(CLIMAP){CLIMAP.remove();CLIMAP=null}
  lfLoad(function(ok){if(!ok||!$('clVmap')){box.innerHTML='<small>No pude cargar el mapa.</small>';return}
-  var dark=document.documentElement.dataset.theme=='dark'||(!document.documentElement.dataset.theme&&matchMedia('(prefers-color-scheme: dark)').matches);
-  CLIMAP=L.map(box,{zoomControl:false,attributionControl:true,scrollWheelZoom:false});
-  if(ZCFG.mb)L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/navigation-'+(dark?'night':'day')+'-v1/tiles/256/{z}/{x}/{y}@2x?access_token='+encodeURIComponent(ZCFG.mb),{maxZoom:19,attribution:'© Mapbox © OpenStreetMap'}).addTo(CLIMAP);
-  else L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(CLIMAP);
+  CLIMAP=L.map(box,{zoomControl:false,attributionControl:true,scrollWheelZoom:false});mapTiles(CLIMAP);
   L.polyline(geo,{color:'#ffffff',weight:9,opacity:.9}).addTo(CLIMAP);var ln=L.polyline(geo,{color:'#1e7a52',weight:5}).addTo(CLIMAP);
   var pin=function(p,c,t){return L.circleMarker([p.la,p.lo],{radius:8,weight:3,color:'#fff',fillColor:c,fillOpacity:1}).addTo(CLIMAP).bindTooltip(t,{direction:'top'})};
   pin(o,'#1e7a52','Recogida');pin(ds,'#e07a28','Destino');CLIMAP.fitBounds(ln.getBounds(),{padding:[24,24]});setTimeout(function(){if(CLIMAP)CLIMAP.invalidateSize()},150)})}
