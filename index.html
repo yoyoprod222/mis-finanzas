@@ -426,6 +426,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px color-mix(in srgb,v
 .hmg{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px}.hmg button{min-height:36px;padding:4px 12px;font-size:13px}
 @media(min-width:621px){.rtb{display:none}}
 .tblw{overflow-x:auto;margin:8px 0}table.hz{width:100%;border-collapse:separate;border-spacing:3px;font-size:13px}table.hz th,table.hz td{padding:6px 4px;text-align:center;border-radius:8px;vertical-align:middle}table.hz th[scope=row]{text-align:left;white-space:nowrap;font-weight:600}table.hz td small{color:var(--mu)}
+.cli-map{height:240px;border-radius:14px;overflow:hidden;margin-top:10px;border:1px solid var(--bd)}a.btnlnk{flex:1;display:flex;align-items:center;justify-content:center;min-height:44px;border:1px solid var(--bd);border-radius:12px;color:var(--tx);text-decoration:none;font-weight:600;font-size:14px;background:var(--card)}
 </style>
 </head>
 <body>
@@ -558,7 +559,7 @@ items:[
 {id:9,name:"Ahorro mínimo diario",amt:100,freq:"d",total:0,prio:3,sv:1}],
 split:[{k:"res",n:"Fondo para días malos (hasta su meta)",p:12.5},{k:"extra",n:"Abono extra a deudas (tarjeta primero)",p:42.5},{k:"ahorro",n:"Ahorro",p:15},{k:"super",n:"Supermercado de la casa",p:20},{k:"pers",n:"Personal / ocio",p:10}],
 logs:[]}}
-var HNAV=false,SCHEMA=6,_sm=null,_nosnap=false,PAGEV='mf-v48';
+var HNAV=false,SCHEMA=6,_sm=null,_nosnap=false,PAGEV='mf-v49';
 var S;
 try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 function upgrade(){if(S&&S.items&&(S.v||0)<SCHEMA){try{localStorage.setItem(KEY+'-bak-'+(S.v||0)+'-'+Date.now(),JSON.stringify(S));pruneBak()}catch(e){}}
@@ -1049,6 +1050,7 @@ function runTests(){var T=[],saved=S,near=function(a,b){return Math.abs(a-b)<0.0
  t('Agenda: «Viaje terminado» aparece aunque el viaje no tenga precio y luego da Cobrado y Recibo con el monto escrito',function(){var ts=Date.now()-3600000,k='5-x';return run(mk([],[],{cli:{c:[{id:1,n:'Ana',tel:'8095551234'}],v:[],p:[],sent:{},done:{}}}),function(){
    var o={k:k,t:{m:0},c:{id:1,n:'Ana',tel:'8095551234'},ds:today(),ts:ts},a=cliOccBtns(o,true,false);S.cli.done[k]={t:Date.now(),m:450};var b=cliOccBtns(o,true,false);
    return /Viaje terminado/.test(a)&&/No se hizo/.test(a)&&!/Recibo PDF/.test(a)&&cliAmt(o)==450&&/Recibo PDF/.test(b)&&/Cobrado/.test(b)&&!/No se hizo/.test(b)&&!/Viaje terminado</.test(b)})});
+ t('Agenda: decodifica la ruta de Google (polyline) para el mapa del precio',function(){var P=cliPoly('_p~iF~ps|U_ulLnnqC_mqNvxq`@');return P.length==3&&near(P[0][0],38.5)&&near(P[0][1],-120.2)&&near(P[1][0],40.7)&&near(P[1][1],-120.95)&&near(P[2][0],43.252)&&near(P[2][1],-126.453)});
  t('Recibo: arma el PDF del viaje del cliente',function(){if(!window.jspdf)return false;var b=cliRcPdf({c:{n:'Ana Pérez'},ds:'2026-03-05',ts:new Date(2026,2,5,8,0).getTime(),t:{m:450,o:{t:'Naco'},ds:{t:'Gazcue'}}},true,7);return /^JVBER/.test(b)&&b.length>1000});
  return T}
 function renderVT(){var T=runTests(),ok=T.filter(function(q){return q[1]}).length;$('vt').innerHTML='<h2>Verificaci\u00f3n del motor financiero</h2><p class="sub">Estas pruebas se ejecutan al abrir la p\u00e1gina y comprueban que el reparto, las prioridades, el fondo y los pendientes calculen bien.</p><div class="warn" style="'+(ok==T.length?'background:var(--ac2);color:var(--ac)':'')+'">'+ok+' de '+T.length+' pruebas correctas.</div>'+T.map(function(q){return '<div class="leg"><span>'+q[0]+'</span><span>'+(q[1]?'Correcta':'FALLA')+'</span></div>'}).join('')}
@@ -3343,11 +3345,37 @@ function cliRates(){var t0=new Date(today()+'T00:00'),K={g:0,k:0},H={g:0,h:0};S.
  var n=andNums(),cpk=n.cpk||0;return {gpk:K.k>=100?K.g/K.k:n.kmGood+cpk,gph:H.h>=15?H.g/H.h:n.hrGood+cpk*18,cpk:cpk,hist:K.k>=100&&H.h>=15}}
 // Uber paga por distancia y por tiempo: se toma lo mayor (en tranque cuenta el tiempo). pas = lo que paga el pasajero = drv ÷ (1 − comisión).
 function cliPriceOf(km,min,r,com){var drv=Math.max(r.gpk*km,r.gph*min/60),pas=drv/(1-com),pr=Math.ceil(pas/10)*10,cost=r.cpk*km;return {drv:drv,pas:pas,pr:pr,cost:cost,net:pr-cost}}
+// Ruta completa para el precio sugerido y su mapa: Google Routes (tránsito a la hora del viaje), Mapbox (tránsito de
+// ahora), OSRM (gratis, sin tránsito: el tiempo se estima por la hora pico) o, si nada responde, la línea recta.
+function cliPoly(e){var P=[],i=0,la=0,lo=0;while(i<e.length){for(var k=0;k<2;k++){var b,sh=0,r=0;do{b=e.charCodeAt(i++)-63;r|=(b&31)<<sh;sh+=5}while(b>=32);var d=r&1?~(r>>1):r>>1;if(k)lo+=d;else la+=d}P.push([la/1e5,lo/1e5])}return P}
+async function cliRouteFull(a,b,ts){var pt=function(x){return{location:{latLng:{latitude:x.la,longitude:x.lo}}}};
+ if(ZCFG.gkey){try{var body={origin:pt(a),destination:pt(b),travelMode:'DRIVE',routingPreference:'TRAFFIC_AWARE'};if(ts>Date.now()+120000)body.departureTime=new Date(ts).toISOString();
+  var r=await fetch('https://routes.googleapis.com/directions/v2:computeRoutes',{method:'POST',headers:{'Content-Type':'application/json','X-Goog-Api-Key':ZCFG.gkey,'X-Goog-FieldMask':'routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline'},body:JSON.stringify(body)}),j=await r.json(),x=j.routes&&j.routes[0];
+  if(r.ok&&x&&x.polyline)return{s:parseFloat(x.duration),km:x.distanceMeters/1000,src:'Google, tránsito '+(body.departureTime?'a esa hora':'de ahora'),geo:cliPoly(x.polyline.encodedPolyline)}}catch(e){}}
+ if(ZCFG.mb){try{var r1=await fetch('https://api.mapbox.com/directions/v5/mapbox/driving-traffic/'+a.lo+','+a.la+';'+b.lo+','+b.la+'?overview=full&geometries=geojson&access_token='+encodeURIComponent(ZCFG.mb)),j1=await r1.json(),y=j1.routes&&j1.routes[0];
+  if(r1.ok&&y)return{s:y.duration,km:y.distance/1000,src:'tráfico en vivo',geo:y.geometry.coordinates.map(function(c){return[c[1],c[0]]})}}catch(e){}}
+ try{var r2=await fetch('https://router.project-osrm.org/route/v1/driving/'+a.lo+','+a.la+';'+b.lo+','+b.la+'?overview=full&geometries=geojson'),j2=await r2.json(),z=j2.routes&&j2.routes[0];
+  if(r2.ok&&z){var km=z.distance/1000;return{s:km/(cliRush(ts)?17:27)*3600,km:km,src:'ruta real, tiempo estimado',geo:z.geometry.coordinates.map(function(c){return[c[1],c[0]]})}}}catch(e){}
+ var e=await cliEta(a,b,ts);e.geo=[[a.la,a.lo],[b.la,b.lo]];return e}
+// Mapa de la ruta debajo del precio: con tu token de Mapbox, sus calles de navegación (con el tránsito); si no, OpenStreetMap.
+var CLIMAP=null;
+function cliRouteMap(o,ds,geo){var box=$('clVmap');if(!box)return;if(CLIMAP){CLIMAP.remove();CLIMAP=null}
+ lfLoad(function(ok){if(!ok||!$('clVmap')){box.innerHTML='<small>No pude cargar el mapa.</small>';return}
+  var dark=document.documentElement.dataset.theme=='dark'||(!document.documentElement.dataset.theme&&matchMedia('(prefers-color-scheme: dark)').matches);
+  CLIMAP=L.map(box,{zoomControl:false,attributionControl:true,scrollWheelZoom:false});
+  if(ZCFG.mb)L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/navigation-'+(dark?'night':'day')+'-v1/tiles/256/{z}/{x}/{y}@2x?access_token='+encodeURIComponent(ZCFG.mb),{maxZoom:19,attribution:'© Mapbox © OpenStreetMap'}).addTo(CLIMAP);
+  else L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(CLIMAP);
+  L.polyline(geo,{color:'#ffffff',weight:9,opacity:.9}).addTo(CLIMAP);var ln=L.polyline(geo,{color:'#1e7a52',weight:5}).addTo(CLIMAP);
+  var pin=function(p,c,t){return L.circleMarker([p.la,p.lo],{radius:8,weight:3,color:'#fff',fillColor:c,fillOpacity:1}).addTo(CLIMAP).bindTooltip(t,{direction:'top'})};
+  pin(o,'#1e7a52','Recogida');pin(ds,'#e07a28','Destino');CLIMAP.fitBounds(ln.getBounds(),{padding:[24,24]});setTimeout(function(){if(CLIMAP)CLIMAP.invalidateSize()},150)})}
 async function cliPriceUI(b){var out=$('clVpr');b.disabled=true;out.innerHTML='<small>Calculando la ruta…</small>';
  try{var o=await cliPoint('clVo'),ds=await cliPoint('clVd');if(o&&o.la!=null)CLIGEO.clVo=o;if(ds&&ds.la!=null)CLIGEO.clVd=ds;
   if(!o||o.la==null||!ds||ds.la==null){out.innerHTML='<small>Busca y elige la recogida y el destino para calcular el precio.</small>';return}
-  var ts=new Date(($('clVf').value||today())+'T'+($('clVh').value||'08:00')).getTime(),e=await cliEta(o,ds,ts),com=cliEns().com/100,r=cliRates(),q=cliPriceOf(e.km,e.s/60,r,com);
-  out.innerHTML='<div class="warn" style="background:var(--ac2);color:var(--tx)"><b>Precio sugerido: '+rd(q.pr)+'</b><br><small>'+e.km.toFixed(1)+' km, unos '+Math.round(e.s/60)+' min ('+e.src+'). Por este viaje Uber te pagaría unos '+rd(q.drv)+' y al pasajero le cobraría unos '+rd(q.pas)+', porque se queda el '+Math.round(com*100)+'%. Combustible y mantenimiento: '+rd(q.cost)+'; te quedan '+rd(q.net)+'.'+(r.hist?'':' Tienes poco historial: lo calculé con tus metas del asistente.')+'</small><div class="row"><button type="button" onclick="$(\'clVm\').value='+q.pr+'">Usar '+rd(q.pr)+'</button></div></div>'}
+  var ts=new Date(($('clVf').value||today())+'T'+($('clVh').value||'08:00')).getTime(),e=await cliRouteFull(o,ds,ts),com=cliEns().com/100,r=cliRates(),q=cliPriceOf(e.km,e.s/60,r,com);
+  out.innerHTML='<div class="warn" style="background:var(--ac2);color:var(--tx)"><b>Precio sugerido: '+rd(q.pr)+'</b><br><small>'+e.km.toFixed(1)+' km, unos '+Math.round(e.s/60)+' min ('+e.src+'). Por este viaje Uber te pagaría unos '+rd(q.drv)+' y al pasajero le cobraría unos '+rd(q.pas)+', porque se queda el '+Math.round(com*100)+'%. Combustible y mantenimiento: '+rd(q.cost)+'; te quedan '+rd(q.net)+'.'+(r.hist?'':' Tienes poco historial: lo calculé con tus metas del asistente.')+'</small><div class="row"><button type="button" onclick="$(\'clVm\').value='+q.pr+'">Usar '+rd(q.pr)+'</button></div></div>'+
+   '<div id="clVmap" class="cli-map" role="img" aria-label="Mapa de la ruta de '+esc(cliShort(o.t))+' a '+esc(cliShort(ds.t))+'"></div>'+
+   '<div class="row" style="margin-top:6px"><a class="btnlnk" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&origin='+o.la+','+o.lo+'&destination='+ds.la+','+ds.lo+'&travelmode=driving">Abrir en Google Maps</a><a class="btnlnk" target="_blank" rel="noopener" href="https://waze.com/ul?ll='+ds.la+','+ds.lo+'&navigate=yes">Waze al destino</a></div>';
+  cliRouteMap(o,ds,e.geo)}
  catch(x){out.innerHTML='<small>No pude calcular la ruta.</small>'}finally{b.disabled=false}}
 // Estado de cuenta por WhatsApp (desde tu número: no hace falta plantilla).
 function cliStmt(id){var c=cliById(id);if(!c)return;var o=cliOwed(id);cliOpenWa(c.tel,'Hola '+cliFirst(c.n)+', este es tu estado de cuenta de los viajes: '+o.n+' viajes realizados por '+rd(o.due)+'. Pagado: '+rd(o.paid)+'. '+(o.bal>0?'Pendiente: '+rd(o.bal)+'.':o.bal<0?'Tienes a favor '+rd(-o.bal)+'.':'Estás al día.')+' ¡Gracias por tu confianza!')}
