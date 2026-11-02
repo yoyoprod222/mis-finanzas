@@ -559,7 +559,7 @@ items:[
 {id:9,name:"Ahorro mínimo diario",amt:100,freq:"d",total:0,prio:3,sv:1}],
 split:[{k:"res",n:"Fondo para días malos (hasta su meta)",p:12.5},{k:"extra",n:"Abono extra a deudas (tarjeta primero)",p:42.5},{k:"ahorro",n:"Ahorro",p:15},{k:"super",n:"Supermercado de la casa",p:20},{k:"pers",n:"Personal / ocio",p:10}],
 logs:[]}}
-var HNAV=false,SCHEMA=6,_sm=null,_nosnap=false,PAGEV='mf-v49';
+var HNAV=false,SCHEMA=6,_sm=null,_nosnap=false,PAGEV='mf-v50';
 var S;
 try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 function upgrade(){if(S&&S.items&&(S.v||0)<SCHEMA){try{localStorage.setItem(KEY+'-bak-'+(S.v||0)+'-'+Date.now(),JSON.stringify(S));pruneBak()}catch(e){}}
@@ -954,7 +954,11 @@ function runTests(){var T=[],saved=S,near=function(a,b){return Math.abs(a-b)<0.0
   return cliFillT(CLIDEF.s,true,v,d)=='Buenos días Ana, tu conductor ya va en camino. Llega a las 7:45 a. m. aproximadamente a Naco. ¡Nos vemos pronto!'
    &&cliSaludo(new Date('2026-10-05T14:00').getTime())=='Buenas tardes'&&cliSaludo(new Date('2026-10-05T21:00').getTime())=='Buenas noches'&&cliSaludo(new Date('2026-10-05T03:00').getTime())=='Buenas noches'
    &&cliFillT('Ya voy, {nombre}',true,v,d)=='Buenos días. Ya voy, Ana'&&cliFillT('Hola {nombre}, {saludo}',true,v,d)=='Hola Ana, Buenos días'&&cliFillT('Llego en {min} min',false,v,d)=='Llego en 12 min'&&cliFillT('Llego a las {hora}.',false,v,d)=='Llego a las 7:45 a. m.'});
- t('Precio: lo que paga el pasajero en Uber (a ti te llega el 75%)',function(){var q=cliPriceOf(10,20,{gpk:25,gph:600,cpk:8},0.25);return near(q.drv,250)&&Math.abs(q.pas-333.33)<0.01&&q.pr==340&&near(q.cost,80)});
+ t('Precio: como cobra Uber (base + minuto + km, con mínima) y a ti te llega el 75%',function(){var M=uberModel([]),q=cliPriceOf(10,20,{cpk:8},0.25,M),c=cliPriceOf(1.8,7,{cpk:8},0.25,M),l=uberRaw(20,40);
+  return near(q.pas,215)&&near(q.drv,161.25)&&q.pr==220&&near(q.cost,80)&&near(c.pas,85)&&c.pr==90&&near(l,35+160+32+160)});
+ t('Precio: se ajusta con cotizaciones reales de Uber y aparte con «Tarifas altas»',function(){var M=uberModel([{km:5,min:12,p:(35+50+48)*1.3},{km:8,min:18,p:(35+80+72)*1.3},{km:1.8,min:7,p:85*1.3*1.25,alta:1}]),q=cliPriceOf(5,12,{cpk:8},0.25,M);
+  var L=[[3,8],[6,14],[9,20],[12,25],[15,30],[4,15]].map(function(x){return{km:x[0],min:x[1],p:50+15*x[0]+5*x[1]}}),F=uberModel(L);
+  return near(M.f,1.3)&&near(M.fa,1.25)&&near(q.pas,133*1.3)&&q.alta==Math.ceil(133*1.3*1.25/10)*10&&F.fit&&Math.abs(F.T.b-50)<0.5&&Math.abs(F.T.km-15)<0.1&&Math.abs(F.T.mn-5)<0.1});
  var A=function(){return[it(1,'Auto',700,'d'),it(2,'Casa',3000,'m')]},E={reserve:0,arr:{},pd:{}};
  t('El dinero se conserva: neto + fondo usado = total repartido',function(){return[0,500,1000,2500,5000,12000].every(function(a){return run(mk(A(),[]),function(){var r=allocDay(a,{reserve:1000,arr:{1:100},pd:{}},false);return near(r.cats.reduce(function(q,c){return q+c.v},0),a+r.draw)})})});
  t('Las prioridades se pagan en orden y lo que falta queda pendiente',function(){return run(mk(A(),[]),function(){var r=allocDay(500,E,false);return near(r.cats[0].v,500)&&near(r.cats[1].v,0)&&near(r.st.arr[1],200)&&r.st.arr[2]>0})});
@@ -3343,8 +3347,28 @@ async function cliPoint(f){var v=$(f).value.trim();if(!v)return null;if(CLIGEO[f
 // Lo que Uber te paga sale de tus últimos 90 días (bruto por km pagado y por hora); sin historial, de tus metas del asistente.
 function cliRates(){var t0=new Date(today()+'T00:00'),K={g:0,k:0},H={g:0,h:0};S.logs.forEach(function(x){if(x.off||!(x.g>0))return;var age=(t0-new Date(x.d+'T00:00'))/864e5;if(age>90||age<0)return;var w=Math.pow(0.5,age/42),km=+x.kmp||+x.km||0;if(km>0){K.g+=x.g*w;K.k+=km*w}if(+x.h>0){H.g+=x.g*w;H.h+=x.h*w}});
  var n=andNums(),cpk=n.cpk||0;return {gpk:K.k>=100?K.g/K.k:n.kmGood+cpk,gph:H.h>=15?H.g/H.h:n.hrGood+cpk*18,cpk:cpk,hist:K.k>=100&&H.h>=15}}
-// Uber paga por distancia y por tiempo: se toma lo mayor (en tranque cuenta el tiempo). pas = lo que paga el pasajero = drv ÷ (1 − comisión).
-function cliPriceOf(km,min,r,com){var drv=Math.max(r.gpk*km,r.gph*min/60),pas=drv/(1-com),pr=Math.ceil(pas/10)*10,cost=r.cpk*km;return {drv:drv,pas:pas,pr:pr,cost:cost,net:pr-cost}}
+// Lo que Uber le cobra al pasajero en UberX (Santo Domingo): tarifa base + minuto + km (el km sale más barato desde el 16),
+// con una tarifa mínima. De fábrica, el esquema oficial de Uber de 2018 (RD$35 base, RD$4/min, RD$10/km, mínimo RD$85);
+// se ajusta solo con las cotizaciones reales que guardas (C.uq: {km, min, p = precio tachado, sin promociones; alta = «Tarifas altas»}).
+var UBX={b:35,km:10,km16:8,mn:4,min:85};
+function uberRaw(km,min,T){T=T||UBX;return Math.max(T.min,T.b+Math.min(km,16)*T.km+Math.max(0,km-16)*T.km16+min*T.mn)}
+function uberMed(a){a=a.slice().sort(function(x,y){return x-y});var n=a.length;return n?(n%2?a[(n-1)/2]:(a[n/2-1]+a[n/2])/2):1}
+// Con cotizaciones normales: todo se multiplica por la mediana de (precio real ÷ precio de fábrica). Con 5 o más viajes
+// que no caen en la mínima, se ajustan por separado la base, el km y el minuto (si salen números lógicos).
+// Las cotizaciones con «Tarifas altas» dan aparte cuánto sube en esos momentos.
+function uberModel(Q){Q=Q||cliEns().uq||[];var N=Q.filter(function(q){return !q.alta&&q.p>0&&q.km>0}),A=Q.filter(function(q){return q.alta&&q.p>0&&q.km>0});
+ var f=N.length?uberMed(N.map(function(q){return q.p/uberRaw(q.km,q.min)})):1,T={b:UBX.b*f,km:UBX.km*f,km16:UBX.km16*f,mn:UBX.mn*f,min:UBX.min*f},fit=0;
+ var L=N.filter(function(q){return UBX.b+q.km*UBX.km+q.min*UBX.mn>UBX.min*1.15});
+ if(L.length>=5){var S0=[[0,0,0],[0,0,0],[0,0,0]],y=[0,0,0];L.forEach(function(q){var x=[1,q.km,q.min];for(var i=0;i<3;i++){y[i]+=x[i]*q.p;for(var j=0;j<3;j++)S0[i][j]+=x[i]*x[j]}});
+  var det=function(m){return m[0][0]*(m[1][1]*m[2][2]-m[1][2]*m[2][1])-m[0][1]*(m[1][0]*m[2][2]-m[1][2]*m[2][0])+m[0][2]*(m[1][0]*m[2][1]-m[1][1]*m[2][0])},D=det(S0);
+  if(Math.abs(D)>1e-6){var sol=[0,1,2].map(function(c){var m=S0.map(function(r,i){return r.map(function(v,j){return j==c?y[i]:v})});return det(m)/D});
+   if(sol[0]>=0&&sol[1]>2&&sol[2]>=0.5){T={b:sol[0],km:sol[1],km16:sol[1]*0.8,mn:sol[2],min:T.min};fit=1}}}
+ var fa=A.length?uberMed(A.map(function(q){return q.p/uberRaw(q.km,q.min,T)})):0;
+ return{T:T,f:f,fit:fit,n:N.length,na:A.length,fa:fa>1.03?fa:0}}
+// pas = lo que pagaría el pasajero en Uber; drv = lo que a ti te llegaría (sin la comisión); pr = precio sugerido (redondeado
+// hacia arriba de 10 en 10); alta = el precio con «Tarifas altas», si ya lo conoce.
+function cliPriceOf(km,min,r,com,M){M=M||uberModel();var pas=uberRaw(km,min,M.T),drv=pas*(1-com),pr=Math.ceil(pas/10)*10,cost=r.cpk*km;
+ return {drv:drv,pas:pas,pr:pr,cost:cost,net:pr-cost,alta:M.fa?Math.ceil(pas*M.fa/10)*10:0}}
 // Ruta completa para el precio sugerido y su mapa: Google Routes (tránsito a la hora del viaje), Mapbox (tránsito de
 // ahora), OSRM (gratis, sin tránsito: el tiempo se estima por la hora pico) o, si nada responde, la línea recta.
 function cliPoly(e){var P=[],i=0,la=0,lo=0;while(i<e.length){for(var k=0;k<2;k++){var b,sh=0,r=0;do{b=e.charCodeAt(i++)-63;r|=(b&31)<<sh;sh+=5}while(b>=32);var d=r&1?~(r>>1):r>>1;if(k)lo+=d;else la+=d}P.push([la/1e5,lo/1e5])}return P}
@@ -3368,15 +3392,29 @@ function cliRouteMap(o,ds,geo){var box=$('clVmap');if(!box)return;if(CLIMAP){CLI
   L.polyline(geo,{color:'#ffffff',weight:9,opacity:.9}).addTo(CLIMAP);var ln=L.polyline(geo,{color:'#1e7a52',weight:5}).addTo(CLIMAP);
   var pin=function(p,c,t){return L.circleMarker([p.la,p.lo],{radius:8,weight:3,color:'#fff',fillColor:c,fillOpacity:1}).addTo(CLIMAP).bindTooltip(t,{direction:'top'})};
   pin(o,'#1e7a52','Recogida');pin(ds,'#e07a28','Destino');CLIMAP.fitBounds(ln.getBounds(),{padding:[24,24]});setTimeout(function(){if(CLIMAP)CLIMAP.invalidateSize()},150)})}
+var CLIPQ=null;
 async function cliPriceUI(b){var out=$('clVpr');b.disabled=true;out.innerHTML='<small>Calculando la ruta…</small>';
  try{var o=await cliPoint('clVo'),ds=await cliPoint('clVd');if(o&&o.la!=null)CLIGEO.clVo=o;if(ds&&ds.la!=null)CLIGEO.clVd=ds;
   if(!o||o.la==null||!ds||ds.la==null){out.innerHTML='<small>Busca y elige la recogida y el destino para calcular el precio.</small>';return}
-  var ts=new Date(($('clVf').value||today())+'T'+($('clVh').value||'08:00')).getTime(),e=await cliRouteFull(o,ds,ts),com=cliEns().com/100,r=cliRates(),q=cliPriceOf(e.km,e.s/60,r,com);
-  out.innerHTML='<div class="warn" style="background:var(--ac2);color:var(--tx)"><b>Precio sugerido: '+rd(q.pr)+'</b><br><small>'+e.km.toFixed(1)+' km, unos '+Math.round(e.s/60)+' min ('+e.src+'). Por este viaje Uber te pagaría unos '+rd(q.drv)+' y al pasajero le cobraría unos '+rd(q.pas)+', porque se queda el '+Math.round(com*100)+'%. Combustible y mantenimiento: '+rd(q.cost)+'; te quedan '+rd(q.net)+'.'+(r.hist?'':' Tienes poco historial: lo calculé con tus metas del asistente.')+'</small><div class="row"><button type="button" onclick="$(\'clVm\').value='+q.pr+'">Usar '+rd(q.pr)+'</button></div></div>'+
-   '<div id="clVmap" class="cli-map" role="img" aria-label="Mapa de la ruta de '+esc(cliShort(o.t))+' a '+esc(cliShort(ds.t))+'"></div>'+
-   '<div class="row" style="margin-top:6px"><a class="btnlnk" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&origin='+o.la+','+o.lo+'&destination='+ds.la+','+ds.lo+'&travelmode=driving">Abrir en Google Maps</a><a class="btnlnk" target="_blank" rel="noopener" href="https://waze.com/ul?ll='+ds.la+','+ds.lo+'&navigate=yes">Waze al destino</a></div>';
-  cliRouteMap(o,ds,e.geo)}
+  var ts=new Date(($('clVf').value||today())+'T'+($('clVh').value||'08:00')).getTime();CLIPQ={o:o,ds:ds,e:await cliRouteFull(o,ds,ts)};cliPriceShow()}
  catch(x){out.innerHTML='<small>No pude calcular la ruta.</small>'}finally{b.disabled=false}}
+function cliPriceShow(){var out=$('clVpr'),P=CLIPQ;if(!out||!P)return;var o=P.o,ds=P.ds,e=P.e,C=cliEns(),com=C.com/100,M=uberModel(),q=cliPriceOf(e.km,e.s/60,cliRates(),com,M),mn=Math.round(e.s/60);
+ out.innerHTML='<div class="warn" style="background:var(--ac2);color:var(--tx)"><b>Precio sugerido: '+rd(q.pr)+'</b>'+(q.alta?' · <b>con tarifas altas: '+rd(q.alta)+'</b>':'')+
+  '<br><small>'+e.km.toFixed(1)+' km, unos '+mn+' min ('+e.src+'). En Uber el pasajero pagaría unos '+rd(q.pas)+' (tarifa normal, sin promociones) y a ti te llegarían unos '+rd(q.drv)+', porque Uber se queda el '+Math.round(com*100)+'%. Combustible y mantenimiento: '+rd(q.cost)+'; te quedan '+rd(q.net)+'.</small>'+
+  '<br><small>'+(M.n?ic('check','ok')+' Ajustado con '+M.n+(M.n==1?' cotización tuya':' cotizaciones tuyas')+' de Uber'+(M.fit?' (base, km y minuto calculados con tus viajes)':'')+'.':'Calculado con la tarifa oficial de Uber de 2018 (puede estar desactualizada): compáralo con Uber y guarda abajo lo que te sale.')+(!M.n&&M.na?' Ya tengo '+M.na+(M.na==1?' cotización':' cotizaciones')+' con tarifas altas; guarda una sin tarifas altas para ajustar la tarifa normal.':'')+'</small>'+
+  '<div class="row"><button type="button" onclick="$(\'clVm\').value='+q.pr+'">Usar '+rd(q.pr)+'</button>'+(q.alta?'<button type="button" onclick="$(\'clVm\').value='+q.alta+'">Usar '+rd(q.alta)+'</button>':'')+'</div>'+
+  '<details style="margin-top:8px"><summary><small><b>¿Uber te sale distinto? Guarda su precio y ajusto los cálculos</b></small></summary>'+
+  '<div class="row" style="margin-top:6px"><label>Precio de UberX en Uber (RD$)<input id="clVq" type="number" inputmode="decimal" min="0" placeholder="El tachado, sin créditos"></label></div>'+
+  '<label class="cli-ck"><input type="checkbox" id="clVqa"> Uber decía «Tarifas altas»</label>'+
+  '<small>Pide la cotización en Uber con la misma recogida y el mismo destino. Escribe el precio <b>tachado</b> (sin créditos ni promociones).</small>'+
+  '<div class="row" style="margin-top:6px"><button type="button" class="pri" onclick="cliQuote()">Guardar cotización</button></div></details></div>'+
+  '<div id="clVmap" class="cli-map" role="img" aria-label="Mapa de la ruta de '+esc(cliShort(o.t))+' a '+esc(cliShort(ds.t))+'"></div>'+
+  '<div class="row" style="margin-top:6px"><a class="btnlnk" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&origin='+o.la+','+o.lo+'&destination='+ds.la+','+ds.lo+'&travelmode=driving">Abrir en Google Maps</a><a class="btnlnk" target="_blank" rel="noopener" href="https://waze.com/ul?ll='+ds.la+','+ds.lo+'&navigate=yes">Waze al destino</a></div>';
+ cliRouteMap(o,ds,e.geo)}
+function cliQuote(){var P=CLIPQ,p=+($('clVq')||{}).value;if(!P||!(p>0)){if($('clVq'))$('clVq').focus();return}var C=cliEns();C.uq=(C.uq||[]).concat([{km:Math.round(P.e.km*100)/100,min:Math.round(P.e.s/6)/10,p:p,alta:$('clVqa').checked?1:0,d:today()}]).slice(-40);
+ save();cliPriceShow();cliUqSum();cliSay(ic('check','ok')+' Cotización guardada. El precio sugerido ya usa tus datos de Uber.',1)}
+function cliUqSum(){var el=$('cliUq');if(!el)return;var Q=cliEns().uq||[],M=uberModel();el.innerHTML=Q.length?'<small>'+Q.length+(Q.length==1?' cotización guardada':' cotizaciones guardadas')+' · ahora: base '+rd(M.T.b)+', '+rd(M.T.km)+'/km, '+rd(M.T.mn)+'/min, mínimo '+rd(M.T.min)+(M.fa?' · tarifas altas ×'+M.fa.toFixed(2):'')+'.</small> <button type="button" class="lnk" onclick="tap2(this,\'¿Borrar?\',function(){cliEns().uq=[];save();cliUqSum()})"><small>Borrar cotizaciones</small></button>':'<small>Todavía no guardaste cotizaciones de Uber: el precio usa la tarifa oficial de 2018.</small>'}
+
 // Estado de cuenta por WhatsApp (desde tu número: no hace falta plantilla).
 function cliStmt(id){var c=cliById(id);if(!c)return;var o=cliOwed(id);cliOpenWa(c.tel,'Hola '+cliFirst(c.n)+', este es tu estado de cuenta de los viajes: '+o.n+' viajes realizados por '+rd(o.due)+'. Pagado: '+rd(o.paid)+'. '+(o.bal>0?'Pendiente: '+rd(o.bal)+'.':o.bal<0?'Tienes a favor '+rd(-o.bal)+'.':'Estás al día.')+' ¡Gracias por tu confianza!')}
 // Esta semana y este mes: lo que hiciste con clientes (precio completo) frente a lo que te llegó de Uber.
@@ -3434,7 +3472,7 @@ function cliBuild(){var a=$('cli_c');if(!a||a.dataset.b)return;a.dataset.b=1;
   '<div class="row"><label class="vl">Tu nombre en el recibo<input id="clRn" maxlength="40" placeholder="Opcional" onchange="cliRcSet()"></label></div>'+
   '<small>En la Agenda, cada viaje que ya pasó tiene el botón <b>Recibo PDF</b>. Con «Solos, desde mi WhatsApp» el recibo sale solo al chat del cliente; si no, se abre la lista para compartirlo.</small>'+
   '<h3>Precios y cobros</h3><div class="row"><label class="vl">Comisión que te quita Uber (%)<input id="clWc" type="number" inputmode="numeric" min="0" max="60"></label></div>'+
-  '<small>El precio sugerido es lo que Uber le cobraría al pasajero por ese viaje: lo que Uber te pagaría a ti ÷ (1 − comisión). Con 25%, si Uber te pagaría RD$300, el cliente paga RD$400.</small>'+
+  '<small>El precio sugerido es lo que Uber le cobraría al pasajero en UberX: tarifa base + minuto + km, con su tarifa mínima. Se ajusta con las cotizaciones de Uber que guardas al calcular un precio.</small><div id="cliUq"></div>'+
   '<label class="cli-ck"><input type="checkbox" id="clWr"> Recordarme cobrar a los clientes que deben</label><div class="row"><label class="vl">Día<select id="clWd">'+[1,2,3,4,5,6,0].map(function(i){return '<option value="'+i+'">'+CLIWN[i]+'</option>'}).join('')+'</select></label><label class="vl">Hora<input id="clWh" type="time"></label></div>'+
   '<div class="row"><button class="pri" onclick="cliSaveW()">Guardar</button><button id="clWt" onclick="cliTestW(this)">Probar</button></div><div id="cli_wmsg" aria-live="polite"></div><div id="cli_wst"></div>';
  cliEditC(0);cliDiasUI();cliWFill();$('clVf').value=today();$('clPf').value=today()}
@@ -3543,7 +3581,7 @@ function cliWMode(){var m=$('clWo').value;$('clWsub').innerHTML=CLIWS[m];$('clWb
 function cliTplPrev(){var g=$('clWsg').checked,v={nombre:'Ana',hora:hm12(Date.now()+15*60000),lugar:'Plaza Central',min:'15'};
  $('clWprev').innerHTML='<b>Así le llega a una clienta llamada Ana (ahora):</b><br>En camino: '+esc(cliFillT($('clWts').value||CLIDEF.s,g,v))+'<br>Llegando: '+esc(cliFillT($('clWtl').value||CLIDEF.l,g,Object.assign({},v,{min:'3'})))}
 function cliTplReset(){$('clWts').value=CLIDEF.s;$('clWtl').value=CLIDEF.l;$('clWsg').checked=true;cliTplPrev()}
-function cliWFill(){var C=cliEns(),w=C.wa;try{$('clRa').checked=!!(C.rc&&C.rc.auto);$('clRn').value=(C.rc&&C.rc.n)||''}catch(e){}$('clWo').value=cliMode();cliWMode();$('clWsg').checked=w.g!==false;$('clWts').value=w.ts||CLIDEF.s;$('clWtl').value=w.tl||CLIDEF.l;cliTplPrev();$('clWu').value=w.url||'';$('clWk').value=w.key||'';$('clWm').value=w.me||'';$('clWy').checked=!!w.yo;$('clWs').checked=!!w.sal;$('clWl').checked=!!w.lleg;$('clWg').value=C.mg;
+function cliWFill(){var C=cliEns(),w=C.wa;try{cliUqSum()}catch(e){}try{$('clRa').checked=!!(C.rc&&C.rc.auto);$('clRn').value=(C.rc&&C.rc.n)||''}catch(e){}$('clWo').value=cliMode();cliWMode();$('clWsg').checked=w.g!==false;$('clWts').value=w.ts||CLIDEF.s;$('clWtl').value=w.tl||CLIDEF.l;cliTplPrev();$('clWu').value=w.url||'';$('clWk').value=w.key||'';$('clWm').value=w.me||'';$('clWy').checked=!!w.yo;$('clWs').checked=!!w.sal;$('clWl').checked=!!w.lleg;$('clWg').value=C.mg;
  $('clWc').value=C.com;$('clWr').checked=!!C.cob.on;$('clWd').value=C.cob.dia;$('clWh').value=C.cob.h||'18:00';if($('clWa'))$('clWa').checked=cliAuto()}
 function cliSaveW(){var C=cliEns(),u=$('clWu').value.trim();if(u&&!/^https:\/\//.test(u)){$('cli_wmsg').innerHTML='<div class="warn">La dirección del bot debe empezar con https://</div>';return}
  C.wa={modo:$('clWo').value,url:u,key:$('clWk').value.trim(),me:$('clWm').value.trim(),yo:$('clWy').checked,sal:$('clWs').checked,lleg:$('clWl').checked,g:$('clWsg').checked,ts:cliTplV('clWts','s'),tl:cliTplV('clWtl','l')};C.mg=Math.max(0,Math.min(30,+$('clWg').value||0));
