@@ -558,7 +558,7 @@ items:[
 {id:9,name:"Ahorro mínimo diario",amt:100,freq:"d",total:0,prio:3,sv:1}],
 split:[{k:"res",n:"Fondo para días malos (hasta su meta)",p:12.5},{k:"extra",n:"Abono extra a deudas (tarjeta primero)",p:42.5},{k:"ahorro",n:"Ahorro",p:15},{k:"super",n:"Supermercado de la casa",p:20},{k:"pers",n:"Personal / ocio",p:10}],
 logs:[]}}
-var HNAV=false,SCHEMA=6,_sm=null,_nosnap=false,PAGEV='mf-v45';
+var HNAV=false,SCHEMA=6,_sm=null,_nosnap=false,PAGEV='mf-v46';
 var S;
 try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 function upgrade(){if(S&&S.items&&(S.v||0)<SCHEMA){try{localStorage.setItem(KEY+'-bak-'+(S.v||0)+'-'+Date.now(),JSON.stringify(S));pruneBak()}catch(e){}}
@@ -2339,7 +2339,7 @@ var ZK=['sde','dn','sdn','stgo'],ZSD=['sde','dn','sdn'];
 // Ajustes del agente ('fin-zcfg'). Viaje a Santiago: ida SD → Santiago (km, horas, peaje); después de la jornada, Santiago → Mao a dormir
 // donde la familia (kmMao); al otro día Mao → SD vacío (kmV, horasV, peajeV). familia=false: regreso Santiago → SD esa misma noche.
 // glpkm = RD$ de GLP por km si aún no registras km. Distancias medidas con OSRM: 151, 54 y 205 km.
-var ZCFG={on:true,auto:true,web:true,mb:'',km:151,peaje:200,horas:2.5,kmMao:54,kmV:205,horasV:3,peajeV:200,glpkm:5,familia:true,rem:true,casa:''};
+var ZCFG={on:true,auto:true,web:true,mb:'',km:151,peaje:200,horas:2.5,kmMao:54,kmV:205,horasV:3,peajeV:200,glpkm:5,familia:true,rem:true,casa:'',gkey:''};
 try{var zc0=JSON.parse(localStorage.getItem('fin-zcfg')||'{}');for(var zk0 in zc0)if(zk0 in ZCFG)ZCFG[zk0]=zc0[zk0]}catch(e){}
 var ZST={busy:0,msg:''};
 function zSaveCfg(){try{localStorage.setItem('fin-zcfg',JSON.stringify(ZCFG))}catch(e){}try{fbQ()}catch(e){}liveMbSync()}
@@ -2350,7 +2350,21 @@ function zGet(){try{var z=JSON.parse(localStorage.getItem('fin-zona')||'null');r
 function zPut(z){try{localStorage.setItem('fin-zona',JSON.stringify(z))}catch(e){}}
 function fetchT(u,ms,o){var c=new AbortController(),t=setTimeout(function(){c.abort()},ms||9000);return fetch(u,Object.assign({signal:c.signal,cache:'no-store'},o||{})).then(function(r){clearTimeout(t);if(!r.ok)throw new Error('HTTP '+r.status);return r.json()},function(e){clearTimeout(t);throw e})}
 // Clima de las 4 zonas para el día objetivo (hoy; o mañana si ya pasan de las 9 p. m.), de 6 a. m. a 10 p. m.
-async function zWeather(day){var u='https://api.open-meteo.com/v1/forecast?latitude='+ZK.map(function(k){return ZONAS[k].lat}).join(',')+'&longitude='+ZK.map(function(k){return ZONAS[k].lon}).join(',')+'&hourly=precipitation_probability,precipitation,weather_code,wind_speed_10m,temperature_2m&timezone=America%2FSanto_Domingo&forecast_days=2',
+// Clima de Google (Weather API, con tu clave de Google Maps): por hora, para cada zona. Devuelve lo mismo que Open-Meteo.
+async function zWeatherG(day,key){var now=day==today()?new Date().getHours():0,out={};
+ await Promise.all(ZK.map(async function(k){var H=[],tok='',base='https://weather.googleapis.com/v1/forecast/hours:lookup?key='+encodeURIComponent(key)+'&location.latitude='+ZONAS[k].lat+'&location.longitude='+ZONAS[k].lon+'&hours=48&pageSize=24';
+  // Como mucho 24 horas por página: dos páginas cubren hoy y mañana.
+  for(var pg=0;pg<2;pg++){var r0=await fetch(base+(tok?'&pageToken='+encodeURIComponent(tok):'')),j0=await r0.json();
+   if(!r0.ok||!j0.forecastHours)throw new Error('Google clima: '+((j0.error&&j0.error.message)||r0.status));H=H.concat(j0.forecastHours);tok=j0.nextPageToken;if(!tok)break}
+  var j={forecastHours:H};
+  var r={prob:0,mm:0,mmh:0,storm:false,heavy:false,wind:0,tmax:null,rainH:0,dry:null,hrs:0,src:'google'},best=0,cur=0,st=0;
+  j.forecastHours.forEach(function(x){var d=x.displayDateTime||{},ds2=d.year+'-'+String(d.month).padStart(2,'0')+'-'+String(d.day).padStart(2,'0'),hr=+d.hours||0;if(ds2!=day||hr<Math.max(6,now)||hr>22)return;
+   var pr=x.precipitation||{},p=+(pr.probability||{}).percent||0,mm=+(pr.qpf||{}).quantity||0,ty=String((x.weatherCondition||{}).type||''),w=+((x.wind||{}).speed||{}).value||0,tp=(x.temperature||{}).degrees,th=+x.thunderstormProbability||0;r.hrs++;
+   r.prob=Math.max(r.prob,p);r.mm+=mm;r.mmh=Math.max(r.mmh,mm);var sh=/THUNDER/.test(ty)||th>=50;if(sh)r.storm=true;if(mm>=8||/HEAVY/.test(ty))r.heavy=true;r.wind=Math.max(r.wind,w);if(tp!=null)r.tmax=r.tmax==null?tp:Math.max(r.tmax,tp);if(mm>=0.5)r.rainH++;
+   if(mm<0.3&&p<50&&!sh){if(!cur)st=hr;cur++;if(cur>best){best=cur;r.dry=[st,hr+1]}}else cur=0});
+  out[k]=r}));return out}
+async function zWeather(day){if(ZCFG.gkey){try{return await zWeatherG(day,ZCFG.gkey)}catch(e){ZST.gw=String(e.message||e)}}return zWeatherOM(day)}
+async function zWeatherOM(day){var u='https://api.open-meteo.com/v1/forecast?latitude='+ZK.map(function(k){return ZONAS[k].lat}).join(',')+'&longitude='+ZK.map(function(k){return ZONAS[k].lon}).join(',')+'&hourly=precipitation_probability,precipitation,weather_code,wind_speed_10m,temperature_2m&timezone=America%2FSanto_Domingo&forecast_days=2',
   j=await fetchT(u,9000),arr=Array.isArray(j)?j:[j],out={},now=day==today()?new Date().getHours():0;
  ZK.forEach(function(k,ix){var h=arr[ix]&&arr[ix].hourly;if(!h)return;var r={prob:0,mm:0,mmh:0,storm:false,heavy:false,wind:0,tmax:null,rainH:0,dry:null,hrs:0},best=0,cur=0,st=0;
   h.time.forEach(function(t,i){var hr=+t.slice(11,13);if(t.slice(0,10)!=day||hr<Math.max(6,now)||hr>22)return;var p=+h.precipitation_probability[i]||0,mm=+h.precipitation[i]||0,c=+h.weather_code[i]||0,w=+h.wind_speed_10m[i]||0,tp=h.temperature_2m[i];r.hrs++;
@@ -2397,6 +2411,15 @@ async function zTTTest(){var m=$('zttm'),key=($('zc_mb')&&$('zc_mb').value||'').
  var rows=R.map(function(o){var x=o.x;return '<div style="font-size:13px;margin-top:6px">'+(x.ok?''+ic('check','ok')+'':''+ic('x','no')+'')+' <b>'+ZONAS[o.k].c+'</b> ('+esc(o.p[4])+(x.ok?'; '+o.n+' de '+o.t+' avenidas responden':'')+'): <span class="sub">'+(x.ok?Math.round(x.cur)+' km/h ahora (sin tránsito '+Math.round(x.free)+') · '+Math.round(x.r*100)+'%':esc(x.err)+(x.det?' <i>('+esc(x.det.slice(0,90))+')</i>':''))+'</span></div>'}).join('');
  var auth=R.some(function(o){return o.x.st==401||o.x.st==403}),msg=okN==R.length?'<div class="warn ok">¡Conexión con Mapbox correcta! Toca “Guardar” y luego “Actualizar”.</div>':okN?'<div class="warn ok">Mapbox responde ('+okN+' de '+R.length+' zonas). Guarda y actualiza.</div>':auth?'<div class="warn">Mapbox rechazó el token. En account.mapbox.com → Tokens copia el <b>Default public token</b> completo (empieza con pk.).</div>':'<div class="warn">No se pudo usar Mapbox. Mira el motivo en cada zona.</div>';
  m.innerHTML=msg+rows}
+// Botón "Probar Google": prueba la búsqueda de lugares y el clima con la clave escrita (aunque no esté guardada).
+async function gTest(){var m=$('ggm'),key=($('zc_gg')&&$('zc_gg').value||'').replace(/\s+/g,'');if(!m)return;if(!key){m.innerHTML='<div class="warn">Primero pega tu clave de Google Maps en el campo.</div>';return}
+ m.innerHTML=fiLoading('Probando la clave de Google');var R=[];
+ try{var p=await gPlaces('Ágora Mall',key);R.push([1,'Buscar lugares',p.length?'encontré «'+esc(cliShort(p[0].t))+'»':'responde, sin resultados'])}catch(e){R.push([0,'Buscar lugares',esc(e.message)])}
+ try{var r=await fetch('https://weather.googleapis.com/v1/currentConditions:lookup?key='+encodeURIComponent(key)+'&location.latitude=18.48&location.longitude=-69.93&languageCode=es'),j=await r.json();
+  if(!r.ok)throw new Error((j.error&&j.error.message)||('HTTP '+r.status));R.push([1,'Clima',Math.round((j.temperature||{}).degrees)+' °C, '+esc(((j.weatherCondition||{}).description||{}).text||'')+' en Santo Domingo'])}catch(e){R.push([0,'Clima',esc(e.message)])}
+ var ok=R.filter(function(x){return x[0]}).length;
+ m.innerHTML='<div class="warn'+(ok?' ok':'')+'">'+(ok==2?'¡La clave funciona para las dos cosas! Toca «Guardar».':ok?'La clave funciona solo para una parte (la otra sigue con el servicio de siempre). Toca «Guardar».':'Google rechazó la clave. Revisa que esté completa y que en Google Cloud estén activadas <b>Places API (New)</b> y <b>Weather API</b>.')+'</div>'+
+  R.map(function(x){return '<div style="font-size:13px;margin-top:6px">'+ic(x[0]?'check':'x',x[0]?'ok':'no')+' <b>'+x[1]+'</b>: <span class="sub">'+x[2]+'</span></div>'}).join('')}
 // Tu historial por zona: neto (bruto − gastos) por jornada y por hora.
 // Historial por zona. Las jornadas recientes pesan más (la mitad cada 6 semanas) y se separa por tipo de día
 // (lun–jue, vie–sáb, domingo). Con km registrados: neto por km y % de km sin pasajero. c = jornadas sin ponderar.
@@ -2922,10 +2945,11 @@ function zR_full(){var el=$('fi_zona');if(!el)return;var z=zGet(),h=zCard(false)
   '<div class="row" style="margin-top:10px"><label>Km SD → Santiago<input type="number" id="zc_km" value="'+ZCFG.km+'"></label><label>Peajes de ida (RD$)<input type="number" id="zc_pj" value="'+ZCFG.peaje+'"></label><label>Horas de manejo de ida<input type="number" step="0.5" id="zc_hr" value="'+ZCFG.horas+'"></label><label>GLP por km (RD$, si no registras km)<input type="number" step="0.1" id="zc_gk" value="'+ZCFG.glpkm+'"></label></div>'+
   '<div class="row" style="margin-top:8px"><label>Km Santiago → Mao<input type="number" id="zc_km2" value="'+ZCFG.kmMao+'"></label><label>Km Mao → SD (vacío)<input type="number" id="zc_kmv" value="'+ZCFG.kmV+'"></label><label>Horas Mao → SD<input type="number" step="0.5" id="zc_hv" value="'+ZCFG.horasV+'"></label><label>Peajes Mao → SD (RD$)<input type="number" id="zc_pjv" value="'+ZCFG.peajeV+'"></label></div>'+
   '<div class="row" style="margin-top:8px"><label style="flex:3">Desde dónde sales a trabajar (para el costo de llegar a cada zona)<select id="zc_casa"><option value="">Sin indicar</option>'+ZK.map(function(k){return '<option value="'+k+'"'+(ZCFG.casa==k?' selected':'')+'>'+ZONAS[k].n+'</option>'}).join('')+'</select></label></div>'+
-  '<div class="row" style="margin-top:8px"><label style="flex:3">Token de Mapbox (opcional, tránsito en vivo)<input type="password" id="zc_mb" value="'+esc(ZCFG.mb)+'" placeholder="pk.… · gratis en account.mapbox.com…" autocomplete="off"></label><button style="flex:1" onclick="zTTTest()">Probar conexión</button><button class="pri" style="flex:1" onclick="zCfgSave()">Guardar</button></div><div id="zttm"></div><small>Registra la <b>zona</b> de cada jornada en Registrar: con unas 6 jornadas el agente empieza a usar tu rendimiento real por zona.</small><div id="zcm"></div></details>';
+  '<div class="row" style="margin-top:8px"><label style="flex:3">Token de Mapbox (opcional, tránsito en vivo)<input type="password" id="zc_mb" value="'+esc(ZCFG.mb)+'" placeholder="pk.… · gratis en account.mapbox.com…" autocomplete="off"></label><button style="flex:1" onclick="zTTTest()">Probar conexión</button><button class="pri" style="flex:1" onclick="zCfgSave()">Guardar</button></div><div id="zttm"></div>'+
+  '<div class="row" style="margin-top:8px"><label style="flex:3">Clave de Google Maps (opcional: buscar lugares y clima más precisos)<input type="password" id="zc_gg" value="'+esc(ZCFG.gkey||'')+'" placeholder="AIza…" autocomplete="off"></label><button style="flex:1" onclick="gTest()">Probar Google</button><button class="pri" style="flex:1" onclick="zCfgSave()">Guardar</button></div><div id="ggm"></div><small>Registra la <b>zona</b> de cada jornada en Registrar: con unas 6 jornadas el agente empieza a usar tu rendimiento real por zona.</small><div id="zcm"></div></details>';
  el.innerHTML=h}
 function zCfgSave(){var n=function(i,d,mx){var v=+$(i).value;return isFinite(v)&&v>=0?Math.min(mx,v):d};ZCFG.on=$('zc_on').checked;ZCFG.auto=$('zc_auto').checked;ZCFG.web=$('zc_web').checked;ZCFG.familia=$('zc_fam').checked;ZCFG.rem=$('zc_rem').checked;
- ZCFG.km=n('zc_km',151,400);ZCFG.kmMao=n('zc_km2',54,300);ZCFG.kmV=n('zc_kmv',205,500);ZCFG.horasV=n('zc_hv',3,10);ZCFG.peajeV=n('zc_pjv',200,5000);ZCFG.peaje=n('zc_pj',200,5000);ZCFG.horas=n('zc_hr',2.5,8);ZCFG.glpkm=n('zc_gk',5,50);ZCFG.mb=$('zc_mb').value.replace(/\s+/g,'');ZCFG.casa=$('zc_casa').value;zSaveCfg();var z=zGet();if(z){zScore(z);zPut(z)}zRender();var m=$('zcm');if(m)m.innerHTML='<div class="warn ok">Ajustes guardados. Toca “Actualizar” para volver a analizar.</div>'}
+ ZCFG.km=n('zc_km',151,400);ZCFG.kmMao=n('zc_km2',54,300);ZCFG.kmV=n('zc_kmv',205,500);ZCFG.horasV=n('zc_hv',3,10);ZCFG.peajeV=n('zc_pjv',200,5000);ZCFG.peaje=n('zc_pj',200,5000);ZCFG.horas=n('zc_hr',2.5,8);ZCFG.glpkm=n('zc_gk',5,50);ZCFG.mb=$('zc_mb').value.replace(/\s+/g,'');if($('zc_gg'))ZCFG.gkey=$('zc_gg').value.replace(/\s+/g,'');ZCFG.casa=$('zc_casa').value;zSaveCfg();var z=zGet();if(z){zScore(z);zPut(z)}zRender();var m=$('zcm');if(m)m.innerHTML='<div class="warn ok">Ajustes guardados. Toca “Actualizar” para volver a analizar.</div>'}
 
 /* =====================================================================================
    FASE 2: jornada en vivo, vehículo, importar Uber, presupuesto del hogar, pagos sugeridos y cierre semanal.
@@ -3275,9 +3299,15 @@ async function cliGeoLink(q){var c=q.match(/(-?1[78]\.\d{3,})\s*,\s*(-?(?:6[89]|
  var m=q.match(CLIGM);if(!m)return null;var before=q.slice(0,m.index).replace(/\s+/g,' ').trim(),g=cliGmParse(m[1]);
  if(!g){var cf=fbCfg();if(!cf)return null;try{var r=await fetch(cf.url+'/geo?u='+encodeURIComponent(m[1])),j=await r.json();if(j.ok)g={la:j.la,lo:j.lo,name:j.name||''}}catch(e){}}
  if(!g)throw new Error('GMAPS');return{t:(g.name||before||'Lugar de Google Maps').slice(0,90),la:g.la,lo:g.lo,gm:1}}
+// Google Places (Text Search): busca como en Google Maps, con nombre y dirección del lugar.
+async function gPlaces(q,key){var r=await fetch('https://places.googleapis.com/v1/places:searchText',{method:'POST',headers:{'Content-Type':'application/json','X-Goog-Api-Key':key,'X-Goog-FieldMask':'places.displayName,places.formattedAddress,places.location'},
+  body:JSON.stringify({textQuery:q,languageCode:'es',regionCode:'DO',maxResultCount:6,locationBias:{circle:{center:{latitude:18.48,longitude:-69.93},radius:50000}}})}),j=await r.json();
+ if(!r.ok)throw new Error((j.error&&j.error.message)||('HTTP '+r.status));
+ return (j.places||[]).filter(function(p){return p.location}).map(function(p){var n=(p.displayName||{}).text||'',a=p.formattedAddress||'';return{t:n+(a&&a.indexOf(n)!=0?', '+a:''),la:p.location.latitude,lo:p.location.longitude,poi:1,g:1}})}
 async function cliGeoFind(q){var L=[],seen={},add=function(x){var k=Math.round(x.la*2000)+'|'+Math.round(x.lo*2000)+'|'+nz(x.t).slice(0,12);if(!seen[k]&&isFinite(x.la)&&isFinite(x.lo)){seen[k]=1;L.push(x)}};
  var g=await cliGeoLink(q);if(g)return [g];
- if(ZCFG.mb){var tk='&access_token='+encodeURIComponent(ZCFG.mb),px='&proximity=-69.93,18.48';
+ if(ZCFG.gkey){try{(await gPlaces(q,ZCFG.gkey)).forEach(add)}catch(e){}}
+ if(ZCFG.mb&&L.length<3){var tk='&access_token='+encodeURIComponent(ZCFG.mb),px='&proximity=-69.93,18.48';
   try{var r=await fetch('https://api.mapbox.com/search/searchbox/v1/forward?q='+encodeURIComponent(q)+'&country=do&language=es&limit=6&types=poi,address,place,street'+px+tk),j=await r.json();
    (j.features||[]).forEach(function(x){var p=x.properties||{},c=x.geometry&&x.geometry.coordinates;if(!c)return;add({t:p.name+(p.full_address&&p.full_address.indexOf(p.name)!=0?', '+p.full_address:p.place_formatted?', '+p.place_formatted:''),la:c[1],lo:c[0],poi:p.feature_type=='poi'})})}catch(e){}
   if(L.length<3)try{var r1=await fetch('https://api.mapbox.com/search/geocode/v6/forward?q='+encodeURIComponent(q)+'&country=do&language=es&limit=5'+px+tk),j1=await r1.json();
