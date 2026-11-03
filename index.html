@@ -703,7 +703,7 @@ items:[
 {id:9,name:"Ahorro mínimo diario",amt:100,freq:"d",total:0,prio:3,sv:1}],
 split:[{k:"res",n:"Fondo para días malos (hasta su meta)",p:12.5},{k:"extra",n:"Abono extra a deudas (tarjeta primero)",p:42.5},{k:"ahorro",n:"Ahorro",p:15},{k:"super",n:"Supermercado de la casa",p:20},{k:"pers",n:"Personal / ocio",p:10}],
 logs:[]}}
-var HNAV=false,SCHEMA=6,_sm=null,_nosnap=false,PAGEV='mf-v64';
+var HNAV=false,SCHEMA=6,_sm=null,_nosnap=false,PAGEV='mf-v65';
 var S;
 try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 function upgrade(){if(S&&S.items&&(S.v||0)<SCHEMA){try{localStorage.setItem(KEY+'-bak-'+(S.v||0)+'-'+Date.now(),JSON.stringify(S));pruneBak()}catch(e){}}
@@ -3437,7 +3437,7 @@ var CARDB=[['Toyota','Corolla 1.8 (2014–2019)',48],['Toyota','Corolla (2020 en
  ['Hyundai','Sonata 2.0/2.4 (2011–2014)',38],['Hyundai','Sonata LPi (GLP de fábrica)',30,'glp'],['Hyundai','Sonata (2015–2019)',40],['Hyundai','Elantra / Avante',45],['Hyundai','Avante LPi (GLP de fábrica)',34,'glp'],['Hyundai','Accent',52],['Hyundai','Tucson',34],
  ['Kia','K5 / Optima (2011–2015)',39],['Kia','K5 LPi (GLP de fábrica)',30,'glp'],['Kia','Forte / K3',45],['Kia','Rio',52],['Kia','Picanto / Morning',60],['Kia','Sportage',33],
  ['Honda','Civic',50],['Honda','Fit',56],['Honda','Accord',40],['Honda','CR-V',35],['Nissan','Sentra',48],['Nissan','Versa',52],['Nissan','Note',55],
- ['Suzuki','Swift / Dzire',58],['Chevrolet','Spark',58],['Chevrolet','Aveo / Sonic',48],['Mitsubishi','Mirage',62],['Mazda','Mazda3',47],['Otro','Otro (escribe tu rendimiento)',45]];
+ ['Suzuki','Swift / Dzire',58],['Suzuki','Alto Hybrid 660 (2014–2021)',70,'hib'],['Chevrolet','Spark',58],['Chevrolet','Aveo / Sonic',48],['Mitsubishi','Mirage',62],['Mazda','Mazda3',47],['Otro','Otro (escribe tu rendimiento)',45]];
 function carFuel(){return S.car&&S.car.fuel||'glp'}
 function fuelLbl(){var f=carFuel();return f=='glp'?'GLP':'Gasolina'}
 function fuelMig(){var P=S.fuelp;if(!P)return;for(var k in FUELOLD)if(+P[k]==FUELOLD[k])P[k]=FUELP0[k]}
